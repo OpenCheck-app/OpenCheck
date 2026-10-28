@@ -1,0 +1,85 @@
+name: Build and test
+
+# Builds OpenCheck.exe on GitHub's own Windows machines, straight from this public source code.
+# Every run publishes the SHA-256 of the .exe so anyone can confirm a download matches this code.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write       # needed for build attestations
+  attestations: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Run tests (parsers, matching, and safety checks)
+        run: dotnet test tests/PCCheck.Tests/PCCheck.Tests.csproj -c Release --logger "console;verbosity=normal"
+
+      - name: Build
+        run: dotnet build src/PCCheck/PCCheck.csproj -c Release -o out
+
+      # Code signing (optional, recommended): see "Signing" in README.md.
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory dist | Out-Null
+          New-Item -ItemType Directory pkg | Out-Null
+          Get-ChildItem out -Recurse -File | Where-Object { $_.Extension -notin '.pdb', '.xml' } | ForEach-Object {
+            $rel = $_.FullName.Substring((Resolve-Path out).Path.Length + 1)
+            $dest = Join-Path pkg $rel
+            New-Item -ItemType Directory -Force (Split-Path $dest) | Out-Null
+            Copy-Item $_.FullName $dest
+          }
+          Copy-Item README.md pkg/README.md
+          Compress-Archive -Path pkg/* -DestinationPath dist/OpenCheck.zip
+          $exe = (Get-FileHash pkg/OpenCheck.exe -Algorithm SHA256).Hash.ToLower()
+          $zip = (Get-FileHash dist/OpenCheck.zip -Algorithm SHA256).Hash.ToLower()
+          "$exe  OpenCheck.exe`n$zip  OpenCheck.zip" | Out-File dist/SHA256SUMS.txt -Encoding ascii
+          Get-Content dist/SHA256SUMS.txt
+          "### SHA-256`n``````n$(Get-Content dist/SHA256SUMS.txt -Raw)``````" >> $env:GITHUB_STEP_SUMMARY
+
+      # Signed proof that these files were built by this workflow from this repo's public code.
+      # Anyone can check a download with:  gh attestation verify OpenCheck.zip --repo OWNER/REPO
+      - name: Attest build provenance
+        if: github.event_name != 'pull_request'
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            dist/OpenCheck.zip
+            pkg/OpenCheck.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenCheck
+          path: dist/*
+
+      - name: Add hashes to release notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $sums = Get-Content dist/SHA256SUMS.txt -Raw
+          (Get-Content .github/RELEASE_TEMPLATE.md -Raw).Replace('{{SHA256SUMS}}', $sums.Trim()).Replace('{{REPO}}', '${{ github.repository }}') | Set-Content .github/RELEASE_TEMPLATE.md
+
+      - name: Publish release (version tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: .github/RELEASE_TEMPLATE.md
+          append_body: true
+          files: |
+            dist/OpenCheck.zip
+            dist/SHA256SUMS.txt
