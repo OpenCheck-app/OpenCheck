@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- .NET Framework 4.8 ships with every copy of Windows 10 and 11, so nothing extra has to be installed. -->
+    <TargetFramework>net48</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>OpenCheck</AssemblyName>
+    <RootNamespace>PCCheck</RootNamespace>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <DebugType>none</DebugType>
+
+    <!-- File properties shown in Windows (right-click > Properties > Details). -->
+    <Version>1.0.0</Version>
+    <Product>OpenCheck</Product>
+    <AssemblyTitle>OpenCheck</AssemblyTitle>
+    <Description>Open-source, read-only PC check for Roblox communities. Not affiliated with Roblox Corporation.</Description>
+    <Company>OpenCheck (open source)</Company>
+    <Copyright>MIT License</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2210.55" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Management" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The UI and cheat list are built into the .exe so they can't be swapped out. -->
+    <EmbeddedResource Include="ui\index.html" LogicalName="index.html" />
+    <EmbeddedResource Include="signatures.json" LogicalName="signatures.json" />
+  </ItemGroup>
+
+</Project>

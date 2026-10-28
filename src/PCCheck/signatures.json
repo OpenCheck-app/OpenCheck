@@ -1,0 +1,978 @@
+{
+  "_readme": [
+    "Edit this file to add or remove cheats. No code changes needed.",
+    "match  = name tokens compared against file / program names (spaces, dashes, dots and underscores are ignored).",
+    "strict = true  -> only flags an exact name or name + a known suffix (ui, bootstrapper, launcher, v3...). Use for short or common words.",
+    "strict = false -> flags any .exe/.dll/.pf/.lnk whose name CONTAINS the token.",
+    "folders = known install folders. %LocalAppData%, %AppData%, %ProgramData%, %UserProfile%, %ProgramFiles%, %ProgramFiles(x86)% are expanded for every user profile.",
+    "severity: high = cheat, medium = suspicious tool, info = context only (never causes FLAGGED by itself).",
+    "Generic tokens (like 'robloxexecutor') catch renamed or unknown tools. No list can catch every cheat, so the checker also looks at behavior: executor folders, deleted files, antivirus exclusions and firewall rules."
+  ],
+  "version": "2026-10-28",
+  "nameSuffixes": [
+    "ui",
+    "bootstrapper",
+    "bootstraper",
+    "launcher",
+    "loader",
+    "injector",
+    "installer",
+    "setup",
+    "updater",
+    "x64",
+    "x86",
+    "api",
+    "module",
+    "v2",
+    "v3",
+    "v4",
+    "beta",
+    "cli",
+    "app"
+  ],
+  "signatures": [
+    {
+      "name": "Solara",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "solara"
+      ],
+      "strict": false,
+      "folders": [
+        "%ProgramData%\\Solara",
+        "%LocalAppData%\\Solara"
+      ]
+    },
+    {
+      "name": "Potassium",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "potassium"
+      ],
+      "strict": false,
+      "folders": [
+        "%LocalAppData%\\Potassium"
+      ]
+    },
+    {
+      "name": "Volcano",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "volcano"
+      ],
+      "strict": true,
+      "folders": [
+        "%LocalAppData%\\Volcano"
+      ]
+    },
+    {
+      "name": "Xeno",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "xeno"
+      ],
+      "strict": true,
+      "folders": [
+        "%LocalAppData%\\Xeno"
+      ]
+    },
+    {
+      "name": "Wave",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "wave"
+      ],
+      "strict": true,
+      "folders": [],
+      "note": "Wave Terminal (a normal app) also uses Wave.exe - check the path."
+    },
+    {
+      "name": "Velocity",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "velocity"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Zenith",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "zenith"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Seliware",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "seliware"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Synapse",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "synapsex",
+        "synapsez"
+      ],
+      "strict": false,
+      "folders": [
+        "%ProgramData%\\Synapse Z",
+        "%LocalAppData%\\Synapse Z"
+      ]
+    },
+    {
+      "name": "Krnl",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "krnl"
+      ],
+      "strict": false,
+      "folders": [
+        "%LocalAppData%\\Krnl"
+      ]
+    },
+    {
+      "name": "Fluxus",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "fluxus"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "JJSploit",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "jjsploit"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Celery",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "celery"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Oxygen U",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "oxygenu"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Script-Ware",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "scriptware"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "SirHurt",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "sirhurt"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Valyse",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "valyse"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Nihon",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "nihon"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Evon",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "evon"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Trigon",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "trigon"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Ronix",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "ronix"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Bunni",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "bunni"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Krampus",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "krampus"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Vega X",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "vegax"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Nezur",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "nezur"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "AWP",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "awp"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Hydrogen",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "hydrogenexecutor",
+        "hydrogenroblox"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Delta",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "deltaexecutor",
+        "deltaroblox"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Codex",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "codexexecutor",
+        "codexroblox"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Arceus X",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "arceusx"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Swift",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "swiftexecutor",
+        "swiftroblox"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Luna",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "lunaexecutor"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Comet",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "cometexecutor"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Electron",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "electronexecutor"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Cryptic",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "crypticexecutor"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Visual",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "visualexecutor"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Volt",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "voltexecutor"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Isabelle",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "isabelleexecutor"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Zorara",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "zorara"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Madium",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "madium"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "ProtoSmasher",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "protosmasher"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Calamari",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "calamari"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Elysian",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "elysian"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Coco Z",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "cocoz"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Furk Ultra",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "furkultra"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Valex",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "valex"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Generic executor",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "robloxexecutor",
+        "executorroblox",
+        "rbxexecutor",
+        "luaexecutor",
+        "scriptexecutor",
+        "robloxexploit",
+        "rbxexploit",
+        "exploitroblox",
+        "robloxhack",
+        "robloxcheat",
+        "rbxcheat",
+        "robloxinjector",
+        "rbxinjector",
+        "rbxinject"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Exploit script",
+      "category": "Exploit script",
+      "severity": "high",
+      "match": [
+        "infiniteyield",
+        "hydroxide",
+        "simplespy",
+        "remotespy",
+        "darkdex",
+        "dexexplorer",
+        "owlhub"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "A well-known Roblox exploit script. These only run inside an executor."
+    },
+    {
+      "name": "Matcha",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "matcha"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Severe",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "severe"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Serotonin",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "serotonin"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Aimmy",
+      "category": "External (AI aimbot)",
+      "severity": "high",
+      "match": [
+        "aimmy"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Generic aimbot / ESP",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "aimbot",
+        "triggerbot",
+        "silentaim",
+        "robloxesp",
+        "rbxesp",
+        "wallhack"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Colorbot / aim assist",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "colorbot",
+        "robloxaimbot",
+        "rbxaimbot",
+        "robloxaimassist",
+        "aimlock"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "FastFlag editor / injector",
+      "category": "FastFlag tool",
+      "severity": "medium",
+      "match": [
+        "fflaginjector",
+        "fflageditor",
+        "fastflageditor",
+        "fastflaginjector",
+        "flaginjector",
+        "fflagtool",
+        "fflagmanager",
+        "fflagsetter",
+        "fflagloader",
+        "fastflagmanager",
+        "fastflagtool"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "Tools like this push FastFlags into Roblox, sometimes past Roblox's allowlist."
+    },
+    {
+      "name": "Cheat Engine",
+      "category": "Cheat tool",
+      "severity": "medium",
+      "match": [
+        "cheatengine"
+      ],
+      "strict": false,
+      "folders": [
+        "%ProgramFiles%\\Cheat Engine"
+      ]
+    },
+    {
+      "name": "Extreme Injector",
+      "category": "Cheat tool",
+      "severity": "medium",
+      "match": [
+        "extremeinjector"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Xenos injector",
+      "category": "Cheat tool",
+      "severity": "medium",
+      "match": [
+        "xenos",
+        "xenos64"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "kdmapper",
+      "category": "Cheat tool",
+      "severity": "medium",
+      "match": [
+        "kdmapper"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Generic injector",
+      "category": "Cheat tool",
+      "severity": "medium",
+      "match": [
+        "dllinjector",
+        "injector"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Clumsy (lag switch)",
+      "category": "Cheat tool",
+      "severity": "medium",
+      "match": [
+        "clumsy"
+      ],
+      "strict": true,
+      "folders": []
+    },
+    {
+      "name": "Auto clicker",
+      "category": "Macro",
+      "severity": "medium",
+      "match": [
+        "autoclicker",
+        "autoclick",
+        "opautoclicker",
+        "gsautoclicker",
+        "speedautoclicker",
+        "murgee",
+        "murgaa",
+        "fastclicker",
+        "clickermann"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "AutoHotkey",
+      "category": "Macro",
+      "severity": "medium",
+      "match": [
+        "autohotkey",
+        "autohotkeyu64",
+        "autohotkeyu32",
+        "autohotkey64",
+        "autohotkey32"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "AutoHotkey has many normal uses. Check what its scripts do."
+    },
+    {
+      "name": "Macro recorder",
+      "category": "Macro",
+      "severity": "medium",
+      "match": [
+        "tinytask",
+        "macrorecorder",
+        "macrocreator",
+        "pulover",
+        "minimousemacro",
+        "macrogamer",
+        "jitbitmacro",
+        "robloxmacro",
+        "rbxmacro",
+        "autofarm"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Lag switch tool",
+      "category": "Lag switch",
+      "severity": "medium",
+      "match": [
+        "lagswitch",
+        "lagswitcher",
+        "robloxlag",
+        "rbxlag"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "NetLimiter",
+      "category": "Lag switch",
+      "severity": "medium",
+      "match": [
+        "netlimiter",
+        "nlclientapp",
+        "nlsvc"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "NetLimiter can throttle or block one app's traffic, which works as a lag switch. It also has normal uses."
+    },
+    {
+      "name": "NetBalancer",
+      "category": "Lag switch",
+      "severity": "medium",
+      "match": [
+        "netbalancer"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "NetBalancer can throttle one app's traffic, which works as a lag switch. It also has normal uses."
+    },
+    {
+      "name": "WinDivert",
+      "category": "Lag switch",
+      "severity": "medium",
+      "match": [
+        "windivert",
+        "windivert64"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "WinDivert is the network driver that Clumsy and similar lag tools use."
+    },
+    {
+      "name": "Trace cleaner",
+      "category": "Trace cleaner",
+      "severity": "medium",
+      "match": [
+        "bleachbit",
+        "privazer",
+        "prefetchcleaner",
+        "usncleaner",
+        "tracecleaner"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "CCleaner",
+      "category": "Trace cleaner",
+      "severity": "info",
+      "match": [
+        "ccleaner"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Android emulator",
+      "category": "Emulator (can run mobile executors)",
+      "severity": "medium",
+      "match": [
+        "hdplayer",
+        "bluestacks",
+        "dnplayer",
+        "ldplayer",
+        "mumuplayer",
+        "noxvmhandle"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Virtual machine software",
+      "category": "Virtual machine",
+      "severity": "medium",
+      "match": [
+        "vmware",
+        "vmwarevmx",
+        "virtualboxvm",
+        "vboxheadless",
+        "vboxsvc",
+        "qemusystemx8664",
+        "windowssandbox",
+        "windowssandboxclient",
+        "vmconnect"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "DMA software",
+      "category": "DMA",
+      "severity": "medium",
+      "match": [
+        "pcileech",
+        "memprocfs",
+        "leechcore",
+        "leechagent"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Roblox bootstrapper",
+      "category": "Roblox bootstrapper (allowed)",
+      "severity": "info",
+      "match": [
+        "bloxstrap",
+        "fishstrap",
+        "voidstrap",
+        "froststrap",
+        "lunastrap",
+        "plexity",
+        "bloxshade"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "Bootstrappers are normal Roblox launchers. Listed so moderators know which one is used."
+    },
+    {
+      "name": "Roblox FPS Unlocker",
+      "category": "Roblox tool (allowed)",
+      "severity": "info",
+      "match": [
+        "rbxfpsunlocker"
+      ],
+      "strict": false,
+      "folders": []
+    }
+  ],
+  "executorFolderLayouts": [
+    [
+      "workspace",
+      "autoexec"
+    ],
+    [
+      "autoexec",
+      "scripts"
+    ]
+  ],
+  "fastFlags": {
+    "_readme": "Any flag whose name contains one of these words is flagged. Roblox only honors an allowlist of FastFlags now, so many of these may have no effect - they are still worth asking about.",
+    "suspiciousWords": [
+      "S2Physics",
+      "PhysicsSender",
+      "DataSender",
+      "MaxMissedWorldSteps",
+      "WorldStep",
+      "Replicat",
+      "NetworkOwner",
+      "Hitbox",
+      "AssemblyExtents",
+      "HipHeight",
+      "Gravity",
+      "WalkSpeed",
+      "JumpPower",
+      "Desync",
+      "Noclip",
+      "Teleport",
+      "Fling",
+      "BufferZone",
+      "GameNetPV",
+      "Invisible",
+      "DontRender",
+      "Interpolation",
+      "LagSwitch",
+      "MaxClientSimulationRadius",
+      "SimRadius"
+    ]
+  },
+  "dma": {
+    "_readme": "PCI vendor IDs commonly seen on FPGA DMA boards. Custom firmware can hide these, so absence proves nothing.",
+    "suspiciousVendorIds": {
+      "10EE": "Xilinx FPGA",
+      "1172": "Altera/Intel FPGA",
+      "1556": "PLDA FPGA",
+      "1D0F": "Amazon FPGA"
+    }
+  },
+  "vmMacPrefixes": {
+    "000569": "VMware",
+    "000C29": "VMware",
+    "001C14": "VMware",
+    "005056": "VMware",
+    "080027": "VirtualBox",
+    "0A0027": "VirtualBox",
+    "00155D": "Hyper-V",
+    "001C42": "Parallels",
+    "525400": "QEMU/KVM"
+  },
+  "knownBadSha256": {
+    "_readme": "Optional: add 'sha256': 'name' pairs for exact cheat builds. Catches renamed files in scanned folders."
+  },
+  "looseFastFlagFiles": {
+    "_readme": "FastFlag list files people download. Looked for by name in Desktop, Downloads and Documents.",
+    "nameWords": [
+      "fflag",
+      "fastflag",
+      "clientappsettings"
+    ]
+  }
+}
