@@ -119,6 +119,8 @@ namespace PCCheck.Engine
         public string Pc;
         public string AppVersion;
         public string AppSha256;
+        /// <summary>Scrambled hardware ID (XXXX-XXXX-XXXX). Same PC, same ID. Can't be reversed into serial numbers.</summary>
+        public string PcId;
         public string ListVersion;
         /// <summary>Scan depth and performance settings used, e.g. "Standard" or "Quick, low CPU".</summary>
         public string Mode = "Standard";

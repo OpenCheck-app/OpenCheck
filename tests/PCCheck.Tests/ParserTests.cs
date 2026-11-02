@@ -424,6 +424,10 @@ namespace PCCheck.Tests
         [InlineData("NetCut.exe", "Network cutting tool")]
         [InlineData("lag switch.ahk", "Lag switch tool")]
         [InlineData("LagMacro.ahk", "Lag switch tool")]
+        [InlineData("SandboxiePlus.exe", "Sandbox or freeze tool")]
+        [InlineData("SbieSvc.exe", "Sandbox or freeze tool")]
+        [InlineData("DeepFreeze.exe", "Sandbox or freeze tool")]
+        [InlineData("ShadowDefender.exe", "Sandbox or freeze tool")]
         [InlineData("Matcha External.exe", "Matcha")]
         public void Detects_new_categories(string file, string expected)
         {
@@ -738,6 +742,32 @@ namespace PCCheck.Tests
             Assert.Single(list);
             Assert.Equal("268", list[0].KickReason);
             Assert.True(list[0].KickTime.HasValue);
+        }
+    }
+
+    public class DeviceTests
+    {
+        [Fact]
+        public void Pc_id_is_stable_short_and_ignores_placeholders()
+        {
+            var a = Parsers.PcId(new[] { "BSN12345678", "To be filled by O.E.M.", "4C4C4544-0042-3510-8054-B4C04F4E4B32" });
+            var b = Parsers.PcId(new[] { "BSN12345678", "Default string", "4C4C4544-0042-3510-8054-B4C04F4E4B32" });
+            Assert.NotNull(a);
+            Assert.Equal(a, b);
+            Assert.Matches("^[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$", a);
+            Assert.NotEqual(a, Parsers.PcId(new[] { "OTHERBOARD99", "4C4C4544-0042-3510-8054-B4C04F4E4B32" }));
+            Assert.Null(Parsers.PcId(new[] { "Default string", "0", "", null }));
+            Assert.DoesNotContain("BSN12345678", a);
+        }
+
+        [Theory]
+        [InlineData(@"USBSTOR\Disk&Ven_SanDisk&Prod_Cruzer_Blade&Rev_1.00\4C530001231122118365&0", "SanDisk Cruzer Blade")]
+        [InlineData(@"USBSTOR\Disk&Ven_&Prod_USB_DISK_3.0&Rev_PMAP\070B3A1&0", "USB DISK 3.0")]
+        [InlineData(@"USB\VID_046D&PID_C52B\5&2A5B9&0&2", null)]
+        [InlineData(@"HID\VID_046D&PID_C52B&MI_00\7&1", null)]
+        public void Names_usb_drives(string id, string expected)
+        {
+            Assert.Equal(expected, Parsers.UsbStorageName(id));
         }
     }
 }

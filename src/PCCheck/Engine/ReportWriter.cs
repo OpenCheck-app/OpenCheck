@@ -70,7 +70,7 @@ namespace PCCheck.Engine
             head.AppendLine("**OpenCheck: " + VerdictWord(r.Verdict) + "**");
             if (!string.IsNullOrEmpty(r.Who)) head.AppendLine("Checked: " + r.Who);
             head.AppendLine(r.Pc + " | " + Time(r.Finished) + " | " + r.Mode + " scan | admin: " + (r.Admin ? "yes" : "no"));
-            head.AppendLine("App v" + r.AppVersion + ", SHA-256 `" + Short(r.AppSha256) + "`");
+            head.AppendLine("App v" + r.AppVersion + ", SHA-256 `" + Short(r.AppSha256) + "`" + (r.PcId != null ? " | PC ID `" + r.PcId + "`" : ""));
             head.AppendLine();
 
             var lines = new List<string>();
@@ -122,6 +122,7 @@ namespace PCCheck.Engine
             sb.AppendLine(new string('=', 60));
             if (!string.IsNullOrEmpty(r.Who)) sb.AppendLine("Checked:     " + r.Who);
             sb.AppendLine("PC:          " + r.Pc);
+            if (r.PcId != null) sb.AppendLine("PC ID:       " + r.PcId + "   (same PC = same ID; it can't be turned back into serial numbers)");
             sb.AppendLine("Started:     " + Time(r.Started));
             sb.AppendLine("Finished:    " + Time(r.Finished) + " (" + (int)(r.Finished - r.Started).TotalSeconds + " s)");
             sb.AppendLine("Admin:       " + (r.Admin ? "Yes" : "No, partial check"));
@@ -185,6 +186,7 @@ namespace PCCheck.Engine
             sb.Append("<h1>").Append(h(VerdictWord(r.Verdict))).Append("</h1><dl>");
             if (!string.IsNullOrEmpty(r.Who)) sb.Append("<dt>Checked</dt><dd>").Append(h(r.Who)).Append("</dd>");
             sb.Append("<dt>PC</dt><dd>").Append(h(r.Pc)).Append("</dd>");
+            if (r.PcId != null) sb.Append("<dt>PC ID</dt><dd>").Append(h(r.PcId)).Append("</dd>");
             sb.Append("<dt>Finished</dt><dd>").Append(h(Time(r.Finished))).Append("</dd>");
             sb.Append("<dt>Admin</dt><dd>").Append(r.Admin ? "Yes" : "No, partial check").Append("</dd>");
             sb.Append("<dt>Scan</dt><dd>").Append(h(r.Mode)).Append("</dd>");
@@ -238,6 +240,7 @@ namespace PCCheck.Engine
                 { "verdict", r.Verdict },
                 { "who", r.Who },
                 { "pc", r.Pc },
+                { "pcId", r.PcId },
                 { "finished", r.Finished.ToString("o", CultureInfo.InvariantCulture) },
                 { "seconds", (int)Math.Round((r.Finished - r.Started).TotalSeconds) },
                 { "admin", r.Admin },

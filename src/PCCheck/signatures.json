@@ -8,7 +8,7 @@
     "severity: high = cheat, medium = suspicious tool, info = context only (never causes FLAGGED by itself).",
     "Generic tokens (like 'robloxexecutor') catch renamed or unknown tools. No list can catch every cheat, so the checker also looks at behavior: executor folders, deleted files, antivirus exclusions and firewall rules."
   ],
-  "version": "2026-11-02d",
+  "version": "2026-11-02e",
   "nameSuffixes": [
     "ui",
     "bootstrapper",
@@ -1120,6 +1120,33 @@
       "strict": false,
       "folders": [],
       "note": "A \"game VPN\" that reroutes game traffic. Legal and often used for better ping, but it can also hide or change a player's connection."
+    },
+    {
+      "name": "Sandbox or freeze tool",
+      "category": "Sandbox / freeze tool",
+      "severity": "medium",
+      "match": [
+        "sandboxie",
+        "sbiesvc",
+        "sbiectrl",
+        "sbiedrv",
+        "sandboxieplus",
+        "shadesandbox",
+        "bufferzone",
+        "timefreeze",
+        "toolwiztimefreeze",
+        "deepfreeze",
+        "dfserv",
+        "frzstate",
+        "shadowdefender",
+        "rollbackrx",
+        "rebootrestore",
+        "wondersharetimefreeze",
+        "returnil"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "Runs programs in an isolated box, or wipes every change when the PC restarts. Cheats run this way leave far fewer traces, so ask why it's installed."
     },
     {
       "name": "Trace cleaner",
