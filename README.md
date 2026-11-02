@@ -15,7 +15,8 @@ OpenCheck is an open-source, read-only Windows app that checks a PC for Roblox e
 - Windows Security (Defender) detections and antivirus exclusions.
 - Cleared event logs, logs that are suspiciously short, clock changes, and wiped Prefetch, Roblox logs or recent-file history.
 - When Windows was last reset or installed, and when the Windows account was created (a reset in the last week is flagged for review).
-- Windows Firewall rules that block Roblox (a common lag-switch trick).
+- Windows Firewall rules that block Roblox (a common lag-switch trick), and the firewall's own history of Roblox rules being added and removed, which is how lag-switch macros work.
+- Lag switches and VPNs: lag tools installed as drivers or services (WinDivert, NetLimiter and others), VPN and game ping-booster adapters (connected or just installed), and short internet drops that happened while a Roblox game was open. A physical switch on the cable or a macro that turns the network off shows up as these drops. Only adapter names and connect/disconnect times are read, and nothing is sent anywhere.
 - Roblox's own log files, to list recent games (place ID, join and leave times only) and show which game was open when a cheat ran. Nothing else from the logs is kept, and server addresses are ignored.
 - FastFlag files from Roblox and every bootstrapper (Bloxstrap, Fishstrap, Voidstrap, Froststrap and others), plus FastFlag list files in Desktop, Downloads and Documents. Bootstrappers are listed as context only and never count against anyone.
 - Macros and auto clickers (AutoHotkey, TinyTask, OP/GS Auto Clicker...) and lag-switch tools (Clumsy, NetLimiter, NetBalancer, WinDivert).

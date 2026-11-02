@@ -272,6 +272,9 @@ h2{font:600 13px/1.3 var(--ui);color:var(--muted);margin:0 0 4px}
 .sess .p{font:12.5px var(--mono);color:var(--ink)}
 .sess .p small{font:12px var(--ui);color:var(--faint);margin-left:8px}
 .sess .hit{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--flag-ink);background:var(--flag-soft);padding:2px 9px;border-radius:999px;white-space:nowrap}
+.cp{display:inline-grid;place-items:center;width:26px;height:26px;margin-left:6px;vertical-align:middle;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--muted);cursor:pointer;transition:color .2s,background-color .2s,border-color .2s}
+.cp:hover{color:var(--ink);background:var(--hover);border-color:var(--line-strong)}
+.cp.ok{color:var(--clean-ink);border-color:color-mix(in srgb,var(--clean) 45%,var(--line))}
 .sess .hit i{width:6px;height:6px;border-radius:50%;background:currentColor}
 .sess.cheat{background:color-mix(in srgb,var(--flag-soft) 45%,transparent)}
 .sess.in{animation:rise .5s var(--ease) both}
@@ -382,7 +385,7 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M10 3a7 7 0 107 7M10 6v4l3 2"/></svg><div><b>Program history</b><span>Windows' records of which programs ran and when.</span></div></li>
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M4 6h12M8 6V4h4v2m-6 0l1 10h6l1-10"/></svg><div><b>Deleted files</b><span>The drive's change log and Recycle Bin, cheat names only.</span></div></li>
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M4 4h12v12H4zM4 8h12M8 8v8"/></svg><div><b>Roblox settings and game history</b><span>FastFlags, plus which games were open and when, from Roblox's own logs. Only game IDs and times are kept.</span></div></li>
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M3 5h14v8H3zM7 17h6M10 13v4"/></svg><div><b>System checks</b><span>Cleared logs, PC resets, lag-switch firewall rules, VMs, emulators and DMA hardware.</span></div></li>
+            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M3 5h14v8H3zM7 17h6M10 13v4"/></svg><div><b>System and network checks</b><span>Cleared logs, PC resets, VMs, emulators, DMA hardware, VPN adapters, firewall history and when the internet dropped. Nothing is sent anywhere.</span></div></li>
           </ul>
         </div>
         <div>
@@ -605,6 +608,7 @@ const AREAS = [
   ["logs","Logs, resets and firewall","Cleared logs, PC resets, lag-switch rules"],
   ["fflags","Roblox FastFlags","Roblox, bootstrappers, FastFlag files"],
   ["games","Roblox game history","Which games were open, from Roblox's logs"],
+  ["network","Lag switches and VPNs","Adapters, firewall history, drops during games"],
   ["vm","Virtual machines and emulators","VMs and Android emulators"],
   ["dma","DMA hardware","PCIe devices"],
   ["running","Running programs","Open right now"]
@@ -760,6 +764,7 @@ const FILTERS = [
   ["cheats","Cheats", f => f.group === "cheat"],
   ["tamper","Tampering", f => f.group === "tamper"],
   ["fflags","FastFlags", f => f.group === "fflags"],
+  ["net","Lag and VPN", f => f.group === "net" || /lag switch/i.test(f.category || "")],
   ["hw","VM and DMA", f => f.group === "hw"],
   ["info","Context", f => f.severity === "info"]
 ];
@@ -790,7 +795,23 @@ function span(g){
   const day = a.toLocaleDateString(undefined,{month:"short",day:"numeric"});
   return day + " · " + hm(a) + (b ? "–" + hm(b) : "");
 }
-const ICONS = {pad: PAD, clock: CLOCK};
+const COPY = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M7 7V4h9v9h-3M4 7h9v9H4z"/></svg>';
+const TICK = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg>';
+const ICONS = {pad: PAD, clock: CLOCK, copy: COPY, tick: TICK};
+const copyButtons = new Map();
+function copyBtn(placeId){
+  const b = el("button","cp"); b.type = "button"; b.innerHTML = ICONS.copy;
+  b.setAttribute("aria-label", "Copy game link for place " + placeId); b.title = "Copy game link";
+  b.onclick = e => { e.stopPropagation(); copyButtons.set(placeId, b); send({type:"copyPlace", placeId: String(placeId)}); };
+  b.onkeydown = e => e.stopPropagation();
+  return b;
+}
+function onCopiedPlace(id){
+  toast("Copied the game link for place " + id + ". Paste it in your browser.");
+  const b = copyButtons.get(id); if (!b) return;
+  b.classList.add("ok"); b.innerHTML = ICONS.tick;
+  setTimeout(() => { b.classList.remove("ok"); b.innerHTML = ICONS.copy; }, 1600);
+}
 function tag(cls, iconName, text){ const t = el("span","tag" + (cls ? " " + cls : "")); if (iconName) t.innerHTML = ICONS[iconName]; t.append(text); return t; }
 function sessKey(g){ return g.placeId + "|" + g.start; }
 function fmtDate(iso){ if(!iso) return null; const d = new Date(iso); return isNaN(d) ? null : d; }
@@ -854,7 +875,7 @@ function renderLead(r){
   text.append(el("span","g", used.evidence === "Running right now" ? "running right now" : ago(d) + " (" + dhm(d) + ")"));
   if (g){
     text.append(g.how === "before" ? ". Roblox place " : ", while Roblox place ");
-    text.append(el("b","g", g.placeId));
+    text.append(el("b","g", g.placeId), copyBtn(g.placeId));
     text.append(g.how === "before" ? " was joined minutes later." : " was open.");
   } else text.append(".");
   box.append(icon, text); box.hidden = false;
@@ -871,7 +892,7 @@ function renderActivity(r){
   box.append(h);
   sessions.slice(0, 12).forEach((g, i) => {
     const row = el("div","sess" + (hits.has(sessKey(g)) ? " cheat" : "") + " in"); row.style.animationDelay = (0.7 + i * 0.03) + "s";
-    const p = el("div","p", "Place " + g.placeId); p.append(el("small", null, "roblox.com/games/" + g.placeId));
+    const p = el("div","p", "Place " + g.placeId); p.append(copyBtn(g.placeId), el("small", null, "roblox.com/games/" + g.placeId));
     row.append(el("div","t", span(g)), p);
     if (hits.has(sessKey(g))){ const x = el("span","hit"); x.append(el("i"), [...hits.get(sessKey(g))].join(", ") + " ran"); row.append(x); }
     else row.append(el("span"));
@@ -947,7 +968,7 @@ function renderList(animate, baseDelay){
       dl.append(el("dt",null,"Roblox open"));
       const dd = el("dd");
       for (const g of games){
-        const line = el("span","gl"); line.append("Place " + g.placeId + ", " + span(g) + " ");
+        const line = el("span","gl"); line.append("Place " + g.placeId); line.append(copyBtn(g.placeId), " " + span(g) + " ");
         line.append(el("small", null, (g.how === "before" ? "joined right after it ran · " : "") + "roblox.com/games/" + g.placeId));
         dd.append(line);
       }
@@ -992,6 +1013,7 @@ function onMessage(m){
     case "done": onDone(m.report); break;
     case "copyPreview": $("preview").textContent = m.text; openModal("sendModal","confirmSend"); break;
     case "copied": closeModals(); toast("Copied. Paste it in Discord."); break;
+    case "copiedPlace": onCopiedPlace(m.placeId); break;
     case "saved": toast("Saved to your Desktop: " + m.path); break;
     case "error": toast(m.message || "Something went wrong"); break;
   }
@@ -1007,12 +1029,13 @@ const Demo = {
     if (msg.type === "start") this.run();
     if (msg.type === "previewCopy") onMessage({type:"copyPreview", text: "**OpenCheck: FLAGGED**\nChecked: builderman\nWindows 11 Home 24H2 | 2026-10-27 22:17 | Standard scan | admin: yes\n\nHIGH **Solara** (Internal executor) Found on this PC\n`C:\\ProgramData\\Solara\\Solara.exe`\nMED **Potassium** (Internal executor) Ran on this PC, 7 runs\n`C:\\Program Files\\Epic Games\\OpXOyuApWKTlFzrV\\Potassium.exe`\n..."});
     if (msg.type === "copy") onMessage({type:"copied"});
+    if (msg.type === "copyPlace") onMessage({type:"copiedPlace", placeId: msg.placeId});
     if (msg.type === "save") onMessage({type:"saved", path:"OpenCheck - builderman - 2026-10-27.txt"});
   },
   run(){
     const plan = [
       ["files","hit","3 matches in 41,208 names"],["exec","hit","3 programs, 9 runs"],["deleted","hit","1 cheat deleted"],
-      ["defender","ok","No related threats"],["logs","warn","Security log cleared"],["fflags","warn","2 unfair flags"],["games","hit","6 game sessions, last 5 days"],
+      ["defender","ok","No related threats"],["logs","warn","Security log cleared"],["fflags","warn","2 unfair flags"],["games","hit","6 game sessions, last 5 days"],["network","warn","VPN connected, drops during games"],
       ["vm","ok","Real PC"],["dma","ok","24 devices, none suspicious"],["running","ok","Nothing running"]
     ];
     let i = 0;
@@ -1040,6 +1063,8 @@ const Demo = {
         {name:"DFIntS2PhysicsSenderRate", category:"FastFlag", group:"fflags", severity:"medium", evidence:"Unfair FastFlag", time:t(26), path:"~\\AppData\\Local\\Bloxstrap\\Modifications\\ClientSettings\\ClientAppSettings.json", sources:["Bloxstrap"], note:"Set to 1. Used for desync. Roblox may ignore it under its FastFlag allowlist."},
         {name:"DFIntMaxMissedWorldStepsRemembered", category:"FastFlag", group:"fflags", severity:"medium", evidence:"Unfair FastFlag", time:t(26), path:"~\\AppData\\Local\\Bloxstrap\\Modifications\\ClientSettings\\ClientAppSettings.json", sources:["Bloxstrap"]},
         {name:"Volcano", category:"Internal executor", group:"cheat", cheat:true, severity:"medium", evidence:"Ran on this PC", time:t(98), path:"~\\Downloads\\DownloadR2\\VolcanoUI.exe", sources:["UserAssist","Compatibility cache (ShimCache)"], runCount:2, games:[{placeId:"4924922222", start:t(97.8), end:t(96.5), how:"before"}]},
+        {name:"VPN connected right now", category:"VPN", group:"net", severity:"medium", evidence:"VPN", time:t(0.01), path:"NordLynx Tunnel (NordLynx)", sources:["Network adapters"], note:"A VPN or game ping booster was connected while the check ran. VPNs are legal, but they change the player's connection and can be used to dodge IP bans."},
+        {name:"Internet cut out 5 times during Roblox games", category:"Lag switch", group:"net", severity:"medium", evidence:"Possible lag switch", time:t(3.2), path:"place 920587237, place 2753915549", sources:["Network history + Roblox logs"], note:"The connection dropped and came back within a few minutes 5 times while Roblox games were open. Lag switches look like this. Weak Wi-Fi can too, so ask about it and compare with VODs."},
         {name:"Last Roblox game", category:"Roblox", group:"context", severity:"info", evidence:"Context", time:t(1.2), path:"Place 6516141723 (roblox.com/games/6516141723)", sources:["Roblox logs"], note:"14 game sessions found in the last 5 days."},
         {name:"Bloxstrap / Fishstrap", category:"Roblox launcher (allowed)", group:"context", severity:"info", evidence:"Context", time:t(120), path:"~\\AppData\\Local\\Bloxstrap\\Bloxstrap.exe", sources:["File"]}
       ],

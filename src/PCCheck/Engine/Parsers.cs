@@ -273,6 +273,42 @@ namespace PCCheck.Engine
             return result;
         }
 
+        /// <summary>The VPN word a network adapter's name or description contains, or null. "VPN" alone must be a whole word.</summary>
+        public static string VpnAdapterMatch(string name, string description, IEnumerable<string> words)
+        {
+            string text = ((name ?? "") + " | " + (description ?? ""));
+            foreach (var w in words)
+            {
+                if (string.IsNullOrEmpty(w)) continue;
+                if (w == "VPN")
+                {
+                    if (Regex.IsMatch(text, @"\bVPN\b", RegexOptions.IgnoreCase)) return w;
+                }
+                else if (text.IndexOf(w, StringComparison.OrdinalIgnoreCase) >= 0) return w;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Network drops (disconnect, then reconnect within maxGap) that happened while a Roblox game was open.
+        /// Lag switches, hardware switches and "disable adapter" macros all show up as short drops like these.
+        /// </summary>
+        public static List<Tuple<DateTime, RobloxSession>> DropsDuringGames(IList<Tuple<DateTime, bool>> events, IList<RobloxSession> sessions, TimeSpan maxGap)
+        {
+            var result = new List<Tuple<DateTime, RobloxSession>>();
+            var ordered = events.OrderBy(e => e.Item1).ToList();
+            for (int i = 0; i < ordered.Count; i++)
+            {
+                if (ordered[i].Item2) continue;                       // looking for a disconnect (false = disconnected)
+                var down = ordered[i].Item1;
+                var up = ordered.Skip(i + 1).FirstOrDefault(e => e.Item2);
+                if (up == null || up.Item1 - down > maxGap) continue; // long outages are normal internet problems
+                var s = sessions.FirstOrDefault(x => down >= x.Start && down <= (x.End ?? x.Start));
+                if (s != null) result.Add(Tuple.Create(down, s));
+            }
+            return result;
+        }
+
         public static List<UsnRecord> ParseUsnBuffer(byte[] buffer, int length)
         {
             var list = new List<UsnRecord>();

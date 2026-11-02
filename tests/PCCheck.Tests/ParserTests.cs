@@ -416,6 +416,14 @@ namespace PCCheck.Tests
         [InlineData("Faded Yart.lua", "Exploit script")]
         [InlineData("divine.land loader.exe", "Cheat store loader")]
         [InlineData("Predator CS2.exe", "Predator")]
+        [InlineData("NordVPN.exe", "VPN app")]
+        [InlineData("ProtonVPN.Client.exe", "VPN app")]
+        [InlineData("warp-svc.exe", "VPN app")]
+        [InlineData("ExitLag.exe", "Game ping booster")]
+        [InlineData("WTFast.exe", "Game ping booster")]
+        [InlineData("NetCut.exe", "Network cutting tool")]
+        [InlineData("lag switch.ahk", "Lag switch tool")]
+        [InlineData("LagMacro.ahk", "Lag switch tool")]
         [InlineData("Matcha External.exe", "Matcha")]
         public void Detects_new_categories(string file, string expected)
         {
@@ -447,6 +455,9 @@ namespace PCCheck.Tests
         [InlineData("PredatorSense.exe")]
         [InlineData("TekkitLauncher.exe")]
         [InlineData("Ignite.exe")]
+        [InlineData("svchost.exe")]
+        [InlineData("RasMan.dll")]
+        [InlineData("chrome.exe")]
         [InlineData("Matrices.dll")]
         public void New_rules_do_not_flag_normal_apps(string file)
         {
@@ -598,6 +609,49 @@ namespace PCCheck.Tests
             var missing = Parsers.UncoveredStarts(starts, spans, now.AddDays(-3), now.AddMinutes(-10));
             Assert.Equal(2, missing.Count);                       // -30h and -20h have no log; -5h is covered; -9 days is too old
             Assert.DoesNotContain(now.AddHours(-5), missing);
+        }
+    }
+
+    public class NetworkTests
+    {
+        static readonly string[] Words = { "WireGuard", "NordLynx", "TAP-Windows", "ExitLag", "VPN" };
+
+        [Theory]
+        [InlineData("NordLynx", "NordLynx Tunnel", "NordLynx")]
+        [InlineData("Ethernet 3", "TAP-Windows Adapter V9", "TAP-Windows")]
+        [InlineData("vpn0", "Some Corp VPN Adapter", "VPN")]
+        [InlineData("ExitLag", "ExitLag Tap Adapter", "ExitLag")]
+        public void Finds_vpn_adapters(string name, string description, string expected)
+        {
+            Assert.Equal(expected, Parsers.VpnAdapterMatch(name, description, Words));
+        }
+
+        [Theory]
+        [InlineData("Ethernet", "Realtek PCIe GbE Family Controller")]
+        [InlineData("Wi-Fi", "Intel(R) Wi-Fi 6 AX201 160MHz")]
+        [InlineData("Local Area Connection* 1", "WAN Miniport (IKEv2)")]
+        [InlineData("vEthernet (WSL)", "Hyper-V Virtual Ethernet Adapter")]
+        [InlineData("Ethernet 2", "Advpnet Controller")]
+        public void Normal_adapters_are_not_vpns(string name, string description)
+        {
+            Assert.Null(Parsers.VpnAdapterMatch(name, description, Words));
+        }
+
+        [Fact]
+        public void Counts_short_drops_only_during_games()
+        {
+            var t0 = new DateTime(2026, 11, 1, 20, 0, 0);
+            var sessions = new List<RobloxSession> { new RobloxSession { PlaceId = 84448037861644, Start = t0, End = t0.AddHours(1) } };
+            var ev = new List<Tuple<DateTime, bool>>
+            {
+                Tuple.Create(t0.AddMinutes(10), false), Tuple.Create(t0.AddMinutes(10).AddSeconds(20), true),   // short drop in game
+                Tuple.Create(t0.AddMinutes(30), false), Tuple.Create(t0.AddMinutes(30).AddSeconds(5), true),    // short drop in game
+                Tuple.Create(t0.AddMinutes(50), false), Tuple.Create(t0.AddMinutes(58), true),                  // 8-minute outage: ignored
+                Tuple.Create(t0.AddHours(3), false), Tuple.Create(t0.AddHours(3).AddSeconds(10), true),         // not during a game
+            };
+            var drops = Parsers.DropsDuringGames(ev, sessions, TimeSpan.FromMinutes(3));
+            Assert.Equal(2, drops.Count);
+            Assert.All(drops, d => Assert.Equal(84448037861644L, d.Item2.PlaceId));
         }
     }
 }

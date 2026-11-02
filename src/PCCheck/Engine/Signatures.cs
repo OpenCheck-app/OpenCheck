@@ -29,6 +29,8 @@ namespace PCCheck.Engine
         public List<string[]> FolderLayouts = new List<string[]>();
         public List<string> FlagWords = new List<string>();
         public List<string> LooseFlagFileWords = new List<string>();
+        /// <summary>Words in a network adapter's name that mean it belongs to a VPN or game ping booster.</summary>
+        public List<string> VpnAdapters = new List<string>();
         public Dictionary<string, string> DmaVendors = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> VmMacPrefixes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> KnownBadSha256 = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -88,6 +90,8 @@ namespace PCCheck.Engine
 
             foreach (var w in Json.Array(Json.Get(Json.Object(Json.Get(root, "looseFastFlagFiles")), "nameWords")))
                 set.LooseFlagFileWords.Add(Clean(Convert.ToString(w)));
+
+            foreach (var w in Json.Array(Json.Get(root, "vpnAdapters"))) set.VpnAdapters.Add(Convert.ToString(w));
 
             var dma = Json.Object(Json.Get(root, "dma"));
             foreach (var kv in Json.Object(Json.Get(dma, "suspiciousVendorIds"))) set.DmaVendors[kv.Key] = Convert.ToString(kv.Value);
