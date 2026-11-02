@@ -20,6 +20,7 @@ namespace PCCheck.Engine
         public const string Tamper = "Possible tampering";
         public const string FastFlag = "Unfair FastFlag";
         public const string LagSwitch = "Possible lag switch";
+        public const string Vpn = "VPN";
         public const string Reset = "PC reset";
         public const string Context = "Context";
     }
@@ -31,6 +32,7 @@ namespace PCCheck.Engine
         public const string FastFlags = "fflags";
         public const string Hardware = "hw";
         public const string Context = "context";
+        public const string Network = "net";
     }
 
     public sealed class Finding

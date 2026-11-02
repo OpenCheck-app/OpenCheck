@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
@@ -139,6 +140,19 @@ namespace PCCheck
                         Post(new Dictionary<string, object> { { "type", "copied" } });
                     }
                     catch (Exception ex) { PostError("Couldn't copy: " + ex.Message); }
+                    break;
+                case "copyPlace":
+                    {
+                        // Only a Roblox place ID (digits) is accepted; the app turns it into the game's link.
+                        string id = Json.Str(msg, "placeId") ?? "";
+                        if (id.Length == 0 || id.Length > 20 || !id.All(char.IsDigit)) return;
+                        try
+                        {
+                            Clipboard.SetText("https://www.roblox.com/games/" + id);
+                            Post(new Dictionary<string, object> { { "type", "copiedPlace" }, { "placeId", id } });
+                        }
+                        catch (Exception ex) { PostError("Couldn't copy: " + ex.Message); }
+                    }
                     break;
                 case "close":
                     Close();
