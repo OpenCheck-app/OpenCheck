@@ -408,7 +408,7 @@ namespace PCCheck.Engine
         }
 
         static readonly HashSet<string> JunkSerials = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        { "", "0", "none", "default string", "to be filled by o.e.m.", "system serial number", "not specified", "not applicable", "n/a", "123456789", "0123456789", "base board serial number", "chassis serial number" };
+        { "", "0", "none", "default string", "to be filled by o.e.m", "system serial number", "not specified", "not applicable", "n/a", "123456789", "0123456789", "base board serial number", "chassis serial number" };
 
         /// <summary>True when a hardware serial is a real value, not a placeholder.</summary>
         public static bool IsRealSerial(string serial)
