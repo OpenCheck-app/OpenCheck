@@ -264,7 +264,7 @@ h2{font:600 13px/1.3 var(--ui);color:var(--muted);margin:0 0 4px}
 .find dd .gl{display:block}
 .find dd .gl + .gl{margin-top:3px}
 .find dd small{color:var(--faint)}
-.acts{margin-bottom:28px}
+.acts{margin-bottom:20px}
 .acts h3{display:flex;align-items:baseline;gap:10px;margin:0;padding:14px 20px 10px;font-size:13.5px;font-weight:600}
 .acts h3 span{color:var(--faint);font-weight:500;font-size:12px}
 .sess{display:grid;grid-template-columns:200px 1fr auto;gap:12px;align-items:center;padding:10px 20px;border-top:1px solid var(--line);font-size:13px}
@@ -381,7 +381,7 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
         <div>
           <h2>What it reads</h2>
           <ul class="rows reads">
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="currentColor" d="M3 5a2 2 0 012-2h3.6l1.6 2H15a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><div><b>File and folder names</b><span>Compared to the cheat list. File contents are never opened.</span></div></li>
+            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="currentColor" d="M3 5a2 2 0 012-2h3.6l1.6 2H15a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><div><b>File and folder names</b><span>Compared to the cheat list. Other files are never opened, except Roblox script files, which are checked for executor-only functions.</span></div></li>
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M10 3a7 7 0 107 7M10 6v4l3 2"/></svg><div><b>Program history</b><span>Windows' records of which programs ran and when.</span></div></li>
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M4 6h12M8 6V4h4v2m-6 0l1 10h6l1-10"/></svg><div><b>Deleted files</b><span>The drive's change log and Recycle Bin, cheat names only.</span></div></li>
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M4 4h12v12H4zM4 8h12M8 8v8"/></svg><div><b>Roblox settings and game history</b><span>FastFlags, plus which games were open and when, from Roblox's own logs. Only game IDs and times are kept.</span></div></li>
@@ -439,11 +439,11 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
       </div>
       <div class="lead in d2" id="lead" hidden></div>
       <div class="panel summary in d2" id="summary"></div>
+      <div class="panel acts in d2" id="acts" hidden></div>
       <div class="in d3">
         <div class="seg" id="filters" role="tablist"><span class="ind" id="segInd"></span></div>
         <div class="panel list" id="list"></div>
       </div>
-      <div class="panel acts in d3" id="acts" hidden></div>
     </div></div>
     <div class="bar"><div class="col">
       <button class="btn" id="saveBtn"><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m-4-4l4 4 4-4M4 15h12"/></svg>Save report</button>
@@ -886,12 +886,12 @@ function renderActivity(r){
   if (!sessions.length) return;
   const hits = new Map();
   for (const f of r.findings.filter(f => f.group === "cheat")) for (const g of (f.games || [])) {
-    const k = sessKey(g); if (!hits.has(k)) hits.set(k, new Set()); hits.get(k).add(f.name);
+    const k = sessKey(g); if (!hits.has(k)) hits.set(k, new Set()); hits.get(k).add(f.category === "Unknown program" ? "Deleted program" : f.name);
   }
   const h = el("h3", null, "Roblox activity"); h.append(el("span", null, "From Roblox's own logs: game IDs and times only"));
   box.append(h);
   sessions.slice(0, 12).forEach((g, i) => {
-    const row = el("div","sess" + (hits.has(sessKey(g)) ? " cheat" : "") + " in"); row.style.animationDelay = (0.7 + i * 0.03) + "s";
+    const row = el("div","sess" + (hits.has(sessKey(g)) ? " cheat" : "") + " in"); row.style.animationDelay = (0.45 + i * 0.03) + "s";
     const p = el("div","p", "Place " + g.placeId); p.append(copyBtn(g.placeId), el("small", null, "roblox.com/games/" + g.placeId));
     row.append(el("div","t", span(g)), p);
     if (hits.has(sessKey(g))){ const x = el("span","hit"); x.append(el("i"), [...hits.get(sessKey(g))].join(", ") + " ran"); row.append(x); }
@@ -1063,6 +1063,8 @@ const Demo = {
         {name:"DFIntS2PhysicsSenderRate", category:"FastFlag", group:"fflags", severity:"medium", evidence:"Unfair FastFlag", time:t(26), path:"~\\AppData\\Local\\Bloxstrap\\Modifications\\ClientSettings\\ClientAppSettings.json", sources:["Bloxstrap"], note:"Set to 1. Used for desync. Roblox may ignore it under its FastFlag allowlist."},
         {name:"DFIntMaxMissedWorldStepsRemembered", category:"FastFlag", group:"fflags", severity:"medium", evidence:"Unfair FastFlag", time:t(26), path:"~\\AppData\\Local\\Bloxstrap\\Modifications\\ClientSettings\\ClientAppSettings.json", sources:["Bloxstrap"]},
         {name:"Volcano", category:"Internal executor", group:"cheat", cheat:true, severity:"medium", evidence:"Ran on this PC", time:t(98), path:"~\\Downloads\\DownloadR2\\VolcanoUI.exe", sources:["UserAssist","Compatibility cache (ShimCache)"], runCount:2, games:[{placeId:"4924922222", start:t(97.8), end:t(96.5), how:"before"}]},
+        {name:"Exploit script", category:"Exploit script (by content)", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(3.3), path:"~\\Documents\\stuff\\farm.lua", sources:["Script contents"], note:"Uses executor-only functions: getgenv, Drawing.new, loadstring(game:HttpGet. Roblox games can't run these, so this script was made for an executor."},
+        {name:"Deleted program ran during a Roblox game", category:"Unknown program", group:"cheat", severity:"medium", evidence:"Deleted", time:t(3.15), path:"C:\\Users\\~\\Downloads\\x7f2k.exe", sources:["BAM + Roblox logs"], runTimes:[t(3.15)], games:[{placeId:"920587237", start:t(3.4), end:t(2.95), how:"during"}], note:"This program was run from a personal folder while Roblox place 920587237 was open, and it has been deleted since. Renamed cheat loaders are used exactly like this. It could also be something harmless, so ask what it was."},
         {name:"VPN connected right now", category:"VPN", group:"net", severity:"medium", evidence:"VPN", time:t(0.01), path:"NordLynx Tunnel (NordLynx)", sources:["Network adapters"], note:"A VPN or game ping booster was connected while the check ran. VPNs are legal, but they change the player's connection and can be used to dodge IP bans."},
         {name:"Internet cut out 5 times during Roblox games", category:"Lag switch", group:"net", severity:"medium", evidence:"Possible lag switch", time:t(3.2), path:"place 920587237, place 2753915549", sources:["Network history + Roblox logs"], note:"The connection dropped and came back within a few minutes 5 times while Roblox games were open. Lag switches look like this. Weak Wi-Fi can too, so ask about it and compare with VODs."},
         {name:"Last Roblox game", category:"Roblox", group:"context", severity:"info", evidence:"Context", time:t(1.2), path:"Place 6516141723 (roblox.com/games/6516141723)", sources:["Roblox logs"], note:"14 game sessions found in the last 5 days."},

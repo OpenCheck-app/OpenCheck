@@ -9,7 +9,7 @@ OpenCheck is an open-source, read-only Windows app that checks a PC for Roblox e
 ## For the person being checked
 
 **What it looks at**
-- File and folder **names** in your user folders, ProgramData and Program Files. File contents are never opened, with three exceptions: a file that already matched the cheat list gets a fingerprint (SHA-256), Roblox FastFlag files are read for flags, and Roblox's own logs are read for game join times.
+- File and folder **names** in your user folders, ProgramData and Program Files. File contents are never opened, with four exceptions: a file that already matched the cheat list gets a fingerprint (SHA-256), Roblox FastFlag files are read for flags, Roblox's own logs are read for game join times, and Roblox script files (.lua/.luau, and .txt inside an executor's folders) are read for executor-only functions like getgenv or hookfunction. Only the names of those functions are reported, never the script.
 - Windows' records of programs that ran or were on the PC: Prefetch, BAM, UserAssist, MuiCache, Compatibility Assistant, the compatibility cache (ShimCache, which keeps program paths for months, even after they're deleted) and Recent files.
 - Deleted files: the Recycle Bin and the drive's change log (NTFS USN journal), read newest first so recent deletions are always covered, filtered to cheat names only.
 - Windows Security (Defender) detections and antivirus exclusions.
@@ -22,6 +22,13 @@ OpenCheck is an open-source, read-only Windows app that checks a PC for Roblox e
 - Macros and auto clickers (AutoHotkey, TinyTask, OP/GS Auto Clicker...) and lag-switch tools (Clumsy, NetLimiter, NetBalancer, WinDivert).
 - Whether the PC is a virtual machine, whether VM software or Android emulators are installed or were used, and PCIe devices that could be DMA cards.
 - Programs running right now.
+- Renamed or unknown cheats, without relying on names:
+  - any `autoexec` folder (executors run scripts from it)
+  - Roblox scripts that use executor-only functions
+  - programs run from Downloads, Desktop, Documents or Temp while a Roblox game was open that have been deleted since
+  - where downloaded programs and archives in Downloads and Desktop came from (Windows notes the website on every download). Only known cheat sites and ad-link "key system" sites are reported; other websites are never written down.
+  - kicks in Roblox's logs: Roblox's own anti-cheat (error 268) and games kicking the player for exploiting
+  - Windows Security being turned off or given exclusions in the last 30 days, even if it was turned back on
 
 **What it never does**
 - Never deletes, moves or changes anything.

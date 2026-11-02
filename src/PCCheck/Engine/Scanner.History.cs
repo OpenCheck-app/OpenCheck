@@ -133,6 +133,9 @@ namespace PCCheck.Engine
             }
         }
 
+        /// <summary>Every program BAM remembers (full path, last run). Only used to line up with Roblox games; never listed unless it matches a rule.</summary>
+        readonly List<Tuple<string, DateTime>> bamRuns = new List<Tuple<string, DateTime>>();
+
         void ScanBam()
         {
             var deviceMap = Native.DeviceToDriveMap();
@@ -151,10 +154,12 @@ namespace PCCheck.Engine
                                 foreach (var valueName in sk.GetValueNames())
                                 {
                                     var sig = matcher.MatchName(valueName);
-                                    if (sig == null) continue;
                                     var data = sk.GetValue(valueName) as byte[];
                                     DateTime? t = data != null && data.Length >= 8 ? Parsers.FromFileTime(BitConverter.ToInt64(data, 0)) : null;
-                                    Add(FromSignature(sig, Evidence.Ran, Parsers.ConvertDevicePath(valueName, deviceMap), t, "BAM"));
+                                    string path = Parsers.ConvertDevicePath(valueName, deviceMap);
+                                    if (t.HasValue && path != null && path.IndexOf('\\') >= 0) bamRuns.Add(Tuple.Create(path, t.Value));
+                                    if (sig == null) continue;
+                                    Add(FromSignature(sig, Evidence.Ran, path, t, "BAM"));
                                 }
                             }
                         }

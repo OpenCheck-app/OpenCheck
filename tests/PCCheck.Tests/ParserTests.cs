@@ -654,4 +654,90 @@ namespace PCCheck.Tests
             Assert.All(drops, d => Assert.Equal(84448037861644L, d.Item2.PlaceId));
         }
     }
+
+    public class ScriptTests
+    {
+        static readonly string[] Strong = { "identifyexecutor(", "hookfunction(", "fireclickdetector(" };
+        static readonly string[] Weak = { "getgenv(", "Drawing.new(", "loadstring(game:HttpGet", "setreadonly(" };
+
+        [Fact]
+        public void Finds_exploit_scripts()
+        {
+            string hub = "getgenv().Aimbot = true\nlocal esp = Drawing.new(\"Square\")\nloadstring(game:HttpGet(\"https://example.invalid/hub.lua\"))()";
+            Assert.True(Parsers.ExploitMarkers(hub, Weak).Count >= 2);
+            Assert.Equal("https://example.invalid/hub.lua", Parsers.LoadstringSource(hub));
+            Assert.Single(Parsers.ExploitMarkers("print(identifyexecutor())", Strong));
+        }
+
+        [Fact]
+        public void Normal_lua_is_not_flagged()
+        {
+            string roblox = "local Players = game:GetService(\"Players\")\nPlayers.PlayerAdded:Connect(function(p) print(p.Name) end)";
+            string neovim = "local lines = vim.fn.readfile(path)\nvim.fn.writefile(lines, path)\nvim.keymap.set('n', '<leader>w', ':w<CR>')";
+            string wow = "hooksecurefunc(\"ChatFrame_OnEvent\", function() end)";
+            foreach (var text in new[] { roblox, neovim, wow })
+            {
+                Assert.Empty(Parsers.ExploitMarkers(text, Strong));
+                Assert.True(Parsers.ExploitMarkers(text, Weak).Count < 2);
+            }
+            Assert.Null(Parsers.LoadstringSource(roblox));
+        }
+
+        [Theory]
+        [InlineData(@"C:\Users\a\Downloads\x7f2k.exe", true)]
+        [InlineData(@"C:\Users\a\Desktop\New folder\loader.exe", true)]
+        [InlineData(@"C:\Users\a\AppData\Local\Temp\abc\run.exe", true)]
+        [InlineData(@"C:\Users\a\Downloads\DiscordSetup.exe", false)]
+        [InlineData(@"C:\Users\a\Downloads\RobloxPlayerInstaller.exe", false)]
+        [InlineData(@"C:\Program Files\Roblox\RobloxPlayerBeta.exe", false)]
+        [InlineData(@"C:\Users\a\Downloads\notes.txt", false)]
+        public void Loose_programs(string path, bool expected)
+        {
+            Assert.Equal(expected, Parsers.IsLooseUserProgram(path));
+        }
+    }
+
+    public class BehaviorTests
+    {
+        [Fact]
+        public void Reads_download_source()
+        {
+            string zone = "[ZoneTransfer]\r\nZoneId=3\r\nReferrerUrl=https://work.ink/abc\r\nHostUrl=https://cdn.wearedevs.net/files/thing.zip\r\n";
+            var hosts = Parsers.ZoneHosts(zone);
+            Assert.Contains("cdn.wearedevs.net", hosts);
+            Assert.Contains("work.ink", hosts);
+            Assert.Equal("wearedevs.net", Parsers.MatchDomain("cdn.wearedevs.net", new[] { "wearedevs.net" }));
+            Assert.Null(Parsers.MatchDomain("notwearedevs.net", new[] { "wearedevs.net" }));
+            Assert.Null(Parsers.MatchDomain("github.com", new[] { "wearedevs.net", "work.ink" }));
+            Assert.Empty(Parsers.ZoneHosts(null));
+            Assert.Empty(Parsers.ZoneHosts("[ZoneTransfer]\r\nZoneId=3\r\n"));
+        }
+
+        [Fact]
+        public void Reads_kicks_from_roblox_logs()
+        {
+            Assert.Equal("268", Parsers.KickFromLogLine("2026-11-01T20:10:00.000Z,1,a,6 [FLog::Output] Disconnection Notification. Reason: You have been kicked due to unexpected client behavior. (Error Code: 268)"));
+            Assert.Equal("Exploiting detected", Parsers.KickFromLogLine("2026-11-01T20:10:00.000Z,1,a,6 [FLog::Output] You were kicked from this experience: Exploiting detected (Error Code: 267)"));
+            Assert.Null(Parsers.KickFromLogLine("2026-11-01T20:10:00.000Z,1,a,6 [FLog::Output] Settings loaded"));
+            Assert.True(Parsers.KickMentionsCheating("Exploiting detected"));
+            Assert.False(Parsers.KickMentionsCheating("Server is restarting for an update"));
+            Assert.False(Parsers.KickMentionsCheating("The butterfly event has ended"));
+            Assert.True(Parsers.KickMentionsCheating("Anti-Cheat: fly hacking"));
+            Assert.False(Parsers.KickMentionsCheating("268"));
+        }
+
+        [Fact]
+        public void Kick_is_attached_to_its_game()
+        {
+            var log = new[]
+            {
+                "2026-11-01T20:00:00.000Z,1,a,6 [FLog::Output] ! Joining game 'aa11bb22-cc33-dd44-ee55-ff6677889900' place 84448037861644 at 1.1.1.1",
+                "2026-11-01T20:10:00.000Z,1,a,6 [FLog::Output] Disconnection Notification. Reason: You have been kicked due to unexpected client behavior. (Error Code: 268)",
+            };
+            var list = Parsers.ParseRobloxLog(log, null);
+            Assert.Single(list);
+            Assert.Equal("268", list[0].KickReason);
+            Assert.True(list[0].KickTime.HasValue);
+        }
+    }
 }

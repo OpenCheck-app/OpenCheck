@@ -64,6 +64,7 @@ namespace PCCheck.Engine
 
             sessions.Sort((a, b) => b.Start.CompareTo(a.Start));
             CheckMissingRobloxLogs(files);
+            ReportKicks();
             if (files.Count > 0 && recent.Count == 0)
                 notes.Add("Roblox is installed but has no logs from the last 60 days.");
 
@@ -119,6 +120,59 @@ namespace PCCheck.Engine
                     @"~\AppData\Local\Roblox\logs", "Prefetch + Roblox logs",
                     "Roblox started " + missing.Count + (missing.Count == 1 ? " time" : " times") + " in the last 3 days with no Roblox log left for " +
                     (missing.Count == 1 ? "it" : "those starts") + " (latest " + missing.Max().ToString("g") + "). Roblox writes a log every time it opens, so these were most likely deleted to hide which games were played."));
+            }
+        }
+
+        /// <summary>
+        /// A program run from Downloads, Desktop, Documents or Temp while a Roblox game was open, and deleted since.
+        /// This catches renamed or brand-new loaders that no name list knows about.
+        /// </summary>
+        void CheckDeletedRunsDuringGames()
+        {
+            if (sessions.Count == 0 || bamRuns.Count == 0) return;
+            var slack = TimeSpan.FromMinutes(5);
+            int added = 0;
+            foreach (var run in bamRuns.OrderByDescending(r => r.Item2))
+            {
+                if (added >= 10) break;
+                if (!Parsers.IsLooseUserProgram(run.Item1)) continue;
+                if (matcher.MatchName(run.Item1) != null) continue;   // already reported by name
+                bool exists = true;
+                try { exists = File.Exists(run.Item1); } catch { }
+                if (exists) continue;
+                var game = sessions.FirstOrDefault(s => run.Item2 >= s.Start - slack && run.Item2 <= (s.End ?? s.Start) + slack);
+                if (game == null) continue;
+                var f = Simple("Deleted program ran during a Roblox game", "Unknown program", Severity.Medium, Evidence.Deleted, Groups.Cheat, run.Item2, run.Item1, "BAM + Roblox logs",
+                    "This program was run from a personal folder while Roblox place " + game.PlaceId + " was open, and it has been deleted since. Renamed cheat loaders are used exactly like this. It could also be something harmless, so ask what it was.");
+                f.RunTimes.Add(run.Item2);
+                f.Games.Add(new GameLink { Session = game, How = "during" });
+                Add(f);
+                added++;
+            }
+        }
+
+        /// <summary>Kicks recorded in Roblox's logs: Roblox's own anti-cheat (error 268), and games kicking the player for cheating.</summary>
+        void ReportKicks()
+        {
+            var roblox = sessions.Where(x => x.KickReason == "268").ToList();
+            if (roblox.Count > 0)
+            {
+                var last = roblox.OrderByDescending(x => x.KickTime ?? x.Start).First();
+                var f = Simple("Kicked by Roblox's anti-cheat", "Roblox anti-cheat", Severity.Medium, Evidence.Tamper, Groups.Cheat, last.KickTime ?? last.Start,
+                    "Error 268 in place " + last.PlaceId + (roblox.Count > 1 ? " (" + roblox.Count + " times)" : ""), "Roblox logs",
+                    "Roblox kicked this account for \"unexpected client behavior\" (error 268). Roblox's anti-cheat shows this when it detects an executor or a modified client.");
+                f.Games.Add(new GameLink { Session = last, How = "during" });
+                Add(f);
+            }
+            foreach (var s in sessions.Where(x => x.KickReason != null && x.KickReason != "268").Take(10))
+            {
+                bool cheating = Parsers.KickMentionsCheating(s.KickReason);
+                var f = Simple(cheating ? "Kicked by a game's anti-cheat" : "Kicked from a game", "Game kick", cheating ? Severity.Medium : Severity.Info,
+                    cheating ? Evidence.Tamper : Evidence.Context, cheating ? Groups.Cheat : Groups.Context, s.KickTime ?? s.Start,
+                    "Place " + s.PlaceId + ": \"" + s.KickReason + "\"", "Roblox logs",
+                    cheating ? "The game kicked this player with a message about cheating or exploiting." : "The game kicked this player. Listed for context.");
+                f.Games.Add(new GameLink { Session = s, How = "during" });
+                Add(f);
             }
         }
 
