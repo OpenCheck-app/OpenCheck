@@ -76,7 +76,8 @@ namespace PCCheck.Engine
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(3),
                 AppSha256 = SafeHash(Assembly.GetExecutingAssembly().Location),
                 Pc = WindowsName(),
-                Mode = options.Summary
+                Mode = options.Summary,
+                PcId = ComputePcId()
             };
 
             if (options.LowCpu)
@@ -96,6 +97,7 @@ namespace PCCheck.Engine
                 Tuple.Create("fflags", 4.0, (AreaFn)ScanFastFlags),
                 Tuple.Create("games", 5.0, (AreaFn)ScanRobloxGames),
                 Tuple.Create("network", 5.0, (AreaFn)ScanNetwork),
+                Tuple.Create("devices", 4.0, (AreaFn)ScanDevicesAndSandboxes),
                 Tuple.Create("vm", 6.0, (AreaFn)ScanVirtualMachines),
                 Tuple.Create("dma", 8.0, (AreaFn)ScanDma),
                 Tuple.Create("running", 4.0, (AreaFn)ScanRunning),
@@ -188,7 +190,7 @@ namespace PCCheck.Engine
             string cat = sig.Category ?? "";
             if (sig.Severity == Severity.Info) group = Groups.Context;
             else if (cat.IndexOf("Virtual", StringComparison.OrdinalIgnoreCase) >= 0 || cat.IndexOf("Emulator", StringComparison.OrdinalIgnoreCase) >= 0 || cat == "DMA") group = Groups.Hardware;
-            else if (cat.IndexOf("cleaner", StringComparison.OrdinalIgnoreCase) >= 0) group = Groups.Tamper;
+            else if (cat.IndexOf("cleaner", StringComparison.OrdinalIgnoreCase) >= 0 || cat.IndexOf("Sandbox", StringComparison.OrdinalIgnoreCase) >= 0) group = Groups.Tamper;
             else if (cat.IndexOf("VPN", StringComparison.OrdinalIgnoreCase) >= 0 || cat.IndexOf("ping booster", StringComparison.OrdinalIgnoreCase) >= 0) group = Groups.Network;
             else group = Groups.Cheat;
 

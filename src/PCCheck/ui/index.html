@@ -385,7 +385,7 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M10 3a7 7 0 107 7M10 6v4l3 2"/></svg><div><b>Program history</b><span>Windows' records of which programs ran and when.</span></div></li>
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M4 6h12M8 6V4h4v2m-6 0l1 10h6l1-10"/></svg><div><b>Deleted files</b><span>The drive's change log and Recycle Bin, cheat names only.</span></div></li>
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M4 4h12v12H4zM4 8h12M8 8v8"/></svg><div><b>Roblox settings and game history</b><span>FastFlags, plus which games were open and when, from Roblox's own logs. Only game IDs and times are kept.</span></div></li>
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M3 5h14v8H3zM7 17h6M10 13v4"/></svg><div><b>System and network checks</b><span>Cleared logs, PC resets, VMs, emulators, DMA hardware, VPN adapters, firewall history and when the internet dropped. Nothing is sent anywhere.</span></div></li>
+            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M3 5h14v8H3zM7 17h6M10 13v4"/></svg><div><b>System, network and device checks</b><span>Cleared logs, PC resets, VMs, emulators, DMA hardware, VPN adapters, firewall history, internet drops, USB drives and sandbox tools. A scrambled PC ID is added to the report. Nothing is sent anywhere.</span></div></li>
           </ul>
         </div>
         <div>
@@ -609,6 +609,7 @@ const AREAS = [
   ["fflags","Roblox FastFlags","Roblox, bootstrappers, FastFlag files"],
   ["games","Roblox game history","Which games were open, from Roblox's logs"],
   ["network","Lag switches and VPNs","Adapters, firewall history, drops during games"],
+  ["devices","USB drives and sandboxes","USB history, programs run from USB, Sandboxie and freeze tools"],
   ["vm","Virtual machines and emulators","VMs and Android emulators"],
   ["dma","DMA hardware","PCIe devices"],
   ["running","Running programs","Open right now"]
@@ -851,6 +852,7 @@ function onDone(r){
   const line = (k,v) => { const dv = el("div"); dv.append(k + " ", el("em",null,v)); meta.append(dv); };
   if (r.who) line("Checked", r.who);
   line("PC", r.pc);
+  if (r.pcId) line("PC ID", r.pcId);
   line("Finished", new Date(r.finished).toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"}) + ", " + r.seconds + " s");
   line("Scan", (r.mode || "Standard") + (r.admin ? "" : ", partial (no admin)"));
   sum.append(meta);
@@ -1035,7 +1037,7 @@ const Demo = {
   run(){
     const plan = [
       ["files","hit","3 matches in 41,208 names"],["exec","hit","3 programs, 9 runs"],["deleted","hit","1 cheat deleted"],
-      ["defender","ok","No related threats"],["logs","warn","Security log cleared"],["fflags","warn","2 unfair flags"],["games","hit","6 game sessions, last 5 days"],["network","warn","VPN connected, drops during games"],
+      ["defender","ok","No related threats"],["logs","warn","Security log cleared"],["fflags","warn","2 unfair flags"],["games","hit","6 game sessions, last 5 days"],["network","warn","VPN connected, drops during games"],["devices","ok","1 USB drive"],
       ["vm","ok","Real PC"],["dma","ok","24 devices, none suspicious"],["running","ok","Nothing running"]
     ];
     let i = 0;
@@ -1053,7 +1055,7 @@ const Demo = {
   report(){
     const now = Date.now(), h = 36e5;
     const t = (hrs) => new Date(now - hrs*h).toISOString();
-    return { verdict:"flag", who: $("who").value.trim() || "builderman", pc:"Windows 11 Home 24H2", mode: DEPTH_TEXT[settings.depth][0], finished: new Date().toISOString(), seconds: 74, admin: true,
+    return { verdict:"flag", who: $("who").value.trim() || "builderman", pc:"Windows 11 Home 24H2", pcId:"7F3A-91C2-0B5E", mode: DEPTH_TEXT[settings.depth][0], finished: new Date().toISOString(), seconds: 74, admin: true,
       findings: [
         {name:"Solara", category:"Internal executor", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(2.2), path:"C:\\ProgramData\\Solara\\Solara.exe", sources:["File"], sha256:"d1e4a542fa75f6a6fb636b5de6f7616e2827a79556d3d9a4afc3ecb47f0beb2b"},
         {name:"Executor workspace", category:"Executor files", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(2.3), path:"~\\AppData\\Local\\Potassium", sources:["Folder layout: workspace + autoexec"], note:"Executors keep scripts in these folders. They are often left behind after the executor itself is deleted."},

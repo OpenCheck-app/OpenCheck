@@ -407,6 +407,47 @@ namespace PCCheck.Engine
             return !string.IsNullOrEmpty(reason) && reason != "268" && CheatWords.IsMatch(reason);
         }
 
+        static readonly HashSet<string> JunkSerials = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        { "", "0", "none", "default string", "to be filled by o.e.m.", "system serial number", "not specified", "not applicable", "n/a", "123456789", "0123456789", "base board serial number", "chassis serial number" };
+
+        /// <summary>True when a hardware serial is a real value, not a placeholder.</summary>
+        public static bool IsRealSerial(string serial)
+        {
+            if (serial == null) return false;
+            string s = serial.Trim().Trim('.');
+            return s.Length >= 4 && !JunkSerials.Contains(s) && s.Distinct().Count() > 2;
+        }
+
+        /// <summary>
+        /// A short ID for this PC: a SHA-256 of hardware serials (salted), cut to 12 characters as XXXX-XXXX-XXXX.
+        /// It can't be turned back into the serials, but it's the same every time OpenCheck runs on the same PC.
+        /// </summary>
+        public static string PcId(IEnumerable<string> parts)
+        {
+            var real = parts.Where(IsRealSerial).Select(x => x.Trim().ToUpperInvariant()).ToList();
+            if (real.Count == 0) return null;
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+            {
+                var hash = sha.ComputeHash(Encoding.UTF8.GetBytes("OpenCheck PC ID v1|" + string.Join("|", real)));
+                string hex = BitConverter.ToString(hash).Replace("-", "").Substring(0, 12).ToUpperInvariant();
+                return hex.Substring(0, 4) + "-" + hex.Substring(4, 4) + "-" + hex.Substring(8, 4);
+            }
+        }
+
+        /// <summary>"USBSTOR\Disk&amp;Ven_SanDisk&amp;Prod_Cruzer_Blade&amp;Rev_1.00\4C53...&amp;0" becomes "SanDisk Cruzer Blade". Null if it isn't a USB storage device.</summary>
+        public static string UsbStorageName(string deviceInstanceId)
+        {
+            if (string.IsNullOrEmpty(deviceInstanceId) || !deviceInstanceId.StartsWith(@"USBSTOR\", StringComparison.OrdinalIgnoreCase)) return null;
+            string ven = null, prod = null;
+            foreach (var part in deviceInstanceId.Split('\\')[1].Split('&'))
+            {
+                if (part.StartsWith("Ven_", StringComparison.OrdinalIgnoreCase)) ven = part.Substring(4).Replace('_', ' ').Trim();
+                else if (part.StartsWith("Prod_", StringComparison.OrdinalIgnoreCase)) prod = part.Substring(5).Replace('_', ' ').Trim();
+            }
+            string name = ((ven ?? "") + " " + (prod ?? "")).Trim();
+            return name.Length == 0 ? "USB drive" : name;
+        }
+
         public static List<UsnRecord> ParseUsnBuffer(byte[] buffer, int length)
         {
             var list = new List<UsnRecord>();
