@@ -7,7 +7,7 @@
 <title>OpenCheck</title>
 <style>
 :root{
-  --bg:#F4F5F7; --panel:#FFFFFF; --sunk:#F0F2F5; --hover:#ECEFF3; --ink:#111827; --muted:#576072; --faint:#8A92A3;
+  --bg:#F4F5F7; --panel:#FFFFFF; --sunk:#F0F2F5; --hover:#ECEFF3; --ink:#111827; --muted:#4B5465; --faint:#646C7C;
   --line:#E3E6EB; --line-strong:#D2D8E0; --accent:#2F5BE0; --accent-ink:#FFFFFF; --accent-soft:#E9EEFD;
   --clean:#178A5A; --clean-soft:#E3F4EC; --review:#A86E06; --review-soft:#FCF2DC; --flag:#C8362F; --flag-soft:#FCE7E5; --info:#4A6280; --info-soft:#EAEFF5;
   --lift:0 1px 2px rgba(17,24,39,.05), 0 8px 24px -14px rgba(17,24,39,.18);
@@ -17,12 +17,12 @@
   --mono:"Cascadia Mono",Consolas,"DejaVu Sans Mono",monospace;
   --ease:cubic-bezier(.22,1,.36,1);
   --col:780px;
-  --raise:#FFFFFF; --accent-fg:#2F5BE0; --glow:none;
+  --raise:#FFFFFF; --accent-fg:#2F5BE0; --glow:none; --clean-ink:#127249; --flag-ink:#B02A24; --review-ink:#8A5A00;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
-  --bg:#0D1015; --panel:#151920; --sunk:#11141A; --hover:#1C212A; --raise:#20262F; --ink:#ECEFF4; --muted:#A4ACBB; --faint:#6E7788;
-  --line:#22272F; --line-strong:#2E3440; --accent:#4F74FF; --accent-ink:#FFFFFF; --accent-fg:#96ABFF; --accent-soft:rgba(79,116,255,.16);
+  --clean-ink:#3DD68C; --flag-ink:#FF6B61; --review-ink:#F2B84B; --bg:#0D1015; --panel:#151920; --sunk:#11141A; --hover:#1C212A; --raise:#20262F; --ink:#ECEFF4; --muted:#A4ACBB; --faint:#858E9F;
+  --line:#22272F; --line-strong:#2E3440; --accent:#3F63F0; --accent-ink:#FFFFFF; --accent-fg:#96ABFF; --accent-soft:rgba(79,116,255,.16);
   --clean:#3DD68C; --clean-soft:rgba(61,214,140,.13); --review:#F2B84B; --review-soft:rgba(242,184,75,.13); --flag:#FF6B61; --flag-soft:rgba(255,107,97,.14); --info:#A5B6D0; --info-soft:rgba(165,182,208,.12);
   --lift:0 0 0 1px rgba(255,255,255,.05), 0 6px 18px -8px rgba(0,0,0,.7);
   --pop:0 0 0 1px rgba(255,255,255,.06), 0 30px 80px -16px rgba(0,0,0,.85);
@@ -30,8 +30,8 @@
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --bg:#0D1015; --panel:#151920; --sunk:#11141A; --hover:#1C212A; --raise:#20262F; --ink:#ECEFF4; --muted:#A4ACBB; --faint:#6E7788;
-  --line:#22272F; --line-strong:#2E3440; --accent:#4F74FF; --accent-ink:#FFFFFF; --accent-fg:#96ABFF; --accent-soft:rgba(79,116,255,.16);
+  --clean-ink:#3DD68C; --flag-ink:#FF6B61; --review-ink:#F2B84B; --bg:#0D1015; --panel:#151920; --sunk:#11141A; --hover:#1C212A; --raise:#20262F; --ink:#ECEFF4; --muted:#A4ACBB; --faint:#858E9F;
+  --line:#22272F; --line-strong:#2E3440; --accent:#3F63F0; --accent-ink:#FFFFFF; --accent-fg:#96ABFF; --accent-soft:rgba(79,116,255,.16);
   --clean:#3DD68C; --clean-soft:rgba(61,214,140,.13); --review:#F2B84B; --review-soft:rgba(242,184,75,.13); --flag:#FF6B61; --flag-soft:rgba(255,107,97,.14); --info:#A5B6D0; --info-soft:rgba(165,182,208,.12);
   --lift:0 0 0 1px rgba(255,255,255,.05), 0 6px 18px -8px rgba(0,0,0,.7);
   --pop:0 0 0 1px rgba(255,255,255,.06), 0 30px 80px -16px rgba(0,0,0,.85);
@@ -56,7 +56,7 @@ button{font:inherit;color:inherit}
 .stepper{position:relative;display:flex;gap:2px;padding:4px;background:var(--sunk);border-radius:999px;transition:background-color .35s}
 .stepper .ind{position:absolute;top:4px;left:0;height:calc(100% - 8px);border-radius:999px;background:var(--raise);box-shadow:var(--lift);transition:transform .55s var(--ease),width .55s var(--ease),background-color .35s}
 .stepper span.s{position:relative;display:flex;align-items:center;gap:7px;padding:5px 14px 5px 10px;border-radius:999px;font-size:13px;font-weight:500;color:var(--faint);transition:color .35s}
-.stepper .n{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;background:var(--line);color:var(--muted);transition:background-color .35s,color .35s;position:relative}
+.stepper .n{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;background:var(--line);color:var(--ink);transition:background-color .35s,color .35s;position:relative}
 .stepper .n svg{position:absolute;opacity:0;transform:scale(.4);transition:opacity .25s,transform .4s var(--ease)}
 .stepper .n i{font-style:normal;transition:opacity .2s}
 .stepper span.s.on{color:var(--ink)}
@@ -66,7 +66,7 @@ button{font:inherit;color:inherit}
 .stepper span.s.done .n i{opacity:0}
 .stepper span.s.done .n svg{opacity:1;transform:none}
 .tools{justify-self:end;display:flex;align-items:center;gap:4px}
-.badge{display:flex;align-items:center;gap:7px;height:30px;padding:0 12px 0 10px;margin-right:6px;background:var(--clean-soft);border-radius:999px;font-size:12px;font-weight:600;color:var(--clean);white-space:nowrap}
+.badge{display:flex;align-items:center;gap:7px;height:30px;padding:0 12px 0 10px;margin-right:6px;background:var(--clean-soft);border-radius:999px;font-size:12px;font-weight:600;color:var(--clean-ink);white-space:nowrap}
 .badge i{width:6px;height:6px;border-radius:50%;background:var(--clean)}
 .iconbtn{width:34px;height:34px;display:grid;place-items:center;border:0;background:none;border-radius:9px;color:var(--muted);cursor:pointer;transition:background-color .2s,color .2s,transform .15s var(--ease)}
 .iconbtn:hover{background:var(--hover);color:var(--ink)}
@@ -179,12 +179,12 @@ h2{font:600 13px/1.3 var(--ui);color:var(--muted);margin:0 0 4px}
 .areas .hl.on{opacity:1}
 .areas li{position:relative;display:grid;grid-template-columns:24px 1fr auto;gap:14px;align-items:center;padding:9px 14px;transition:opacity .5s var(--ease)}
 .areas li + li::before{content:"";position:absolute;left:14px;right:14px;top:0;border-top:1px solid var(--line)}
-.areas li.pending{opacity:.42}
+.areas li.pending b{color:var(--muted)} .areas li.pending span,.areas li.pending .d{color:var(--faint)} .areas li.pending .st{opacity:.45}
 .areas .t b{font-weight:600;font-size:13.5px}
 .areas .t span{color:var(--faint);font-size:12.5px;margin-left:8px}
 .areas .d{font-size:12.5px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
-.areas .d.hit{color:var(--flag);font-weight:600}
-.areas .d.warn{color:var(--review);font-weight:600}
+.areas .d.hit{color:var(--flag-ink);font-weight:600}
+.areas .d.warn{color:var(--review-ink);font-weight:600}
 .areas .d.fresh{animation:fadein .35s var(--ease)}
 .st{width:22px;height:22px;display:grid;place-items:center}
 .st > *{animation:pop .45s var(--ease) both}
@@ -234,7 +234,7 @@ h2{font:600 13px/1.3 var(--ui);color:var(--muted);margin:0 0 4px}
 .find .h b{font-weight:600;font-size:14px}
 .find .h span{color:var(--muted);font-size:12.5px}
 .find .ev{font-size:11.5px;font-weight:600;padding:1px 9px;border-radius:999px;background:var(--info-soft);color:var(--info)}
-.find.high .ev{background:var(--flag-soft);color:var(--flag)} .find.medium .ev{background:var(--review-soft);color:var(--review)}
+.find.high .ev{background:var(--flag-soft);color:var(--flag-ink)} .find.medium .ev{background:var(--review-soft);color:var(--review-ink)}
 .find .when{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap;padding-top:1px}
 .find .chev{color:var(--faint);padding-top:2px;transition:transform .35s var(--ease)}
 .find.open .chev{transform:rotate(180deg)}
@@ -248,6 +248,35 @@ h2{font:600 13px/1.3 var(--ui);color:var(--muted);margin:0 0 4px}
 .find dd{margin:0;user-select:text;word-break:break-all}
 .find dd code{font:12px var(--mono)}
 .empty{padding:60px 20px;text-align:center;color:var(--muted)}
+.empty.clean{padding:44px 24px}
+.empty.clean b{display:block;color:var(--ink);font-size:15px;font-weight:600;margin-bottom:6px}
+.empty.clean span{display:block;max-width:52ch;margin:0 auto;font-size:13.5px;line-height:1.55}
+.lead{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:14px 18px;margin:-4px 0 16px;border-radius:14px;background:var(--vs,var(--sunk));border:1px solid color-mix(in srgb,var(--v,var(--line)) 22%,transparent);font-size:14px;line-height:1.5}
+.lead[hidden],.acts[hidden]{display:none}
+.lead.flag{--v:var(--flag);--vs:var(--flag-soft)} .lead.review{--v:var(--review);--vs:var(--review-soft)} .lead.clean{--v:var(--clean);--vs:var(--clean-soft)}
+.lead svg{color:var(--v,var(--muted));margin-top:2px}
+.lead b{font-weight:600}
+.lead .g{font-variant-numeric:tabular-nums}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:7px;background:var(--sunk);border:1px solid var(--line);color:var(--muted);font-size:11.5px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag svg{opacity:.85}
+.tag.game{background:var(--accent-soft);border-color:transparent;color:var(--accent-fg)}
+.find dd .gl{display:block}
+.find dd .gl + .gl{margin-top:3px}
+.find dd small{color:var(--faint)}
+.acts{margin-bottom:28px}
+.acts h3{display:flex;align-items:baseline;gap:10px;margin:0;padding:14px 20px 10px;font-size:13.5px;font-weight:600}
+.acts h3 span{color:var(--faint);font-weight:500;font-size:12px}
+.sess{display:grid;grid-template-columns:200px 1fr auto;gap:12px;align-items:center;padding:10px 20px;border-top:1px solid var(--line);font-size:13px}
+.sess .t{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sess .p{font:12.5px var(--mono);color:var(--ink)}
+.sess .p small{font:12px var(--ui);color:var(--faint);margin-left:8px}
+.sess .hit{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--flag-ink);background:var(--flag-soft);padding:2px 9px;border-radius:999px;white-space:nowrap}
+.sess .hit i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.sess.cheat{background:color-mix(in srgb,var(--flag-soft) 45%,transparent)}
+.sess.in{animation:rise .5s var(--ease) both}
+@media (max-width:700px){.sess{grid-template-columns:1fr auto}.sess .t{grid-column:1 / 3}}
+
 
 /* ---------- settings drawer ---------- */
 .drawer{position:fixed;top:0;right:0;bottom:0;z-index:55;width:min(440px,100vw);background:var(--panel);border-left:1px solid var(--line);box-shadow:var(--pop);display:flex;flex-direction:column;transform:translateX(104%);transition:transform .5s var(--ease),background-color .35s;visibility:hidden}
@@ -275,7 +304,7 @@ h2{font:600 13px/1.3 var(--ui);color:var(--muted);margin:0 0 4px}
 .switch[aria-checked="true"]:active::after{transform:translateX(12px)}
 .dfoot{display:flex;align-items:center;gap:10px;padding:14px 18px 14px 24px;border-top:1px solid var(--line)}
 .dfoot .hint{flex:1}
-.locked{font-size:12.5px;color:var(--review);background:var(--review-soft);border-radius:10px;padding:10px 12px;margin-top:14px;display:none}
+.locked{font-size:12.5px;color:var(--review-ink);background:var(--review-soft);border-radius:10px;padding:10px 12px;margin-top:14px;display:none}
 .drawer.busy .locked{display:block}
 
 /* ---------- modal, scrim and toast ---------- */
@@ -352,7 +381,7 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="currentColor" d="M3 5a2 2 0 012-2h3.6l1.6 2H15a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><div><b>File and folder names</b><span>Compared to the cheat list. File contents are never opened.</span></div></li>
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M10 3a7 7 0 107 7M10 6v4l3 2"/></svg><div><b>Program history</b><span>Windows' records of which programs ran and when.</span></div></li>
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M4 6h12M8 6V4h4v2m-6 0l1 10h6l1-10"/></svg><div><b>Deleted files</b><span>The drive's change log and Recycle Bin, cheat names only.</span></div></li>
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M4 4h12v12H4zM4 8h12M8 8v8"/></svg><div><b>Roblox settings</b><span>FastFlags from Roblox, bootstrappers and FastFlag files you downloaded.</span></div></li>
+            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M4 4h12v12H4zM4 8h12M8 8v8"/></svg><div><b>Roblox settings and game history</b><span>FastFlags, plus which games were open and when, from Roblox's own logs. Only game IDs and times are kept.</span></div></li>
             <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M3 5h14v8H3zM7 17h6M10 13v4"/></svg><div><b>System checks</b><span>Cleared logs, PC resets, lag-switch firewall rules, VMs, emulators and DMA hardware.</span></div></li>
           </ul>
         </div>
@@ -405,11 +434,13 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
         <div class="seal" id="seal"></div>
         <div class="in d1"><div class="word" id="vWord">Clean</div><p id="vText"></p></div>
       </div>
+      <div class="lead in d2" id="lead" hidden></div>
       <div class="panel summary in d2" id="summary"></div>
       <div class="in d3">
         <div class="seg" id="filters" role="tablist"><span class="ind" id="segInd"></span></div>
         <div class="panel list" id="list"></div>
       </div>
+      <div class="panel acts in d3" id="acts" hidden></div>
     </div></div>
     <div class="bar"><div class="col">
       <button class="btn" id="saveBtn"><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m-4-4l4 4 4-4M4 15h12"/></svg>Save report</button>
@@ -573,6 +604,7 @@ const AREAS = [
   ["defender","Windows Security history","Defender detections"],
   ["logs","Logs, resets and firewall","Cleared logs, PC resets, lag-switch rules"],
   ["fflags","Roblox FastFlags","Roblox, bootstrappers, FastFlag files"],
+  ["games","Roblox game history","Which games were open, from Roblox's logs"],
   ["vm","Virtual machines and emulators","VMs and Android emulators"],
   ["dma","DMA hardware","PCIe devices"],
   ["running","Running programs","Open right now"]
@@ -742,6 +774,25 @@ const SEAL = {
   clean:'<svg width="26" height="26" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M6.5 12.5l3.6 3.6L17.5 8.5" style="stroke-dasharray:18;stroke-dashoffset:18;animation:draw .5s var(--ease) .45s forwards"/></svg>'
 };
 const CHEV = '<svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M6 8l4 4 4-4"/></svg>';
+const PAD = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M6.5 6h7a4 4 0 0 1 3.9 3.2l.8 4a2.2 2.2 0 0 1-3.8 1.9L12.6 13H7.4l-1.8 2.1a2.2 2.2 0 0 1-3.8-1.9l.8-4A4 4 0 0 1 6.5 6z"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M6.5 8.5v2.5M5.2 9.75h2.6M13.5 9.5h.01M15 11h.01"/></svg>';
+const CLOCK = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M10 6.5V10l2.3 1.6"/></svg>';
+const SPARK = '<svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M10 2.5l1.8 4.7 4.7 1.8-4.7 1.8L10 15.5l-1.8-4.7L3.5 9l4.7-1.8z"/></svg>';
+const hm = d => d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
+const dhm = d => d.toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+function ago(d){
+  const m = Math.round((Date.now() - d) / 6e4);
+  if (m < 2) return "just now"; if (m < 60) return m + " min ago";
+  const h = Math.round(m / 60); if (h < 36) return h + (h === 1 ? " hour ago" : " hours ago");
+  const days = Math.round(h / 24); return days + (days === 1 ? " day ago" : " days ago");
+}
+function span(g){
+  const a = fmtDate(g.start), b = fmtDate(g.end);
+  const day = a.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  return day + " · " + hm(a) + (b ? "–" + hm(b) : "");
+}
+const ICONS = {pad: PAD, clock: CLOCK};
+function tag(cls, iconName, text){ const t = el("span","tag" + (cls ? " " + cls : "")); if (iconName) t.innerHTML = ICONS[iconName]; t.append(text); return t; }
+function sessKey(g){ return g.placeId + "|" + g.start; }
 function fmtDate(iso){ if(!iso) return null; const d = new Date(iso); return isNaN(d) ? null : d; }
 function dayLabel(d){
   if (!d) return "No time recorded";
@@ -753,6 +804,8 @@ function dayLabel(d){
   return d.toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric", year: d.getFullYear() === today.getFullYear() ? undefined : "numeric"});
 }
 function onDone(r){
+  // The "Last Roblox game" row is shown in the Roblox activity panel instead.
+  if ((r.sessions || []).length) r = Object.assign({}, r, {findings: r.findings.filter(f => !(f.group === "context" && f.name === "Last Roblox game"))});
   report = r;
   setArc(100); countTo(100);
   moveHighlight(null); $("dial").classList.remove("busy");
@@ -770,7 +823,7 @@ function onDone(r){
     [r.findings.filter(f=>f.group!=="context" && f.severity!=="info" && (f.evidence==="Found on this PC"||f.evidence==="Running right now")).length, "Found now"],
     [r.findings.filter(f=>f.evidence==="Ran on this PC").length, "Ran before"],
     [r.findings.filter(f=>f.evidence==="Deleted"||f.evidence==="Renamed").length, "Deleted"],
-    [r.findings.filter(f=>f.severity==="info").length, "Context"]
+    [new Set(r.findings.filter(f=>f.group==="cheat").flatMap(f=>(f.games||[]).map(sessKey))).size, "Cheat in game"]
   ];
   const nums = counts.map(([n,l]) => { const d = el("div"), b = el("b",null,"0"); d.append(b, el("span",null,l)); sum.append(d); return [b,n]; });
   const meta = el("div","meta");
@@ -781,12 +834,50 @@ function onDone(r){
   line("Scan", (r.mode || "Standard") + (r.admin ? "" : ", partial (no admin)"));
   sum.append(meta);
 
+  renderLead(r); renderActivity(r);
   filter = "all";
   renderFilters(); renderList(true);
   setTimeout(() => {
     go("s-results");
     setTimeout(() => { nums.forEach(([b,n]) => tween(b, n, 900)); slideTo($("segInd"), $("filters").querySelector(".chip.on")); }, 350);
   }, 1100);
+}
+function renderLead(r){
+  const box = $("lead"); box.textContent = ""; box.hidden = true; box.className = "lead in d2 " + r.verdict;
+  const used = r.findings.filter(f => f.group === "cheat" && (f.evidence === "Ran on this PC" || f.evidence === "Running right now") && f.time)
+                         .sort((a,b) => fmtDate(b.time) - fmtDate(a.time))[0];
+  if (!used) return;
+  const d = fmtDate(used.time), g = (used.games || [])[0];
+  const icon = el("span"); icon.innerHTML = SPARK;
+  const text = el("div");
+  text.append("Last cheat used: ", el("b", null, used.name), ", ");
+  text.append(el("span","g", used.evidence === "Running right now" ? "running right now" : ago(d) + " (" + dhm(d) + ")"));
+  if (g){
+    text.append(g.how === "before" ? ". Roblox place " : ", while Roblox place ");
+    text.append(el("b","g", g.placeId));
+    text.append(g.how === "before" ? " was joined minutes later." : " was open.");
+  } else text.append(".");
+  box.append(icon, text); box.hidden = false;
+}
+function renderActivity(r){
+  const box = $("acts"); box.textContent = ""; box.hidden = true;
+  const sessions = r.sessions || [];
+  if (!sessions.length) return;
+  const hits = new Map();
+  for (const f of r.findings.filter(f => f.group === "cheat")) for (const g of (f.games || [])) {
+    const k = sessKey(g); if (!hits.has(k)) hits.set(k, new Set()); hits.get(k).add(f.name);
+  }
+  const h = el("h3", null, "Roblox activity"); h.append(el("span", null, "From Roblox's own logs: game IDs and times only"));
+  box.append(h);
+  sessions.slice(0, 12).forEach((g, i) => {
+    const row = el("div","sess" + (hits.has(sessKey(g)) ? " cheat" : "") + " in"); row.style.animationDelay = (0.7 + i * 0.03) + "s";
+    const p = el("div","p", "Place " + g.placeId); p.append(el("small", null, "roblox.com/games/" + g.placeId));
+    row.append(el("div","t", span(g)), p);
+    if (hits.has(sessKey(g))){ const x = el("span","hit"); x.append(el("i"), [...hits.get(sessKey(g))].join(", ") + " ran"); row.append(x); }
+    else row.append(el("span"));
+    box.append(row);
+  });
+  box.hidden = false;
 }
 function renderFilters(){
   const box = $("filters");
@@ -819,7 +910,15 @@ function renderList(animate, baseDelay){
     if (!!da !== !!db) return da ? -1 : 1;
     return sevRank[a.severity] - sevRank[b.severity];
   });
-  if (!items.length){ list.append(el("div","empty","Nothing in this group.")); return; }
+  if (!items.length){
+    if (!report.findings.length){
+      const e = el("div","empty clean");
+      e.append(el("b",null,"Nothing on the cheat list was found"),
+        el("span",null,"Checked file names, program history, deleted files, Windows Security, event logs, FastFlags, Roblox's game history, VMs, DMA hardware and running programs."));
+      list.append(e);
+    } else list.append(el("div","empty","Nothing in this group."));
+    return;
+  }
   const start = baseDelay == null ? 0.55 : baseDelay;
   let lastDay = null, i = 0;
   for (const f of items){
@@ -831,12 +930,29 @@ function renderList(animate, baseDelay){
     const h = el("div","h");
     h.append(el("b",null,f.name), el("span",null,f.category), el("span","ev",f.evidence));
     const main = el("div"); main.append(h, el("div","path",f.path || ""));
+    const tags = el("div","tags");
+    if (d && f.evidence === "Ran on this PC") tags.append(tag("", "clock", "Last opened " + ago(d)));
+    if (f.runCount > 1) tags.append(tag("", null, f.runCount + " runs"));
+    const games = f.games || [];
+    if (games.length) tags.append(tag("game", "pad", (games[0].how === "before" ? "Then joined place " : "In place ") + games[0].placeId + (games.length > 1 ? " +" + (games.length - 1) : "")));
+    if (tags.childNodes.length) main.append(tags);
     const when = el("div","when", d ? d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}) : "");
     const chev = el("div","chev"); chev.innerHTML = CHEV;
     const more = el("div","more"), inner = el("div"), dl = el("dl");
     const add = (k,v,code) => { if(!v) return; dl.append(el("dt",null,k)); const dd = el("dd"); if(code) dd.append(el("code",null,v)); else dd.textContent = v; dl.append(dd); };
     add("Seen in", (f.sources||[]).join(", "));
     add("Runs counted", f.runCount ? String(f.runCount) : null);
+    if ((f.runTimes||[]).length > 1) add("Run times", f.runTimes.map(t => dhm(fmtDate(t))).join(" · "));
+    if (games.length){
+      dl.append(el("dt",null,"Roblox open"));
+      const dd = el("dd");
+      for (const g of games){
+        const line = el("span","gl"); line.append("Place " + g.placeId + ", " + span(g) + " ");
+        line.append(el("small", null, (g.how === "before" ? "joined right after it ran · " : "") + "roblox.com/games/" + g.placeId));
+        dd.append(line);
+      }
+      dl.append(dd);
+    }
     add("Exact time", d ? d.toLocaleString() : null);
     add("SHA-256", f.sha256, true);
     add("Note", f.note);
@@ -896,7 +1012,7 @@ const Demo = {
   run(){
     const plan = [
       ["files","hit","3 matches in 41,208 names"],["exec","hit","3 programs, 9 runs"],["deleted","hit","1 cheat deleted"],
-      ["defender","ok","No related threats"],["logs","warn","Security log cleared"],["fflags","warn","2 unfair flags"],
+      ["defender","ok","No related threats"],["logs","warn","Security log cleared"],["fflags","warn","2 unfair flags"],["games","hit","6 game sessions, last 5 days"],
       ["vm","ok","Real PC"],["dma","ok","24 devices, none suspicious"],["running","ok","Nothing running"]
     ];
     let i = 0;
@@ -918,13 +1034,22 @@ const Demo = {
       findings: [
         {name:"Solara", category:"Internal executor", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(2.2), path:"C:\\ProgramData\\Solara\\Solara.exe", sources:["File"], sha256:"d1e4a542fa75f6a6fb636b5de6f7616e2827a79556d3d9a4afc3ecb47f0beb2b"},
         {name:"Executor workspace", category:"Executor files", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(2.3), path:"~\\AppData\\Local\\Potassium", sources:["Folder layout: workspace + autoexec"], note:"Executors keep scripts in these folders. They are often left behind after the executor itself is deleted."},
-        {name:"Potassium", category:"Internal executor", group:"cheat", cheat:true, severity:"medium", evidence:"Ran on this PC", time:t(3.1), path:"C:\\Program Files\\Epic Games\\OpXOyuApWKTlFzrV\\Potassium.exe", sources:["BAM","MuiCache","Prefetch","UserAssist"], runCount:7},
+        {name:"Potassium", category:"Internal executor", group:"cheat", cheat:true, severity:"medium", evidence:"Ran on this PC", time:t(3.1), path:"C:\\Program Files\\Epic Games\\OpXOyuApWKTlFzrV\\Potassium.exe", sources:["BAM","MuiCache","Prefetch","UserAssist"], runCount:7, runTimes:[t(3.1),t(27),t(50)], games:[{placeId:"920587237", start:t(3.4), end:t(2.95), how:"during"},{placeId:"2753915549", start:t(27.2), end:t(26.1), how:"during"}]},
         {name:"Potassium", category:"Internal executor", group:"cheat", cheat:true, severity:"medium", evidence:"Deleted", time:t(2.9), path:"C:\\Program Files\\Epic Games\\OpXOyuApWKTlFzrV\\Potassium.exe", sources:["Drive change log (USN)"]},
         {name:"Security log cleared", category:"Tampering", group:"tamper", severity:"medium", evidence:"Possible tampering", time:t(2.8), path:"Event 1102, Security log", sources:["Windows event log"], note:"Someone with admin rights wiped the Security event log."},
         {name:"DFIntS2PhysicsSenderRate", category:"FastFlag", group:"fflags", severity:"medium", evidence:"Unfair FastFlag", time:t(26), path:"~\\AppData\\Local\\Bloxstrap\\Modifications\\ClientSettings\\ClientAppSettings.json", sources:["Bloxstrap"], note:"Set to 1. Used for desync. Roblox may ignore it under its FastFlag allowlist."},
         {name:"DFIntMaxMissedWorldStepsRemembered", category:"FastFlag", group:"fflags", severity:"medium", evidence:"Unfair FastFlag", time:t(26), path:"~\\AppData\\Local\\Bloxstrap\\Modifications\\ClientSettings\\ClientAppSettings.json", sources:["Bloxstrap"]},
-        {name:"Volcano", category:"Internal executor", group:"cheat", cheat:true, severity:"medium", evidence:"Ran on this PC", time:t(98), path:"~\\Downloads\\DownloadR2\\VolcanoUI.exe", sources:["UserAssist"], runCount:2},
+        {name:"Volcano", category:"Internal executor", group:"cheat", cheat:true, severity:"medium", evidence:"Ran on this PC", time:t(98), path:"~\\Downloads\\DownloadR2\\VolcanoUI.exe", sources:["UserAssist","Compatibility cache (ShimCache)"], runCount:2, games:[{placeId:"4924922222", start:t(97.8), end:t(96.5), how:"before"}]},
+        {name:"Last Roblox game", category:"Roblox", group:"context", severity:"info", evidence:"Context", time:t(1.2), path:"Place 6516141723 (roblox.com/games/6516141723)", sources:["Roblox logs"], note:"14 game sessions found in the last 5 days."},
         {name:"Bloxstrap / Fishstrap", category:"Roblox launcher (allowed)", group:"context", severity:"info", evidence:"Context", time:t(120), path:"~\\AppData\\Local\\Bloxstrap\\Bloxstrap.exe", sources:["File"]}
+      ],
+      sessions:[
+        {placeId:"6516141723", start:t(1.2), end:t(0.6)},
+        {placeId:"920587237", start:t(3.4), end:t(2.95)},
+        {placeId:"920587237", start:t(6), end:t(5.1)},
+        {placeId:"2753915549", start:t(27.2), end:t(26.1)},
+        {placeId:"4924922222", start:t(97.8), end:t(96.5)},
+        {placeId:"6516141723", start:t(100), end:t(99.2)}
       ]};
   }
 };

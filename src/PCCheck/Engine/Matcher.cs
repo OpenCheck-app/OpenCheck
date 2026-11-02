@@ -94,12 +94,21 @@ namespace PCCheck.Engine
             return null;
         }
 
+        /// <summary>
+        /// Exact name, or the name plus up to two known suffixes and a version number:
+        /// "matrix" matches Matrix, MatrixHub, Matrix_Hub_v2, MatrixHubLoader, Matrix External 3.
+        /// </summary>
         bool StrictEquals(string norm, string token)
         {
             if (norm == token) return true;
             if (!norm.StartsWith(token, StringComparison.Ordinal)) return false;
-            string rest = norm.Substring(token.Length);
-            return set.Suffixes.Contains(rest);
+            string rest = norm.Substring(token.Length).TrimEnd('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+            if (rest.EndsWith("v", StringComparison.Ordinal) && rest.Length < norm.Length - token.Length) rest = rest.Substring(0, rest.Length - 1);
+            if (rest.Length == 0) return true;
+            if (set.Suffixes.Contains(rest)) return true;
+            foreach (var a in set.Suffixes)
+                if (rest.StartsWith(a, StringComparison.Ordinal) && set.Suffixes.Contains(rest.Substring(a.Length))) return true;
+            return false;
         }
 
         /// <summary>Returns the layout that matches a folder's child folder names, or null.</summary>

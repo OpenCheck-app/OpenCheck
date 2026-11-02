@@ -94,6 +94,7 @@ namespace PCCheck.Engine
                 Tuple.Create("defender", 6.0, (AreaFn)ScanDefender),
                 Tuple.Create("logs", 6.0, (AreaFn)ScanLogs),
                 Tuple.Create("fflags", 4.0, (AreaFn)ScanFastFlags),
+                Tuple.Create("games", 5.0, (AreaFn)ScanRobloxGames),
                 Tuple.Create("vm", 6.0, (AreaFn)ScanVirtualMachines),
                 Tuple.Create("dma", 8.0, (AreaFn)ScanDma),
                 Tuple.Create("running", 4.0, (AreaFn)ScanRunning),
@@ -126,6 +127,8 @@ namespace PCCheck.Engine
                 Progress(state, detail, done / total * 100);
             }
 
+            try { LinkGames(); } catch (Exception ex) { notes.Add("games: " + ex.Message); }
+            report.Sessions = sessions.Take(40).ToList();
             report.Findings = findings.Values.ToList();
             report.Notes = notes;
             if (!admin) notes.Add("Not run as administrator, so Prefetch, the drive change log and the Security log could not be read.");
@@ -157,6 +160,7 @@ namespace PCCheck.Engine
         void Add(Finding f)
         {
             f.Path = Matcher.MaskUser(f.Path);
+            if (f.Time.HasValue && (f.Evidence == Evidence.Ran || f.Evidence == Evidence.Running)) f.RunTimes.Add(f.Time.Value);
             string key = f.MergeKey;
             Finding existing;
             if (findings.TryGetValue(key, out existing))

@@ -301,19 +301,6 @@ namespace PCCheck.Engine
                 foreach (var sub in new[] { "Desktop", "Downloads", "Documents", @"OneDrive\Desktop", @"OneDrive\Documents" })
                     AddLooseFlagFiles(files, Path.Combine(p.Path, sub));
 
-                // When Roblox was last opened, to help line up the timeline.
-                try
-                {
-                    var logs = new DirectoryInfo(Path.Combine(local, @"Roblox\logs"));
-                    if (logs.Exists)
-                    {
-                        var newest = logs.EnumerateFiles("*.log").OrderByDescending(f => f.LastWriteTime).FirstOrDefault();
-                        if (newest != null)
-                            Add(Simple("Roblox last used", "Roblox", Severity.Info, Evidence.Context, Groups.Context, newest.LastWriteTime,
-                                logs.FullName, "Roblox logs", "Helps line up the timeline with the other findings."));
-                    }
-                }
-                catch { }
             }
             foreach (var pf in ProgramFilesDirs())
                 AddFlagFilesUnder(files, Path.Combine(pf, @"Roblox\Versions"), "Roblox");

@@ -13,6 +13,7 @@ namespace PCCheck.Engine
             public Signature Sig;
             public string Name;
             public long ParentRef;
+            public long FileRef;
             public DateTime? Time;
             public string Evidence;
         }
@@ -86,6 +87,7 @@ namespace PCCheck.Engine
             var prefetchDeletes = new List<DateTime>();
             var robloxLogDeletes = new List<DateTime>();
             var jumpListDeletes = new List<DateTime>();
+            var recycledRefs = new HashSet<long>();
             int programDeletesThisWeek = 0;
             var weekAgo = DateTime.Now.AddDays(-7);
             DateTime? oldest = null;
@@ -100,67 +102,86 @@ namespace PCCheck.Engine
                 try { journal = Native.QueryJournal(volume); }
                 catch (Exception ex) { notes.Add("Drive " + letter + " has no change log: " + ex.Message); return null; }
 
+                // Read newest first: the log is split into windows and read from the end backwards,
+                // so recent deletions are always covered even if the time limit stops the read early.
                 var buffer = new byte[1 << 20];
-                long usn = journal.FirstUsn;
+                const long Window = 32L << 20;
                 long span = Math.Max(1, journal.NextUsn - journal.FirstUsn);
+                long segEnd = journal.NextUsn;
                 var sw = Stopwatch.StartNew();
-                long records = 0;
+                bool forwardOnly = false;   // fallback if this drive won't start a read mid-log
 
-                while (!cancelled && sw.Elapsed.TotalSeconds < options.JournalSeconds)
+                while (!cancelled && segEnd > journal.FirstUsn && sw.Elapsed.TotalSeconds < options.JournalSeconds)
                 {
-                    int n = Native.ReadJournal(volume, journal.JournalId, usn, buffer);
-                    if (n <= 8) break;
-                    Breathe();
-                    long next = BitConverter.ToInt64(buffer, 0);
-
-                    foreach (var rec in Parsers.ParseUsnBuffer(buffer, n))
+                    long segStart = forwardOnly ? journal.FirstUsn : Math.Max(journal.FirstUsn, segEnd - Window);
+                    long usn = segStart;
+                    bool segDone = false;
+                    int reads = 0;
+                    while (!segDone && !cancelled && sw.Elapsed.TotalSeconds < options.JournalSeconds)
                     {
-                        records++;
-                        if (!oldest.HasValue && rec.Time.HasValue) oldest = rec.Time;
+                        int n = Native.ReadJournal(volume, journal.JournalId, usn, buffer);
+                        if (n <= 8) break;
+                        reads++;
+                        Breathe();
+                        long next = BitConverter.ToInt64(buffer, 0);
 
-                        bool isDelete = (rec.Reason & Parsers.UsnReasonFileDelete) != 0;
-                        bool isRename = (rec.Reason & Parsers.UsnReasonRenameOldName) != 0;
-                        bool isCreate = (rec.Reason & Parsers.UsnReasonFileCreate) != 0;
-                        if (!isDelete && !isRename && !isCreate) continue;
-
-                        if (isDelete && rec.Time.HasValue)
+                        foreach (var rec in Parsers.ParseUsnBuffer(buffer, n))
                         {
-                            if (rec.Name.EndsWith(".pf", StringComparison.OrdinalIgnoreCase)) prefetchDeletes.Add(rec.Time.Value);
-                            else if (Parsers.IsRobloxLogName(rec.Name)) robloxLogDeletes.Add(rec.Time.Value);
-                            else if (Parsers.IsJumpListName(rec.Name)) jumpListDeletes.Add(rec.Time.Value);
-                            else if (rec.Time.Value > weekAgo && (rec.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || rec.Name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)))
-                                programDeletesThisWeek++;
+                            if (rec.Usn >= segEnd) { segDone = true; break; }   // already read in the previous window
+                            if (rec.Time.HasValue && (!oldest.HasValue || rec.Time.Value < oldest.Value)) oldest = rec.Time;
+
+                            bool isDelete = (rec.Reason & Parsers.UsnReasonFileDelete) != 0;
+                            bool isRename = (rec.Reason & Parsers.UsnReasonRenameOldName) != 0;
+                            bool isCreate = (rec.Reason & Parsers.UsnReasonFileCreate) != 0;
+                            bool isNewName = (rec.Reason & Parsers.UsnReasonRenameNewName) != 0;
+
+                            // Explorer "Delete" renames the file to $R... inside the Recycle Bin.
+                            if (isNewName && rec.Name.StartsWith("$R", StringComparison.OrdinalIgnoreCase)) recycledRefs.Add(rec.FileRef);
+                            if (!isDelete && !isRename && !isCreate) continue;
+
+                            if (isDelete && rec.Time.HasValue)
+                            {
+                                if (rec.Name.EndsWith(".pf", StringComparison.OrdinalIgnoreCase)) prefetchDeletes.Add(rec.Time.Value);
+                                else if (Parsers.IsRobloxLogName(rec.Name)) robloxLogDeletes.Add(rec.Time.Value);
+                                else if (Parsers.IsJumpListName(rec.Name)) jumpListDeletes.Add(rec.Time.Value);
+                                else if (rec.Time.Value > weekAgo && (rec.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || rec.Name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)))
+                                    programDeletesThisWeek++;
+                            }
+
+                            bool isFolder = (rec.Attributes & 0x10) != 0;
+                            var sig = isFolder ? matcher.MatchFolderName(rec.Name) : matcher.MatchName(rec.Name);
+                            if (sig == null) continue;
+                            if (!isFolder && !Matcher.ScannedExtensions.Contains(Path.GetExtension(rec.Name))) continue;   // only programs, scripts and archives
+
+                            string evidence = isDelete ? Evidence.Deleted : isRename ? Evidence.Renamed : Evidence.WasHere;
+                            string key = evidence + "|" + rec.ParentRef + "|" + rec.Name;
+                            JournalHit h;
+                            if (!hits.TryGetValue(key, out h))
+                            {
+                                if (hits.Count >= 300) continue;
+                                h = new JournalHit { Sig = sig, Name = rec.Name, ParentRef = rec.ParentRef, FileRef = rec.FileRef, Evidence = evidence };
+                                hits[key] = h;
+                            }
+                            if (rec.Time.HasValue && (!h.Time.HasValue || rec.Time.Value > h.Time.Value)) h.Time = rec.Time;
                         }
 
-                        bool isFolder = (rec.Attributes & 0x10) != 0;
-                        var sig = isFolder ? matcher.MatchFolderName(rec.Name) : matcher.MatchName(rec.Name);
-                        if (sig == null) continue;
-                        if (!isFolder && !Matcher.ScannedExtensions.Contains(Path.GetExtension(rec.Name))) continue;   // only programs, scripts and archives
-
-                        string evidence = isDelete ? Evidence.Deleted : isRename ? Evidence.Renamed : Evidence.WasHere;
-                        string key = evidence + "|" + rec.ParentRef + "|" + rec.Name;
-                        JournalHit h;
-                        if (!hits.TryGetValue(key, out h))
-                        {
-                            if (hits.Count >= 300) continue;
-                            h = new JournalHit { Sig = sig, Name = rec.Name, ParentRef = rec.ParentRef, Evidence = evidence };
-                            hits[key] = h;
-                        }
-                        if (rec.Time.HasValue && (!h.Time.HasValue || rec.Time.Value > h.Time.Value)) h.Time = rec.Time;
+                        if (next <= usn) break;
+                        usn = next;
                     }
-
-                    Tick("Reading drive " + letter + " change log", progressStart + progressSpan * Math.Min(1.0, (double)(next - journal.FirstUsn) / span));
-                    if (next <= usn) break;
-                    usn = next;
+                    if (reads == 0 && !forwardOnly && segStart > journal.FirstUsn) { forwardOnly = true; continue; }   // retry this window from the start of the log
+                    Tick("Reading drive " + letter + " change log", progressStart + progressSpan * Math.Min(1.0, (double)(journal.NextUsn - segStart) / span));
+                    segEnd = segStart;
                 }
 
-                if (sw.Elapsed.TotalSeconds >= options.JournalSeconds)
-                    notes.Add("Drive " + letter + " change log was only partly read (time limit).");
+                if (segEnd > journal.FirstUsn && sw.Elapsed.TotalSeconds >= options.JournalSeconds)
+                    notes.Add("Drive " + letter + " change log: the newest part was read, the oldest part was skipped (time limit). Thorough reads more.");
 
                 // Turn hits into findings, finding each parent folder's current path.
                 var parentCache = new Dictionary<long, string>();
                 foreach (var h in hits.Values)
                 {
+                    bool recycled = h.Evidence == Evidence.Renamed && recycledRefs.Contains(h.FileRef);
+                    if (recycled) h.Evidence = Evidence.Deleted;
                     string parent;
                     if (!parentCache.TryGetValue(h.ParentRef, out parent))
                     {
@@ -169,7 +190,8 @@ namespace PCCheck.Engine
                     }
                     string path = parent != null ? Path.Combine(parent, h.Name) : letter + @"\(folder no longer exists)\" + h.Name;
                     var f = FromSignature(h.Sig, h.Evidence, path, h.Time, "Drive change log (USN)");
-                    if (h.Evidence == Evidence.Renamed) f.Note = "Renamed from this name. Cheats are often renamed to avoid checks.";
+                    if (recycled) f.Note = "Moved to the Recycle Bin.";
+                    else if (h.Evidence == Evidence.Renamed) f.Note = "Renamed from this name. Cheats are often renamed to avoid checks.";
                     Add(f);
                 }
 

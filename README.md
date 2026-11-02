@@ -9,13 +9,14 @@ OpenCheck is an open-source, read-only Windows app that checks a PC for Roblox e
 ## For the person being checked
 
 **What it looks at**
-- File and folder **names** in your user folders, ProgramData and Program Files. File contents are never opened. (The only exception: a file that already matched the cheat list gets a fingerprint, its SHA-256.)
-- Windows' records of programs that ran: Prefetch, BAM, UserAssist, MuiCache, Compatibility Assistant, Recent files.
-- Deleted files: the Recycle Bin and the drive's change log (NTFS USN journal), filtered to cheat names only.
+- File and folder **names** in your user folders, ProgramData and Program Files. File contents are never opened, with three exceptions: a file that already matched the cheat list gets a fingerprint (SHA-256), Roblox FastFlag files are read for flags, and Roblox's own logs are read for game join times.
+- Windows' records of programs that ran or were on the PC: Prefetch, BAM, UserAssist, MuiCache, Compatibility Assistant, the compatibility cache (ShimCache, which keeps program paths for months, even after they're deleted) and Recent files.
+- Deleted files: the Recycle Bin and the drive's change log (NTFS USN journal), read newest first so recent deletions are always covered, filtered to cheat names only.
 - Windows Security (Defender) detections and antivirus exclusions.
 - Cleared event logs, logs that are suspiciously short, clock changes, and wiped Prefetch, Roblox logs or recent-file history.
 - When Windows was last reset or installed, and when the Windows account was created (a reset in the last week is flagged for review).
 - Windows Firewall rules that block Roblox (a common lag-switch trick).
+- Roblox's own log files, to list recent games (place ID, join and leave times only) and show which game was open when a cheat ran. Nothing else from the logs is kept, and server addresses are ignored.
 - FastFlag files from Roblox and every bootstrapper (Bloxstrap, Fishstrap, Voidstrap, Froststrap and others), plus FastFlag list files in Desktop, Downloads and Documents. Bootstrappers are listed as context only and never count against anyone.
 - Macros and auto clickers (AutoHotkey, TinyTask, OP/GS Auto Clicker...) and lag-switch tools (Clumsy, NetLimiter, NetBalancer, WinDivert).
 - Whether the PC is a virtual machine, whether VM software or Android emulators are installed or were used, and PCIe devices that could be DMA cards.

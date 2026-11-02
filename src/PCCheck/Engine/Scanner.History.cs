@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Win32;
@@ -22,13 +23,43 @@ namespace PCCheck.Engine
                 ScanRegistryPathNames(Registry.Users, sid + @"\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers", "Compatibility settings", false);
             }
             ScanRegistryPathNames(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers", "Compatibility settings", false);
-            Tick("Reading recent files", 0.9);
+            Tick("Reading recent files", 0.85);
             ScanRecentShortcuts();
+            Tick("Reading compatibility cache", 0.95);
+            ScanShimCache();
 
             var ran = areaFindings.Where(f => f.Evidence == Evidence.Ran && f.Group == Groups.Cheat).ToList();
             if (ran.Count == 0) return admin ? "No cheats in program history" : "No cheats found (partial, needs admin)";
             int runs = ran.Sum(f => Math.Max(1, f.RunCount));
             return ran.Count + (ran.Count == 1 ? " program, " : " programs, ") + runs + (runs == 1 ? " run" : " runs");
+        }
+
+        /// <summary>AppCompatCache (ShimCache): Windows' list of programs it has seen. Kept for months and survives deleting the file.</summary>
+        void ScanShimCache()
+        {
+            try
+            {
+                using (var key = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache"))
+                {
+                    var data = key == null ? null : key.GetValue("AppCompatCache") as byte[];
+                    foreach (var e in Parsers.ParseShimCache(data))
+                    {
+                        string ext;
+                        try { ext = Path.GetExtension(e.Path); } catch { continue; }
+                        if (!Matcher.ScannedExtensions.Contains(ext)) continue;
+                        var sig = matcher.MatchName(e.Path);
+                        if (sig == null) continue;
+                        string path = e.Path.StartsWith(@"\??\", StringComparison.Ordinal) ? e.Path.Substring(4) : e.Path;
+                        bool gone = false;
+                        try { gone = !File.Exists(path); } catch { }
+                        var f = FromSignature(sig, Evidence.WasHere, path, null, "Compatibility cache (ShimCache)");
+                        f.Note = (gone ? "The file is gone now, but Windows still remembers it. " : "") +
+                                 "Windows saw this program" + (e.Modified.HasValue ? " (file dated " + e.Modified.Value.ToString("yyyy-MM-dd") + ")" : "") + ". This record lasts for months.";
+                        Add(f);
+                    }
+                }
+            }
+            catch (Exception ex) { notes.Add("Couldn't read the compatibility cache: " + ex.Message); }
         }
 
         void ScanPrefetch()
@@ -47,6 +78,7 @@ namespace PCCheck.Engine
 
                     DateTime? last = null;
                     int runs = 0;
+                    List<DateTime> runTimes = null;
                     try { last = File.GetLastWriteTime(file); } catch { }
                     try
                     {
@@ -56,7 +88,8 @@ namespace PCCheck.Engine
                         if (info != null)
                         {
                             runs = info.RunCount;
-                            if (info.RunTimes.Count > 0) last = info.RunTimes[0];
+                            if (info.RunTimes.Count > 0) last = info.RunTimes.Max();
+                            runTimes = info.RunTimes;
                         }
                     }
                     catch { }
@@ -65,6 +98,7 @@ namespace PCCheck.Engine
                     string exe = dash > 0 ? fileName.Substring(0, dash) : fileName;
                     var f = FromSignature(sig, Evidence.Ran, exe, last, "Prefetch");
                     f.RunCount = runs;
+                    if (runTimes != null) foreach (var rt in runTimes) f.RunTimes.Add(rt);
                     Add(f);
                 }
             }

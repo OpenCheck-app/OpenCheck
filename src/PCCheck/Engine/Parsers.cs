@@ -22,6 +22,8 @@ namespace PCCheck.Engine
         public string Name;
     }
 
+    public sealed class ShimEntry { public string Path; public DateTime? Modified; }
+
     public sealed class PrefetchInfo { public int Version; public int RunCount; public List<DateTime> RunTimes = new List<DateTime>(); }
 
     public sealed class DeviceInstall { public DateTime Time; public string DeviceId; }
@@ -34,6 +36,7 @@ namespace PCCheck.Engine
         public const uint UsnReasonFileCreate = 0x00000100;
         public const uint UsnReasonFileDelete = 0x00000200;
         public const uint UsnReasonRenameOldName = 0x00001000;
+        public const uint UsnReasonRenameNewName = 0x00002000;
 
         static readonly DateTime MinSane = new DateTime(2000, 1, 1);
 
@@ -146,6 +149,130 @@ namespace PCCheck.Engine
         /// Reads USN_RECORD_V2 entries from a FSCTL_READ_USN_JOURNAL output buffer.
         /// The first 8 bytes of the buffer are the next USN and are skipped.
         /// </summary>
+        /// <summary>
+        /// Reads Windows 8/10/11 AppCompatCache (ShimCache) data: a header, then "10ts" entries holding a program path
+        /// and that file's last-modified time. Windows keeps these for a long time, even after the file is deleted.
+        /// </summary>
+        public static List<ShimEntry> ParseShimCache(byte[] data)
+        {
+            var list = new List<ShimEntry>();
+            if (data == null || data.Length < 8) return list;
+            int off = BitConverter.ToInt32(data, 0);   // header size (0x30, 0x34 or 0x80)
+            if (off < 4 || off > data.Length) return list;
+            while (off + 12 <= data.Length && list.Count < 4096)
+            {
+                if (data[off] != (byte)'1' || data[off + 1] != (byte)'0' || data[off + 2] != (byte)'t' || data[off + 3] != (byte)'s') break;
+                int entrySize = BitConverter.ToInt32(data, off + 8);
+                int body = off + 12;
+                if (entrySize < 2 || body + entrySize > data.Length) break;
+                int pathLen = BitConverter.ToUInt16(data, body);
+                if (body + 2 + pathLen + 8 <= body + entrySize)
+                {
+                    string path = Encoding.Unicode.GetString(data, body + 2, pathLen);
+                    var modified = FromFileTime(BitConverter.ToInt64(data, body + 2 + pathLen));
+                    list.Add(new ShimEntry { Path = path, Modified = modified });
+                }
+                off = body + entrySize;
+            }
+            return list;
+        }
+
+        static readonly Regex RobloxJoin = new Regex(@"! Joining game '([0-9a-fA-F-]+)' place (\d+)", RegexOptions.Compiled);
+        static readonly Regex RobloxUniverse = new Regex(@"game_join_loadtime:.*?placeid:(\d+).*?universeid:(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        /// <summary>The ISO time at the start of a Roblox log line ("2026-10-28T21:14:05.123Z,..."), as local time.</summary>
+        public static DateTime? RobloxLogTime(string line)
+        {
+            if (line == null || line.Length < 20 || line[4] != '-' || line[10] != 'T') return null;
+            int end = line.IndexOf('Z');
+            if (end < 19 || end > 32) return null;
+            DateTime t;
+            if (DateTime.TryParse(line.Substring(0, end + 1), CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out t))
+                return DateTime.SpecifyKind(t, DateTimeKind.Utc).ToLocalTime();
+            return null;
+        }
+
+        /// <summary>
+        /// Finds game sessions in a Roblox log: "! Joining game ... place N" starts one, and
+        /// "Time to disconnect replication data" (or leaving / the next join) ends it. Only place IDs and times are kept.
+        /// </summary>
+        public static List<RobloxSession> ParseRobloxLog(IEnumerable<string> lines, DateTime? fileEnd)
+        {
+            var list = new List<RobloxSession>();
+            RobloxSession cur = null;
+            DateTime? lastTime = null;
+            foreach (var line in lines)
+            {
+                if (line == null) continue;
+                bool join = line.IndexOf("! Joining game", StringComparison.Ordinal) >= 0;
+                bool load = !join && line.IndexOf("game_join_loadtime", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool leave = !join && !load && (line.IndexOf("Time to disconnect replication data", StringComparison.Ordinal) >= 0
+                                             || line.IndexOf("leaveUGCGameInternal", StringComparison.Ordinal) >= 0);
+                if (!join && !load && !leave) continue;
+                var t = RobloxLogTime(line);
+                if (t.HasValue) lastTime = t;
+                if (join)
+                {
+                    var m = RobloxJoin.Match(line);
+                    long place;
+                    if (!m.Success || !t.HasValue || !long.TryParse(m.Groups[2].Value, out place)) continue;
+                    if (cur != null && !cur.End.HasValue) { cur.End = t; }
+                    cur = new RobloxSession { PlaceId = place, Start = t.Value };
+                    list.Add(cur);
+                }
+                else if (load && cur != null)
+                {
+                    var m = RobloxUniverse.Match(line);
+                    long place, universe;
+                    if (m.Success && long.TryParse(m.Groups[1].Value, out place) && place == cur.PlaceId && long.TryParse(m.Groups[2].Value, out universe))
+                        cur.UniverseId = universe;
+                }
+                else if (leave && cur != null && t.HasValue && !cur.End.HasValue)
+                {
+                    cur.End = t;
+                }
+            }
+            if (cur != null && !cur.End.HasValue)
+            {
+                cur.NoLeave = true;
+                var end = fileEnd ?? lastTime;
+                if (end.HasValue && end.Value >= cur.Start) cur.End = end;
+            }
+            return list;
+        }
+
+        /// <summary>Roblox games that were open at time t (with 2 minutes of slack), or joined up to 20 minutes after it.</summary>
+        public static List<GameLink> GamesAround(DateTime t, IList<RobloxSession> sessions)
+        {
+            var links = new List<GameLink>();
+            var slack = TimeSpan.FromMinutes(2);
+            foreach (var s in sessions)
+            {
+                var end = s.End ?? s.Start;
+                if (t >= s.Start - slack && t <= end + slack) links.Add(new GameLink { Session = s, How = "during" });
+            }
+            if (links.Count == 0)
+            {
+                var next = sessions.Where(s => s.Start > t && s.Start <= t.AddMinutes(20)).OrderBy(s => s.Start).FirstOrDefault();
+                if (next != null) links.Add(new GameLink { Session = next, How = "before" });
+            }
+            return links;
+        }
+
+        /// <summary>Program start times in [from, to] that no log file's (created, last written) span covers, with 5 minutes of slack.</summary>
+        public static List<DateTime> UncoveredStarts(IEnumerable<DateTime> starts, IList<Tuple<DateTime, DateTime>> logSpans, DateTime from, DateTime to)
+        {
+            var slack = TimeSpan.FromMinutes(5);
+            var result = new List<DateTime>();
+            foreach (var t in starts.Distinct())
+            {
+                if (t < from || t > to) continue;
+                bool covered = logSpans.Any(s => t >= s.Item1 - slack && t <= s.Item2 + slack);
+                if (!covered) result.Add(t);
+            }
+            return result;
+        }
+
         public static List<UsnRecord> ParseUsnBuffer(byte[] buffer, int length)
         {
             var list = new List<UsnRecord>();

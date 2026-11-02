@@ -385,6 +385,38 @@ namespace PCCheck.Tests
         [InlineData("WinDivert64.sys", "WinDivert")]
         [InlineData("Voidstrap.exe", "Roblox bootstrapper")]
         [InlineData("Fishstrap.exe", "Roblox bootstrapper")]
+        [InlineData("Matrix.exe", "Matrix Hub")]
+        [InlineData("Matrix External.exe", "Matrix Hub")]
+        [InlineData("Matrix Hub.exe", "Matrix Hub")]
+        [InlineData("Matrix_Hub_v2.exe", "Matrix Hub")]
+        [InlineData("MatrixHubLoader.exe", "Matrix Hub")]
+        [InlineData("matrix-external-3.1.exe", "Matrix Hub")]
+        [InlineData("MATRIX.EXE-1A2B3C4D.pf", "Matrix Hub")]
+        [InlineData("MatrixV2.exe", "Matrix Hub")]
+        [InlineData("DX9WARE V2.exe", "DX9WARE")]
+        [InlineData("Photon.exe", "Photon")]
+        [InlineData("Melatonin.exe", "Melatonin")]
+        [InlineData("Lumen External.exe", "Lumen")]
+        [InlineData("Madius.exe", "Madius")]
+        [InlineData("Isaeva.exe", "Isaeva")]
+        [InlineData("Cosmic Executor.exe", "Cosmic")]
+        [InlineData("WRDApi.dll", "WeAreDevs / exploit API")]
+        [InlineData("Roblox Hack.exe", "Generic executor")]
+        [InlineData("Severe Hub.exe", "Severe")]
+        [InlineData("Volt.exe", "Volt")]
+        [InlineData("VoltLoader.exe", "Volt")]
+        [InlineData("Vector.cc.exe", "Vector")]
+        [InlineData("Vector External.exe", "Vector")]
+        [InlineData("Isaeva.exe", "Isaeva")]
+        [InlineData("Serotonin.exe", "Serotonin")]
+        [InlineData("Potassium.exe", "Potassium")]
+        [InlineData("RiftHub.lua", "Exploit script")]
+        [InlineData("Yabujin.lua", "Exploit script")]
+        [InlineData("Lunor Hub.lua", "Exploit script")]
+        [InlineData("Faded Yart.lua", "Exploit script")]
+        [InlineData("divine.land loader.exe", "Cheat store loader")]
+        [InlineData("Predator CS2.exe", "Predator")]
+        [InlineData("Matcha External.exe", "Matcha")]
         public void Detects_new_categories(string file, string expected)
         {
             var sig = m.MatchName(file);
@@ -400,6 +432,22 @@ namespace PCCheck.Tests
         [InlineData("RobloxPlayerInstaller.exe")]
         [InlineData("feature-flags.json")]
         [InlineData("Microsoft.Build.Tasks.Executor.dll")]
+        [InlineData("MatrixScreensaver.exe")]
+        [InlineData("PhotonEngine.dll")]
+        [InlineData("Photoshop.exe")]
+        [InlineData("AxisCameraStation.exe")]
+        [InlineData("LumenRender.dll")]
+        [InlineData("CosmicTweaks.exe")]
+        [InlineData("RealtekAudio.exe")]
+        [InlineData("MatrixMultiply.dll")]
+        [InlineData("Wavelength.exe")]
+        [InlineData("Severeweatheralerts.exe")]
+        [InlineData("vector.exe")]
+        [InlineData("Volta.exe")]
+        [InlineData("PredatorSense.exe")]
+        [InlineData("TekkitLauncher.exe")]
+        [InlineData("Ignite.exe")]
+        [InlineData("Matrices.dll")]
         public void New_rules_do_not_flag_normal_apps(string file)
         {
             Assert.Null(m.MatchName(file));
@@ -439,6 +487,117 @@ namespace PCCheck.Tests
             Assert.False(Parsers.IsRobloxLogName("setup.log"));
             Assert.True(Parsers.IsJumpListName("5f7b5f1e01b83767.automaticDestinations-ms"));
             Assert.False(Parsers.IsJumpListName("notes.txt"));
+        }
+    }
+
+    public class ShimCacheTests
+    {
+        static byte[] Entry(string path, long fileTime)
+        {
+            var p = System.Text.Encoding.Unicode.GetBytes(path);
+            var body = new List<byte>();
+            body.AddRange(BitConverter.GetBytes((ushort)p.Length));
+            body.AddRange(p);
+            body.AddRange(BitConverter.GetBytes(fileTime));
+            body.AddRange(BitConverter.GetBytes(0));   // no extra data
+            var e = new List<byte>();
+            e.AddRange(System.Text.Encoding.ASCII.GetBytes("10ts"));
+            e.AddRange(BitConverter.GetBytes(0));
+            e.AddRange(BitConverter.GetBytes(body.Count));
+            e.AddRange(body);
+            return e.ToArray();
+        }
+
+        [Fact]
+        public void Reads_paths_and_dates()
+        {
+            long ft = new DateTime(2026, 3, 1, 12, 0, 0, DateTimeKind.Utc).ToFileTimeUtc();
+            var data = new List<byte>();
+            data.AddRange(BitConverter.GetBytes(0x34));
+            data.AddRange(new byte[0x34 - 4]);
+            data.AddRange(Entry(@"C:\Users\a\Downloads\Solara.exe", ft));
+            data.AddRange(Entry(@"\??\C:\Windows\notepad.exe", ft));
+            var list = Parsers.ParseShimCache(data.ToArray());
+            Assert.Equal(2, list.Count);
+            Assert.Equal(@"C:\Users\a\Downloads\Solara.exe", list[0].Path);
+            Assert.True(list[0].Modified.HasValue);
+            Assert.Equal(2026, list[0].Modified.Value.Year);
+        }
+
+        [Fact]
+        public void Bad_data_is_ignored()
+        {
+            Assert.Empty(Parsers.ParseShimCache(null));
+            Assert.Empty(Parsers.ParseShimCache(new byte[] { 1, 2, 3 }));
+            var junk = new byte[200]; junk[0] = 0x34;
+            Assert.Empty(Parsers.ParseShimCache(junk));
+        }
+    }
+
+    public class RobloxLogTests
+    {
+        static readonly string[] Log =
+        {
+            "2026-10-28T21:00:01.100Z,0.1,1a2b,6 [FLog::Output] Settings Date header was Wed, 28 Oct 2026",
+            "2026-10-28T21:02:05.123Z,12.3,1a2b,6 [FLog::Output] ! Joining game 'aa11bb22-cc33-dd44-ee55-ff6677889900' place 920587237 at 128.116.1.1",
+            "2026-10-28T21:02:20.000Z,27.3,1a2b,6 [FLog::GameJoinLoadTime] Report game_join_loadtime: placeid:920587237, loadtime:15, universeid:383310974, joinattemptid:x",
+            "2026-10-28T21:40:00.000Z,99.0,1a2b,6 [FLog::Network] Time to disconnect replication data: {{1.0}}",
+            "2026-10-28T21:45:00.000Z,99.5,1a2b,6 [FLog::Output] ! Joining game '11111111-2222-3333-4444-555555555555' place 2753915549 at 128.116.1.2",
+        };
+
+        [Fact]
+        public void Finds_sessions_with_place_universe_and_times()
+        {
+            var end = new DateTime(2026, 10, 28, 22, 10, 0, DateTimeKind.Utc).ToLocalTime();
+            var list = Parsers.ParseRobloxLog(Log, end);
+            Assert.Equal(2, list.Count);
+            Assert.Equal(920587237L, list[0].PlaceId);
+            Assert.Equal(383310974L, list[0].UniverseId);
+            Assert.Equal(new DateTime(2026, 10, 28, 21, 2, 5, DateTimeKind.Utc).ToLocalTime(), list[0].Start.AddMilliseconds(-list[0].Start.Millisecond));
+            Assert.Equal(new DateTime(2026, 10, 28, 21, 40, 0, DateTimeKind.Utc).ToLocalTime(), list[0].End.Value);
+            Assert.Equal(2753915549L, list[1].PlaceId);
+            Assert.True(list[1].NoLeave);
+            Assert.Equal(end, list[1].End.Value);
+        }
+
+        [Fact]
+        public void Links_cheat_run_times_to_games()
+        {
+            var list = Parsers.ParseRobloxLog(Log, null);
+            var during = new DateTime(2026, 10, 28, 21, 15, 0, DateTimeKind.Utc).ToLocalTime();
+            var links = Parsers.GamesAround(during, list);
+            Assert.Single(links);
+            Assert.Equal("during", links[0].How);
+            Assert.Equal(920587237L, links[0].Session.PlaceId);
+
+            var before = new DateTime(2026, 10, 28, 20, 55, 0, DateTimeKind.Utc).ToLocalTime();
+            links = Parsers.GamesAround(before, list);
+            Assert.Single(links);
+            Assert.Equal("before", links[0].How);
+
+            var unrelated = new DateTime(2026, 10, 27, 12, 0, 0, DateTimeKind.Utc).ToLocalTime();
+            Assert.Empty(Parsers.GamesAround(unrelated, list));
+        }
+
+        [Fact]
+        public void Ignores_junk_lines()
+        {
+            Assert.Empty(Parsers.ParseRobloxLog(new[] { "", "hello", "! Joining game 'x' place abc", null }, null));
+            Assert.Null(Parsers.RobloxLogTime("not a time"));
+        }
+    }
+
+    public class MissingLogTests
+    {
+        [Fact]
+        public void Finds_roblox_starts_with_no_log()
+        {
+            var now = new DateTime(2026, 11, 2, 12, 0, 0);
+            var starts = new[] { now.AddHours(-30), now.AddHours(-20), now.AddHours(-5), now.AddDays(-9) };
+            var spans = new List<Tuple<DateTime, DateTime>> { Tuple.Create(now.AddHours(-5).AddSeconds(3), now.AddHours(-4)) };
+            var missing = Parsers.UncoveredStarts(starts, spans, now.AddDays(-3), now.AddMinutes(-10));
+            Assert.Equal(2, missing.Count);                       // -30h and -20h have no log; -5h is covered; -9 days is too old
+            Assert.DoesNotContain(now.AddHours(-5), missing);
         }
     }
 }

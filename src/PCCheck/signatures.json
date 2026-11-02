@@ -8,7 +8,7 @@
     "severity: high = cheat, medium = suspicious tool, info = context only (never causes FLAGGED by itself).",
     "Generic tokens (like 'robloxexecutor') catch renamed or unknown tools. No list can catch every cheat, so the checker also looks at behavior: executor folders, deleted files, antivirus exclusions and firewall rules."
   ],
-  "version": "2026-10-28",
+  "version": "2026-11-02",
   "nameSuffixes": [
     "ui",
     "bootstrapper",
@@ -28,7 +28,11 @@
     "v4",
     "beta",
     "cli",
-    "app"
+    "app",
+    "external",
+    "executor",
+    "exploit",
+    "hub"
   ],
   "signatures": [
     {
@@ -416,10 +420,11 @@
       "category": "Internal executor",
       "severity": "high",
       "match": [
-        "voltexecutor"
+        "volt"
       ],
-      "strict": false,
-      "folders": []
+      "strict": true,
+      "folders": [],
+      "note": "\"Volt\" is a short word, so check the path if it's the only match."
     },
     {
       "name": "Isabelle",
@@ -512,6 +517,112 @@
       "folders": []
     },
     {
+      "name": "Cosmic",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "cosmic"
+      ],
+      "strict": true,
+      "folders": [],
+      "note": "\"Cosmic\" is also a common app name, so check the path if it's the only match."
+    },
+    {
+      "name": "Isaeva",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "isaeva"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Real",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "realexecutor"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Incognito",
+      "category": "Internal executor",
+      "severity": "high",
+      "match": [
+        "incognitoexecutor",
+        "incognitoroblox"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "WeAreDevs / exploit API",
+      "category": "Exploit API",
+      "severity": "high",
+      "match": [
+        "wearedevs",
+        "wrdapi",
+        "exploitapi",
+        "easyexploits",
+        "forlornapi",
+        "oxygenapi",
+        "krnlapi",
+        "kiwiapi"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "Libraries that Roblox exploits are built on."
+    },
+    {
+      "name": "MacSploit",
+      "category": "Internal executor (Mac)",
+      "severity": "high",
+      "match": [
+        "macsploit"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Opiumware",
+      "category": "Internal executor (Mac)",
+      "severity": "high",
+      "match": [
+        "opiumware"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Cheat store loader",
+      "category": "Cheat loader",
+      "severity": "high",
+      "match": [
+        "divineland",
+        "divinelandloader"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "Loader from a cheat store that sells Roblox executors and externals."
+    },
+    {
+      "name": "Predator",
+      "category": "Internal cheat (CS2)",
+      "severity": "high",
+      "match": [
+        "predatorcs2",
+        "predatorinternal",
+        "predatorcheat",
+        "predatorloader"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "Only cheat-specific names are matched, because \"Predator\" is also Acer's gaming software."
+    },
+    {
       "name": "Generic executor",
       "category": "Internal executor",
       "severity": "high",
@@ -529,7 +640,11 @@
         "rbxcheat",
         "robloxinjector",
         "rbxinjector",
-        "rbxinject"
+        "rbxinject",
+        "rbxhack",
+        "robloxexternal",
+        "rbxexternal",
+        "externalroblox"
       ],
       "strict": false,
       "folders": []
@@ -545,11 +660,24 @@
         "remotespy",
         "darkdex",
         "dexexplorer",
-        "owlhub"
+        "owlhub",
+        "ignitehub",
+        "ignitescript",
+        "nhachub",
+        "nhacscript",
+        "fadedyart",
+        "fadedhub",
+        "fadedscript",
+        "rifthub",
+        "yabujin",
+        "lunor",
+        "lunorhub",
+        "tekkithub",
+        "tekkitscript"
       ],
       "strict": false,
       "folders": [],
-      "note": "A well-known Roblox exploit script. These only run inside an executor."
+      "note": "A Roblox exploit script or script hub. These only run inside an executor."
     },
     {
       "name": "Matcha",
@@ -570,6 +698,98 @@
       ],
       "strict": true,
       "folders": []
+    },
+    {
+      "name": "Matrix Hub",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "matrix"
+      ],
+      "strict": true,
+      "folders": [],
+      "note": "Roblox external (Matrix Hub). \"Matrix\" is also a common word, so check the path if it's the only match."
+    },
+    {
+      "name": "Photon",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "photon"
+      ],
+      "strict": true,
+      "folders": [],
+      "note": "\"Photon\" is also used by normal apps, so check the path if it's the only match."
+    },
+    {
+      "name": "DX9WARE",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "dx9ware",
+        "dx9warev2"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Melatonin",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "melatonin"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Lumen",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "lumen"
+      ],
+      "strict": true,
+      "folders": [],
+      "note": "\"Lumen\" is also a common app name, so check the path if it's the only match."
+    },
+    {
+      "name": "Axis",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "axisexternal",
+        "axisroblox",
+        "axisrbx"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Madius",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "madius"
+      ],
+      "strict": false,
+      "folders": []
+    },
+    {
+      "name": "Vector",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "vectorcc",
+        "vectorexternal",
+        "vectorroblox",
+        "vectorrbx",
+        "vectorrust",
+        "vectorloader"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "Only cheat-specific names are matched (like Vector.cc or Vector External), because \"Vector\" is also a normal app name."
     },
     {
       "name": "Serotonin",

@@ -38,6 +38,29 @@ namespace PCCheck.Engine
                 .ToList();
         }
 
+        static string Clock(DateTime t) { return t.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture); }
+
+        /// <summary>"place 920587237 (2026-10-28 21:02 to 21:40)" for each game open when this ran.</summary>
+        static string GamesText(Finding f, int max)
+        {
+            if (f.Games.Count == 0) return null;
+            var parts = f.Games.Take(max).Select(g =>
+            {
+                var s = g.Session;
+                string span = Clock(s.Start) + (s.End.HasValue ? " to " + s.End.Value.ToString("HH:mm", CultureInfo.InvariantCulture) : "");
+                return "place " + s.PlaceId + " (" + (g.How == "before" ? "joined right after it ran, " : "") + span + ")";
+            });
+            return string.Join("; ", parts) + (f.Games.Count > max ? "; +" + (f.Games.Count - max) + " more" : "");
+        }
+
+        static string LastOpenedText(Finding f)
+        {
+            if (f.Evidence == Evidence.Ran && f.Time.HasValue) return "last opened " + Time(f.Time);
+            if (f.Evidence == Evidence.Running) return "open right now";
+            if (f.Evidence == Evidence.Deleted && f.Time.HasValue) return "deleted " + Time(f.Time);
+            return Time(f.Time);
+        }
+
         static string Ticks(string s) { return (s ?? "").Replace("`", "'"); }
 
         /// <summary>Discord-ready text. Kept under Discord's 2000 character limit; the full list is in the saved file.</summary>
@@ -55,13 +78,20 @@ namespace PCCheck.Engine
             {
                 var sb = new StringBuilder();
                 sb.Append(SevTag(f.Severity).Trim()).Append(' ').Append("**").Append(Ticks(f.Name)).Append("** (").Append(f.Category).Append(") ")
-                  .Append(f.Evidence).Append(", ").Append(Time(f.Time));
+                  .Append(f.Evidence).Append(", ").Append(LastOpenedText(f));
                 if (f.RunCount > 1) sb.Append(", ").Append(f.RunCount).Append(" runs");
                 sb.AppendLine();
                 if (!string.IsNullOrEmpty(f.Path)) sb.Append('`').Append(Ticks(f.Path)).Append('`').AppendLine();
+                var games = GamesText(f, 2);
+                if (games != null) sb.Append("🎮 Roblox open: ").Append(games).AppendLine();
                 lines.Add(sb.ToString());
             }
             if (lines.Count == 0) lines.Add("Nothing on the cheat list was found.\n");
+            if (r.Sessions.Count > 0)
+            {
+                var last = r.Sessions[0];
+                lines.Add("Last Roblox game: place " + last.PlaceId + ", " + Clock(last.Start) + " (" + r.Sessions.Count + " sessions in logs)\n");
+            }
 
             var body = new StringBuilder(head.ToString());
             int shown = 0;
@@ -106,11 +136,23 @@ namespace PCCheck.Engine
             foreach (var f in ordered)
             {
                 sb.AppendLine(SevTag(f.Severity) + " " + f.Name + " (" + f.Category + ")");
-                sb.AppendLine("       " + f.Evidence + ", " + Time(f.Time) + (f.RunCount > 1 ? ", " + f.RunCount + " runs" : ""));
+                sb.AppendLine("       " + f.Evidence + ", " + LastOpenedText(f) + (f.RunCount > 1 ? ", " + f.RunCount + " runs" : ""));
                 if (!string.IsNullOrEmpty(f.Path)) sb.AppendLine("       " + f.Path);
+                if (f.RunTimes.Count > 1) sb.AppendLine("       Run times: " + string.Join(", ", f.RunTimes.Reverse().Take(8).Select(Clock)));
+                var games = GamesText(f, 6);
+                if (games != null) sb.AppendLine("       Roblox open at the time: " + games);
                 if (f.Sources.Count > 0) sb.AppendLine("       Seen in: " + string.Join(", ", f.Sources));
                 if (!string.IsNullOrEmpty(f.Sha256)) sb.AppendLine("       SHA-256: " + f.Sha256);
                 if (!string.IsNullOrEmpty(f.Note)) sb.AppendLine("       Note: " + f.Note);
+                sb.AppendLine();
+            }
+
+            if (r.Sessions.Count > 0)
+            {
+                sb.AppendLine("Recent Roblox games (from Roblox's logs)");
+                sb.AppendLine(new string('-', 60));
+                foreach (var g in r.Sessions.Take(20))
+                    sb.AppendLine("  " + Clock(g.Start) + (g.End.HasValue ? " to " + g.End.Value.ToString("HH:mm", CultureInfo.InvariantCulture) : "") + "   place " + g.PlaceId + "   roblox.com/games/" + g.PlaceId);
                 sb.AppendLine();
             }
 
@@ -157,6 +199,8 @@ namespace PCCheck.Engine
                 if (f.RunCount > 1) sb.Append(" &middot; ").Append(f.RunCount).Append(" runs");
                 sb.Append("</span>");
                 if (!string.IsNullOrEmpty(f.Path)) sb.Append("<div class=\"p\">").Append(h(f.Path)).Append("</div>");
+                var games = GamesText(f, 6);
+                if (games != null) sb.Append("<small>Roblox open at the time: ").Append(h(games)).Append("</small><br>");
                 if (f.Sources.Count > 0) sb.Append("<small>Seen in: ").Append(h(string.Join(", ", f.Sources))).Append("</small><br>");
                 if (!string.IsNullOrEmpty(f.Sha256)) sb.Append("<small class=\"p\">SHA-256: ").Append(h(f.Sha256)).Append("</small><br>");
                 if (!string.IsNullOrEmpty(f.Note)) sb.Append("<small>").Append(h(f.Note)).Append("</small>");
@@ -209,10 +253,24 @@ namespace PCCheck.Engine
                         { "path", f.Path },
                         { "sources", f.Sources.ToArray() },
                         { "runCount", f.RunCount },
+                        { "runTimes", f.RunTimes.Reverse().Take(8).Select(t => (object)t.ToString("o", CultureInfo.InvariantCulture)).ToArray() },
+                        { "games", f.Games.Select(g => (object)SessionUi(g.Session, g.How)).ToArray() },
                         { "sha256", f.Sha256 },
                         { "note", f.Note },
                         { "cheat", f.IsCheat }
-                    }).ToArray() }
+                    }).ToArray() },
+                { "sessions", r.Sessions.Take(20).Select(g => (object)SessionUi(g, null)).ToArray() }
+            };
+        }
+
+        static Dictionary<string, object> SessionUi(RobloxSession s, string how)
+        {
+            return new Dictionary<string, object>
+            {
+                { "placeId", s.PlaceId.ToString(CultureInfo.InvariantCulture) },
+                { "start", s.Start.ToString("o", CultureInfo.InvariantCulture) },
+                { "end", s.End.HasValue ? s.End.Value.ToString("o", CultureInfo.InvariantCulture) : null },
+                { "how", how }
             };
         }
     }
