@@ -47,11 +47,64 @@ namespace PCCheck.Engine
             catch (Exception ex) { notes.Add("Windows Security history unavailable: " + ex.Message); }
 
             int exclusions = ScanDefenderExclusions();
+            exclusions += ScanDefenderChanges();
             if (detections == 0 && exclusions == 0) return "No related threats";
             var parts = new List<string>();
             if (detections > 0) parts.Add(detections + (detections == 1 ? " related detection" : " related detections"));
             if (exclusions > 0) parts.Add(exclusions + (exclusions == 1 ? " risky exclusion" : " risky exclusions"));
             return string.Join(", ", parts);
+        }
+
+        /// <summary>
+        /// Windows Security's own log of being turned off (event 5001) or having exclusions added (event 5007) in the last 30 days.
+        /// Executor guides tell people to do both. This shows it even if the setting was put back before the check.
+        /// </summary>
+        int ScanDefenderChanges()
+        {
+            var offTimes = new List<DateTime>();
+            var excl = new List<Tuple<DateTime, string>>();
+            try
+            {
+                ReadEvents("Microsoft-Windows-Windows Defender/Operational",
+                    "*[System[(EventID=5001 or EventID=5007) and TimeCreated[timediff(@SystemTime) <= 2592000000]]]", 2000, (time, id, data) =>
+                    {
+                        if (!time.HasValue) return;
+                        if (id == 5001) { offTimes.Add(time.Value); return; }
+                        string nv;
+                        if (!data.TryGetValue("New Value", out nv) || nv == null) return;
+                        if (nv.IndexOf(@"\Exclusions\Paths\", StringComparison.OrdinalIgnoreCase) >= 0 || nv.IndexOf(@"\Exclusions\Processes\", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            int cut = nv.IndexOf(@"\Exclusions\", StringComparison.OrdinalIgnoreCase);
+                            string rest = nv.Substring(cut + 12);
+                            int slash = rest.IndexOf('\\');
+                            string path = slash >= 0 ? rest.Substring(slash + 1) : rest;
+                            int eq = path.LastIndexOf(" = ", StringComparison.Ordinal);
+                            if (eq > 0) path = path.Substring(0, eq);
+                            excl.Add(Tuple.Create(time.Value, path.Trim()));
+                        }
+                        else if (nv.IndexOf("DisableRealtimeMonitoring = 0x1", StringComparison.OrdinalIgnoreCase) >= 0) offTimes.Add(time.Value);
+                    });
+            }
+            catch (Exception ex) { notes.Add("Couldn't read Windows Security's change history: " + ex.Message); return 0; }
+
+            int count = 0;
+            if (offTimes.Count > 0)
+            {
+                Add(Simple("Windows Security was turned off", "Antivirus turned off", Severity.Medium, Evidence.Tamper, Groups.Tamper, offTimes.Max(),
+                    "Real-time protection (" + offTimes.Count + (offTimes.Count == 1 ? " time" : " times") + " in 30 days)", "Windows Security log",
+                    "Real-time protection was switched off. Executor install guides tell people to do this so the cheat isn't deleted. It also happens when installing some other antivirus."));
+                count++;
+            }
+            foreach (var e in excl.GroupBy(x => x.Item2, StringComparer.OrdinalIgnoreCase).Select(g => g.OrderByDescending(x => x.Item1).First()).Take(10))
+            {
+                var sig = matcher.MatchName(e.Item2) ?? matcher.MatchFolderName(Path.GetFileName(e.Item2.TrimEnd('\\')));
+                if (sig != null) { Add(FromSignature(sig, Evidence.Excluded, e.Item2, e.Item1, "Windows Security log")); count++; continue; }
+                if (!Regex.IsMatch(e.Item2, @"\\(Downloads|Desktop|AppData|Temp|OneDrive|Documents)(\\|$)|^[A-Za-z]:\\?$", RegexOptions.IgnoreCase)) continue;
+                Add(Simple("Antivirus exclusion added", "Antivirus exclusion", Severity.Medium, Evidence.Excluded, Groups.Tamper, e.Item1, e.Item2, "Windows Security log",
+                    "This folder was excluded from Windows Security on " + e.Item1.ToString("g") + ". Cheats are often kept in excluded folders. Some normal apps ask for this too."));
+                count++;
+            }
+            return count;
         }
 
         int ScanDefenderExclusions()

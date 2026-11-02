@@ -129,6 +129,7 @@ namespace PCCheck.Engine
             }
 
             try { LinkGames(); } catch (Exception ex) { notes.Add("games: " + ex.Message); }
+            try { CheckDeletedRunsDuringGames(); } catch (Exception ex) { notes.Add("deleted runs: " + ex.Message); }
             report.Sessions = sessions.Take(40).ToList();
             report.Findings = findings.Values.ToList();
             report.Notes = notes;

@@ -31,6 +31,12 @@ namespace PCCheck.Engine
         public List<string> LooseFlagFileWords = new List<string>();
         /// <summary>Words in a network adapter's name that mean it belongs to a VPN or game ping booster.</summary>
         public List<string> VpnAdapters = new List<string>();
+        /// <summary>Executor-only Lua functions. One strong marker, or two weak ones, means an exploit script.</summary>
+        public List<string> ScriptStrong = new List<string>();
+        public List<string> ScriptWeak = new List<string>();
+        /// <summary>Websites cheats are downloaded from, and ad-link "key system" sites.</summary>
+        public List<string> CheatSites = new List<string>();
+        public List<string> KeySites = new List<string>();
         public Dictionary<string, string> DmaVendors = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> VmMacPrefixes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> KnownBadSha256 = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -92,6 +98,12 @@ namespace PCCheck.Engine
                 set.LooseFlagFileWords.Add(Clean(Convert.ToString(w)));
 
             foreach (var w in Json.Array(Json.Get(root, "vpnAdapters"))) set.VpnAdapters.Add(Convert.ToString(w));
+            var markers = Json.Object(Json.Get(root, "exploitScriptMarkers"));
+            foreach (var w in Json.Array(Json.Get(markers, "strong"))) set.ScriptStrong.Add(Convert.ToString(w));
+            foreach (var w in Json.Array(Json.Get(markers, "weak"))) set.ScriptWeak.Add(Convert.ToString(w));
+            var sites = Json.Object(Json.Get(root, "downloadSites"));
+            foreach (var w in Json.Array(Json.Get(sites, "cheat"))) set.CheatSites.Add(Convert.ToString(w));
+            foreach (var w in Json.Array(Json.Get(sites, "keySystem"))) set.KeySites.Add(Convert.ToString(w));
 
             var dma = Json.Object(Json.Get(root, "dma"));
             foreach (var kv in Json.Object(Json.Get(dma, "suspiciousVendorIds"))) set.DmaVendors[kv.Key] = Convert.ToString(kv.Value);

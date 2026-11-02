@@ -158,5 +158,23 @@ namespace PCCheck.Engine
             if (status != 0) return null;
             return buf[1] != 0;   // DmaProtectionsInUse
         }
+
+        /// <summary>
+        /// Reads the small "Zone.Identifier" note Windows attaches to downloaded files (it says which website the file came from).
+        /// Opened for reading only. Returns null when there is none.
+        /// </summary>
+        public static string ReadZoneIdentifier(string path)
+        {
+            using (var h = CreateFileW(path + ":Zone.Identifier", GENERIC_READ, FILE_SHARE_READ_WRITE_DELETE, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero))
+            {
+                if (h.IsInvalid) return null;
+                using (var fs = new FileStream(h, FileAccess.Read))
+                {
+                    var buf = new byte[8192];
+                    int n = fs.Read(buf, 0, buf.Length);
+                    return n <= 0 ? null : Encoding.UTF8.GetString(buf, 0, n);
+                }
+            }
+        }
     }
 }

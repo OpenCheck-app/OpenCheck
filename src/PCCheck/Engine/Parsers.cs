@@ -208,7 +208,15 @@ namespace PCCheck.Engine
                 bool load = !join && line.IndexOf("game_join_loadtime", StringComparison.OrdinalIgnoreCase) >= 0;
                 bool leave = !join && !load && (line.IndexOf("Time to disconnect replication data", StringComparison.Ordinal) >= 0
                                              || line.IndexOf("leaveUGCGameInternal", StringComparison.Ordinal) >= 0);
-                if (!join && !load && !leave) continue;
+                if (!join && !load && !leave)
+                {
+                    if (cur != null && (line.IndexOf("kick", StringComparison.OrdinalIgnoreCase) >= 0 || line.IndexOf("268", StringComparison.Ordinal) >= 0 || line.IndexOf("client behavio", StringComparison.OrdinalIgnoreCase) >= 0))
+                    {
+                        var kick = KickFromLogLine(line);
+                        if (kick != null && cur.KickReason == null) { cur.KickReason = kick; cur.KickTime = RobloxLogTime(line) ?? cur.Start; }
+                    }
+                    continue;
+                }
                 var t = RobloxLogTime(line);
                 if (t.HasValue) lastTime = t;
                 if (join)
@@ -307,6 +315,96 @@ namespace PCCheck.Engine
                 if (s != null) result.Add(Tuple.Create(down, s));
             }
             return result;
+        }
+
+        /// <summary>
+        /// Exploit-only functions found in a Roblox script's text. Real Roblox games can't call these, so finding them
+        /// means the script was written for an executor. Returns the distinct markers found.
+        /// </summary>
+        public static List<string> ExploitMarkers(string text, IEnumerable<string> markers)
+        {
+            var found = new List<string>();
+            if (string.IsNullOrEmpty(text)) return found;
+            foreach (var m in markers)
+                if (!string.IsNullOrEmpty(m) && text.IndexOf(m, StringComparison.OrdinalIgnoreCase) >= 0 && !found.Contains(m)) found.Add(m);
+            return found;
+        }
+
+        static readonly Regex LoadstringUrl = new Regex(@"loadstring\s*\(\s*game\s*:\s*HttpGet(?:Async)?\s*\(\s*[""']([^""']{8,300})[""']", RegexOptions.IgnoreCase);
+
+        /// <summary>The first web address a script loads code from (loadstring(game:HttpGet("..."))). Text only; it is never visited.</summary>
+        public static string LoadstringSource(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return null;
+            var m = LoadstringUrl.Match(text);
+            return m.Success ? m.Groups[1].Value : null;
+        }
+
+        static readonly string[] InstallerWords = { "setup", "install", "update", "unins", "vcredist", "vc_redist", "dxsetup", "dotnet", "ndp4", "windowsdesktop-runtime", "robloxplayerlauncher", "robloxplayerinstaller", "robloxstudio", "chromesetup", "discordsetup" };
+
+        /// <summary>True for a program run from Downloads, Desktop, Documents or Temp that isn't an installer. Used for "deleted program ran during a game".</summary>
+        public static bool IsLooseUserProgram(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) return false;
+            string p = path.ToLowerInvariant();
+            bool place = p.Contains(@"\downloads\") || p.Contains(@"\desktop\") || p.Contains(@"\documents\") || p.Contains(@"\appdata\local\temp\");
+            if (!place) return false;
+            string name = p.Substring(p.LastIndexOf('\\') + 1);
+            return !InstallerWords.Any(w => name.Contains(w));
+        }
+
+        /// <summary>Website host names in a Zone.Identifier note (HostUrl= and ReferrerUrl= lines).</summary>
+        public static List<string> ZoneHosts(string zone)
+        {
+            var hosts = new List<string>();
+            if (string.IsNullOrEmpty(zone)) return hosts;
+            foreach (var raw in zone.Split('\n'))
+            {
+                string line = raw.Trim();
+                int eq = line.IndexOf('=');
+                if (eq < 0) continue;
+                string key = line.Substring(0, eq);
+                if (!key.Equals("HostUrl", StringComparison.OrdinalIgnoreCase) && !key.Equals("ReferrerUrl", StringComparison.OrdinalIgnoreCase)) continue;
+                Uri u;
+                if (Uri.TryCreate(line.Substring(eq + 1).Trim(), UriKind.Absolute, out u) && !string.IsNullOrEmpty(u.Host))
+                {
+                    string host = u.Host.ToLowerInvariant();
+                    if (!hosts.Contains(host)) hosts.Add(host);
+                }
+            }
+            return hosts;
+        }
+
+        /// <summary>The listed domain a host belongs to (exact or a subdomain of it), or null.</summary>
+        public static string MatchDomain(string host, IEnumerable<string> domains)
+        {
+            if (string.IsNullOrEmpty(host)) return null;
+            foreach (var d in domains)
+            {
+                if (string.IsNullOrEmpty(d)) continue;
+                string dl = d.ToLowerInvariant();
+                if (host == dl || host.EndsWith("." + dl, StringComparison.Ordinal)) return d;
+            }
+            return null;
+        }
+
+        static readonly Regex Kick268 = new Regex(@"unexpected client behavio(u)?r|(error code|reason)\s*:\s*268\b", RegexOptions.IgnoreCase);
+        static readonly Regex KickByGame = new Regex(@"kicked from this experience\s*:\s*(.{1,160}?)\s*(\(error code|$)", RegexOptions.IgnoreCase);
+        static readonly Regex CheatWords = new Regex(@"\b(exploit\w*|cheat\w*|hack\w*|inject\w*|executor|anti[- ]?cheat|speed ?hack\w*|fly ?hack\w*|noclip\w*|teleport ?hack\w*|tamper\w*|suspicious)\b", RegexOptions.IgnoreCase);
+
+        /// <summary>Kick reason from a Roblox log line: "268" for Roblox's own anti-cheat, or the game's kick message, or null.</summary>
+        public static string KickFromLogLine(string line)
+        {
+            if (string.IsNullOrEmpty(line)) return null;
+            if (Kick268.IsMatch(line)) return "268";
+            var m = KickByGame.Match(line);
+            return m.Success ? m.Groups[1].Value.Trim() : null;
+        }
+
+        /// <summary>True when a game's kick message talks about cheating.</summary>
+        public static bool KickMentionsCheating(string reason)
+        {
+            return !string.IsNullOrEmpty(reason) && reason != "268" && CheatWords.IsMatch(reason);
         }
 
         public static List<UsnRecord> ParseUsnBuffer(byte[] buffer, int length)

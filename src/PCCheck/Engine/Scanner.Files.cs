@@ -101,6 +101,8 @@ namespace PCCheck.Engine
                             else
                             {
                                 string ext = Path.GetExtension(e.Name);
+                                if (IsScriptCandidate(ext, dir)) CheckScript((FileInfo)e);
+                                if (IsDownloadCandidate(ext, e.FullName)) CheckDownloadSource((FileInfo)e);
                                 if (!Matcher.ScannedExtensions.Contains(ext)) continue;
                                 var sig = matcher.MatchName(e.Name);
                                 bool isBinary = ext.Equals(".exe", StringComparison.OrdinalIgnoreCase) || ext.Equals(".dll", StringComparison.OrdinalIgnoreCase);
@@ -144,6 +146,17 @@ namespace PCCheck.Engine
                         f.IsCheat = true;
                         Add(f);
                     }
+                    else if (childNames.Contains("autoexec"))
+                    {
+                        // "autoexec" is the folder executors run scripts from on launch. Normal apps don't use it.
+                        DateTime? t = null;
+                        try { t = Directory.GetLastWriteTime(Path.Combine(dir, "autoexec")); } catch { }
+                        var f = Simple("Executor autoexec folder", "Executor files", Severity.High, Evidence.Found, Groups.Cheat, t, Path.Combine(dir, "autoexec"),
+                            "Folder name: autoexec",
+                            "Roblox executors run every script in their \"autoexec\" folder when they start. It's usually left behind after the executor is renamed or deleted.");
+                        f.IsCheat = true;
+                        Add(f);
+                    }
 
                     foreach (var c in childDirs) stack.Push(new KeyValuePair<string, int>(c, depth + 1));
                 }
@@ -171,6 +184,89 @@ namespace PCCheck.Engine
             return hits == 0
                 ? "Nothing found in " + names.ToString("N0") + " names"
                 : hits + (hits == 1 ? " match" : " matches") + " in " + names.ToString("N0") + " names";
+        }
+
+        int scriptsRead;
+        long scriptBytes;
+        static readonly HashSet<string> ScriptFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "workspace", "autoexec", "scripts" };
+
+        /// <summary>Roblox script files: any .lua/.luau, and .txt only inside an executor's workspace, autoexec or scripts folder.</summary>
+        static bool IsScriptCandidate(string ext, string dir)
+        {
+            if (ext.Equals(".lua", StringComparison.OrdinalIgnoreCase) || ext.Equals(".luau", StringComparison.OrdinalIgnoreCase)) return true;
+            return ext.Equals(".txt", StringComparison.OrdinalIgnoreCase) && ScriptFolders.Contains(Path.GetFileName(dir.TrimEnd('\\')));
+        }
+
+        /// <summary>
+        /// Reads a small Roblox script and looks for functions that only executors have (getgenv, hookfunction, identifyexecutor...).
+        /// Only the names of those functions and the address it loads code from are reported, never the script itself.
+        /// </summary>
+        void CheckScript(FileInfo file)
+        {
+            try
+            {
+                if (scriptsRead >= 600 || scriptBytes > (40L << 20) || file.Length > 512 * 1024 || file.Length == 0) return;
+                scriptsRead++;
+                scriptBytes += file.Length;
+                string text;
+                using (var fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                using (var r = new StreamReader(fs))
+                    text = r.ReadToEnd();
+                var strong = Parsers.ExploitMarkers(text, set.ScriptStrong);
+                var weak = Parsers.ExploitMarkers(text, set.ScriptWeak);
+                if (strong.Count == 0 && weak.Count < 2) return;
+                var all = strong.Concat(weak).Take(5).Select(m => m.TrimEnd('('));
+                string source = Parsers.LoadstringSource(text);
+                var f = Simple("Exploit script", "Exploit script (by content)", Severity.High, Evidence.Found, Groups.Cheat, file.LastWriteTime, file.FullName,
+                    "Script contents",
+                    "Uses executor-only functions: " + string.Join(", ", all) + ". Roblox games can't run these, so this script was made for an executor." +
+                    (source != null ? " It loads code from " + source + "." : ""));
+                f.IsCheat = true;
+                Add(f);
+            }
+            catch { }
+        }
+
+        int zonesRead;
+        static readonly HashSet<string> DownloadExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".exe", ".dll", ".zip", ".rar", ".7z", ".msi", ".lua", ".luau", ".bat" };
+
+        static bool IsDownloadCandidate(string ext, string path)
+        {
+            return DownloadExts.Contains(ext) &&
+                   (path.IndexOf(@"\Downloads\", StringComparison.OrdinalIgnoreCase) >= 0 || path.IndexOf(@"\Desktop\", StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        /// <summary>
+        /// Which website a downloaded program or archive came from, from the note Windows attaches to every download.
+        /// Works even if the file was renamed. Only listed cheat and key-system sites are reported; other sites are never written down.
+        /// </summary>
+        void CheckDownloadSource(FileInfo file)
+        {
+            if (zonesRead >= 5000) return;
+            zonesRead++;
+            try
+            {
+                foreach (var host in Parsers.ZoneHosts(Native.ReadZoneIdentifier(file.FullName)))
+                {
+                    string cheat = Parsers.MatchDomain(host, set.CheatSites);
+                    if (cheat != null)
+                    {
+                        var f = Simple("Downloaded from a cheat site", "Cheat download", Severity.High, Evidence.Found, Groups.Cheat, file.LastWriteTime, file.FullName, "Download source",
+                            "Windows recorded that this file came from " + host + ", a Roblox exploit or script site. This works even if the file was renamed.");
+                        f.IsCheat = true;
+                        Add(f);
+                        return;
+                    }
+                    string key = Parsers.MatchDomain(host, set.KeySites);
+                    if (key != null)
+                    {
+                        Add(Simple("Downloaded through an ad-link site", "Cheat download", Severity.Medium, Evidence.Found, Groups.Cheat, file.LastWriteTime, file.FullName, "Download source",
+                            "Windows recorded that this file came through " + host + ". Cheat \"key systems\" use sites like this, but mods and other tools do too, so ask what it is."));
+                        return;
+                    }
+                }
+            }
+            catch { }
         }
 
         /// <summary>Folder depth limit adjusted for the chosen scan depth (never below 1).</summary>

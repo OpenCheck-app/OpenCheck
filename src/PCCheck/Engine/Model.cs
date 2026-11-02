@@ -98,6 +98,9 @@ namespace PCCheck.Engine
         /// <summary>True when the log has no leave line (Roblox closed or is still open).</summary>
         public bool NoLeave;
         public string LogFile;
+        /// <summary>"268" if Roblox's own anti-cheat kicked the player, or a game's kick message, else null.</summary>
+        public string KickReason;
+        public DateTime? KickTime;
     }
 
     /// <summary>A Roblox game that was open when a cheat ran.</summary>
