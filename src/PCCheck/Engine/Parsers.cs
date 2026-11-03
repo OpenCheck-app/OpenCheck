@@ -443,6 +443,27 @@ namespace PCCheck.Engine
             return name.Length == 0 ? "USB drive" : name;
         }
 
+        static readonly HashSet<string> WindowsProgramNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "svchost.exe", "explorer.exe", "csrss.exe", "lsass.exe", "winlogon.exe", "services.exe", "smss.exe", "wininit.exe",
+            "dwm.exe", "conhost.exe", "runtimebroker.exe", "taskhostw.exe", "sihost.exe", "dllhost.exe", "spoolsv.exe",
+            "rundll32.exe", "ctfmon.exe", "fontdrvhost.exe", "searchhost.exe", "searchindexer.exe", "audiodg.exe",
+            "lsaiso.exe", "wudfhost.exe", "msmpeng.exe", "securityhealthservice.exe", "smartscreen.exe", "taskmgr.exe", "regedit.exe"
+        };
+
+        /// <summary>
+        /// A Windows system program name running from a personal folder (Downloads, Desktop, Documents, Temp, AppData\Roaming),
+        /// where the real one never lives. Cheats and loaders rename themselves like this to blend in.
+        /// </summary>
+        public static bool IsDisguisedAsWindows(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            int slash = path.LastIndexOf('\\');
+            if (slash < 0 || !WindowsProgramNames.Contains(path.Substring(slash + 1))) return false;
+            string p = path.ToLowerInvariant();
+            return p.Contains(@"\downloads\") || p.Contains(@"\desktop\") || p.Contains(@"\documents\") || p.Contains(@"\appdata\local\temp\") || p.Contains(@"\appdata\roaming\") || p.Contains(@"\users\public\");
+        }
+
         public static List<UsnRecord> ParseUsnBuffer(byte[] buffer, int length)
         {
             var list = new List<UsnRecord>();

@@ -432,6 +432,11 @@ namespace PCCheck.Tests
         [InlineData("SandboxiePlus.exe", "Sandbox or freeze tool")]
         [InlineData("DeepFreeze.exe", "Sandbox or freeze tool")]
         [InlineData("ShadowDefender.exe", "Sandbox or freeze tool")]
+        [InlineData("HWID Spoofer.exe", "HWID spoofer")]
+        [InlineData("AMIDEWINx64.EXE", "HWID spoofer")]
+        [InlineData("Technitium MAC Address Changer.exe", "HWID spoofer")]
+        [InlineData("ImDisk.exe", "RAM disk tool")]
+        [InlineData("SoftPerfect RAM Disk.exe", "RAM disk tool")]
         [InlineData("Matcha External.exe", "Matcha")]
         public void Detects_new_categories(string file, string expected)
         {
@@ -465,6 +470,7 @@ namespace PCCheck.Tests
         [InlineData("PredatorSense.exe")]
         [InlineData("TekkitLauncher.exe")]
         [InlineData("Ignite.exe")]
+        [InlineData("SmartMacro.exe")]
         [InlineData("svchost.exe")]
         [InlineData("RasMan.dll")]
         [InlineData("chrome.exe")]
@@ -803,6 +809,21 @@ namespace PCCheck.Tests
         public void Matrix_loader_fingerprint_is_known()
         {
             Assert.True(Repo.Signatures().KnownBadSha256.ContainsKey("74e704b51c1c1d2ffd2c58d2c10026d88c5a50134c9989b87c98db315f341400"));
+        }
+    }
+
+    public class DisguiseTests
+    {
+        [Theory]
+        [InlineData(@"C:\Users\a\Downloads\svchost.exe", true)]
+        [InlineData(@"C:\Users\a\AppData\Roaming\RuntimeBroker.exe", true)]
+        [InlineData(@"C:\Users\a\AppData\Local\Temp\x\explorer.exe", true)]
+        [InlineData(@"C:\Windows\System32\svchost.exe", false)]
+        [InlineData(@"C:\Windows\explorer.exe", false)]
+        [InlineData(@"C:\Users\a\Downloads\Discord.exe", false)]
+        public void Finds_windows_names_in_personal_folders(string path, bool expected)
+        {
+            Assert.Equal(expected, Parsers.IsDisguisedAsWindows(path));
         }
     }
 }

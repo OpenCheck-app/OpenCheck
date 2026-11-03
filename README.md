@@ -66,6 +66,8 @@ Replace `OWNER/REPO` with this repository's name.
 
 ## For moderators
 
+Read the **[staff guide](STAFF-GUIDE.md)** for how to run a check that can't be faked, and the **[threat model](THREAT-MODEL.md)** for every known way to beat a check and what catches it.
+
 1. Send the player the link to this repo's Releases page.
 2. They run it, tick the box and press **Start check**. It takes about 1 to 2 minutes.
 3. They press **Copy for Discord** and paste it in your channel, or **Save report** and attach the `.txt` file. You can also watch it live over a screenshare.
