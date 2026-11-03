@@ -121,6 +121,8 @@ namespace PCCheck.Engine
         public string AppSha256;
         /// <summary>Scrambled hardware ID (XXXX-XXXX-XXXX). Same PC, same ID. Can't be reversed into serial numbers.</summary>
         public string PcId;
+        /// <summary>The code staff read out at the start of the check. An old or edited report can't carry today's code.</summary>
+        public string SessionCode;
         public string ListVersion;
         /// <summary>Scan depth and performance settings used, e.g. "Standard" or "Quick, low CPU".</summary>
         public string Mode = "Standard";
@@ -129,6 +131,15 @@ namespace PCCheck.Engine
         public bool Admin;
         public List<Finding> Findings = new List<Finding>();
         public List<string> Notes = new List<string>();
+
+        /// <summary>Wipes, resets, cleared logs and cleanup commands in the 24 hours before the check finished.</summary>
+        public List<Finding> CleanupBeforeCheck()
+        {
+            var from = Finished.AddHours(-24);
+            return Findings.Where(f => (f.Evidence == Evidence.Tamper || f.Evidence == Evidence.Reset) && f.Severity >= Severity.Medium
+                                       && f.Time.HasValue && f.Time.Value >= from && f.Time.Value <= Finished.AddMinutes(5))
+                           .OrderByDescending(f => f.Time).ToList();
+        }
 
         public static string DecideVerdict(IEnumerable<Finding> findings)
         {

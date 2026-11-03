@@ -947,5 +947,246 @@ namespace PCCheck.Tests
             Assert.Equal(expected, TraceParsers.IsPersonalFolderDriver(image));
         }
     }
+
+    /// <summary>Gaps found by watching experienced manual PC checkers (Nov 2026 videos).</summary>
+    public class CheckerVideoTests
+    {
+        readonly Matcher m = new Matcher(Repo.Signatures());
+
+        [Fact]
+        public void Run_box_history_is_read()
+        {
+            Assert.Equal(@"C:\Users\a\Downloads\Solara.exe", TraceParsers.RunBoxCommand(@"C:\Users\a\Downloads\Solara.exe\1"));
+            Assert.Equal(@"C:\Users\a\Downloads\Solara.exe", TraceParsers.RunBoxTarget(@"C:\Users\a\Downloads\Solara.exe --inject"));
+            Assert.Equal(@"C:\Program Files\Wave\Wave.exe", TraceParsers.RunBoxTarget("\"C:\\Program Files\\Wave\\Wave.exe\" -x"));
+            Assert.Equal("cmd", TraceParsers.RunBoxTarget("cmd /c dir"));
+            Assert.NotNull(m.MatchName(TraceParsers.RunBoxTarget(@"C:\Users\a\Downloads\Solara.exe --inject")));
+            Assert.Equal("Deleted the drive change log", TraceParsers.CleanupCommand("cmd /c fsutil usn deletejournal /d c:"));
+        }
+
+        [Theory]
+        [InlineData(@"VID_1A86&PID_55DD&MI_02", true)]
+        [InlineData(@"VID_1A86&PID_55DE", true)]
+        [InlineData(@"VID_0403&PID_601F", true)]
+        [InlineData(@"VID_046D&PID_C539", false)]
+        [InlineData(@"VID_1A86&PID_7523", false)]
+        public void Dma_flashing_tools_are_recognized_by_usb_id(string key, bool dma)
+        {
+            Assert.Equal(dma, TraceParsers.DmaUsbTool(key) != null);
+        }
+
+        [Fact]
+        public void Usb_serial_chips_are_context_only()
+        {
+            Assert.True(TraceParsers.IsUsbSerialChip("VID_1A86&PID_7523"));
+            Assert.False(TraceParsers.IsUsbSerialChip("VID_046D&PID_C539"));
+        }
+
+        [Fact]
+        public void Defender_off_only_counts_when_it_is_the_only_antivirus()
+        {
+            Assert.Equal(new[] { "Real-time protection", "Tamper protection" }, TraceParsers.DefenderOffNow(true, 4, false));
+            Assert.Empty(TraceParsers.DefenderOffNow(true, 4, true));
+            Assert.Empty(TraceParsers.DefenderOffNow(false, 5, false));
+        }
+
+        [Fact]
+        public void Memory_string_cleaners_are_flagged_as_tampering()
+        {
+            var sig = m.MatchName("Manual Cleaner.exe");
+            Assert.NotNull(sig);
+            Assert.Equal("Trace cleaner", sig.Category);
+            Assert.NotNull(m.MatchName("StringCleaner.exe"));
+        }
+
+        [Fact]
+        public void Skript_is_matched_by_its_site_not_its_name()
+        {
+            // "Skript" is also a popular Minecraft plugin, so only the cheat's website counts.
+            Assert.Null(m.MatchName("Skript-2.8.zip"));
+            Assert.Equal("skript.gg", Parsers.MatchDomain("www.skript.gg", Repo.Signatures().CheatSites));
+        }
+
+        [Theory]
+        [InlineData("k7q2xm", "K7Q2XM")]
+        [InlineData(" K7-Q2 XM ", "K7Q2XM")]
+        [InlineData("ab", null)]
+        [InlineData("ABCDEFGHIJK", "ABCDEFGH")]
+        [InlineData(null, null)]
+        public void Session_codes_are_cleaned(string input, string expected)
+        {
+            Assert.Equal(expected, Parsers.SessionCode(input));
+        }
+
+        [Fact]
+        public void Cleanup_in_the_last_day_is_called_out()
+        {
+            var now = new DateTime(2026, 11, 3, 20, 0, 0);
+            var r = new Report { Finished = now };
+            r.Findings.Add(new Finding { Name = "Security log cleared", Evidence = Evidence.Tamper, Severity = Severity.Medium, Time = now.AddHours(-2) });
+            r.Findings.Add(new Finding { Name = "Old wipe", Evidence = Evidence.Tamper, Severity = Severity.Medium, Time = now.AddDays(-5) });
+            r.Findings.Add(new Finding { Name = "Context", Evidence = Evidence.Context, Severity = Severity.Info, Time = now.AddHours(-1) });
+            var c = r.CleanupBeforeCheck();
+            Assert.Single(c);
+            Assert.Equal("Security log cleared", c[0].Name);
+        }
+    }
+
+    /// <summary>FastFlags sorted into categories, from any launcher's files.</summary>
+    public class FastFlagCategoryTests
+    {
+        readonly SignatureSet set = Repo.Signatures();
+
+        FlagCategory CategoryOf(string flag)
+        {
+            var hits = Parsers.CategorizeFastFlags(new Dictionary<string, object> { { flag, 1 } }, set.FlagCategories);
+            return hits[0].Category;
+        }
+
+        [Theory]
+        [InlineData("DFIntS2PhysicsSenderRate", "desync", true)]
+        [InlineData("DFIntAssemblyExtentsExpansionStudHundredth", "hitbox", true)]
+        [InlineData("DFIntRakNetResendRtoMultiple", "network", true)]
+        [InlineData("FFlagDebugSkyGray", "visibility", true)]
+        [InlineData("FIntFRMMinGrassDistance", "visibility", true)]
+        [InlineData("DFIntTaskSchedulerTargetFps", "fps", false)]
+        [InlineData("FFlagDebugGraphicsPreferVulkan", "fps", false)]
+        [InlineData("FFlagEnableInGameMenuChrome", "ui", false)]
+        [InlineData("FFlagDebugDisableTelemetryEphemeralCounter", "telemetry", false)]
+        public void Each_flag_gets_its_category(string flag, string id, bool unfair)
+        {
+            var c = CategoryOf(flag);
+            Assert.NotNull(c);
+            Assert.Equal(id, c.Id);
+            Assert.Equal(unfair, c.Unfair);
+        }
+
+        [Fact]
+        public void Every_category_has_a_name_note_and_words()
+        {
+            Assert.True(set.FlagCategories.Count >= 8);
+            foreach (var c in set.FlagCategories)
+            {
+                Assert.False(string.IsNullOrEmpty(c.Name));
+                Assert.False(string.IsNullOrEmpty(c.Note));
+                Assert.NotEmpty(c.Words);
+            }
+            // Unfair categories come first, so an unfair word always wins over a graphics word.
+            int lastUnfair = set.FlagCategories.FindLastIndex(c => c.Unfair), firstAllowed = set.FlagCategories.FindIndex(c => !c.Unfair);
+            Assert.True(lastUnfair < firstAllowed);
+        }
+
+        [Fact]
+        public void Flags_are_found_in_any_launcher_file_shape()
+        {
+            var flat = new Dictionary<string, object> { { "DFIntS2PhysicsSenderRate", 1 }, { "Theme", "Dark" } };
+            var nested = new Dictionary<string, object> { { "Version", "2.9" }, { "FastFlags", new Dictionary<string, object> { { "FFlagDebugSkyGray", true }, { "Name", "x" } } } };
+            Assert.Equal(new[] { "DFIntS2PhysicsSenderRate" }, Parsers.FlagLikeEntries(flat).Keys.ToArray());
+            Assert.Equal(new[] { "FFlagDebugSkyGray" }, Parsers.FlagLikeEntries(nested).Keys.ToArray());
+            Assert.True(Parsers.LooksLikeFlagName("SFFlagX1"));
+            Assert.False(Parsers.LooksLikeFlagName("Theme"));
+        }
+    }
+
+    /// <summary>PowerShell cheats: "irm site | iex" downloads a script and runs it from memory.</summary>
+    public class PowerShellCheatTests
+    {
+        readonly SignatureSet set = Repo.Signatures();
+
+        [Theory]
+        [InlineData("irm cheese-project.com | iex", "cheese-project.com")]
+        [InlineData("iex (irm https://cheese-project.com/load)", "cheese-project.com")]
+        [InlineData("Invoke-Expression (Invoke-RestMethod -Uri 'https://cheese-project.com')", "cheese-project.com")]
+        [InlineData("iwr -useb get.scoop.sh | iex", "get.scoop.sh")]
+        [InlineData("[scriptblock]::Create((irm https://example.org/x.ps1)).Invoke()", "example.org")]
+        public void Download_and_run_commands_are_recognized(string cmd, string host)
+        {
+            var rs = TraceParsers.RemoteScriptRun(cmd);
+            Assert.NotNull(rs);
+            Assert.Equal(host, rs.Host);
+        }
+
+        [Theory]
+        [InlineData("irm https://api.github.com/repos/x/y")]
+        [InlineData("Get-ChildItem | Where-Object Name -like *iex*x")]
+        [InlineData("winget install Git.Git")]
+        public void Other_commands_are_not_flagged(string cmd)
+        {
+            Assert.Null(TraceParsers.RemoteScriptRun(cmd));
+        }
+
+        [Fact]
+        public void Sites_are_graded()
+        {
+            Assert.Equal("cheat", TraceParsers.RemoteScriptKind("cheese-project.com", set.CheatSites, set.ScriptInstallerSites));
+            Assert.Equal("installer", TraceParsers.RemoteScriptKind("get.scoop.sh", set.CheatSites, set.ScriptInstallerSites));
+            Assert.Equal("installer", TraceParsers.RemoteScriptKind("christitus.com", set.CheatSites, set.ScriptInstallerSites));
+            Assert.Equal("unknown", TraceParsers.RemoteScriptKind("example.org", set.CheatSites, set.ScriptInstallerSites));
+            Assert.Equal("unknown", TraceParsers.RemoteScriptKind(null, set.CheatSites, set.ScriptInstallerSites));
+        }
+    }
+
+    /// <summary>Matcha (Nov 2026 sample): a packed, unsigned loader.exe with a DirectX overlay that logs in online.</summary>
+    public class PackedLoaderTests
+    {
+        static TraceParsers.PeSection S(string name, uint vsize, uint raw, double entropy)
+        {
+            return new TraceParsers.PeSection { Name = name, VirtualSize = vsize, RawSize = raw, Entropy = entropy };
+        }
+
+        [Fact]
+        public void Matcha_shaped_loader_is_packed()
+        {
+            // The real Matcha loader's sections: code empty on disk, random names, one encrypted section.
+            var matcha = new[] { S(".text", 430112, 0, 0), S(".rdata", 149134, 0, 0), S(".data", 173072, 0, 0), S(".pdata", 19296, 0, 0),
+                                 S(". Pb", 9196678, 0, 0), S(".Ml9", 408, 512, 1.5), S(".;gX", 14838496, 14838784, 7.74), S(".rsrc", 469, 512, 4.7), S(".reloc", 176, 512, 1.9) };
+            Assert.Equal("an unknown protector", TraceParsers.PackedVerdict(matcha));
+        }
+
+        [Fact]
+        public void Named_packers_are_recognized()
+        {
+            Assert.Equal("VMProtect", TraceParsers.PackedVerdict(new[] { S(".text", 1000, 1000, 6), S(".vmp0", 900000, 0, 0), S(".vmp1", 900000, 900000, 7.9) }));
+            Assert.Equal("UPX", TraceParsers.PackedVerdict(new[] { S("UPX0", 900000, 0, 0), S("UPX1", 400000, 400000, 7.9) }));
+        }
+
+        [Fact]
+        public void Normal_programs_are_not_packed()
+        {
+            var normal = new[] { S(".text", 5000000, 5000000, 6.4), S(".rdata", 2000000, 2000000, 5.5), S(".data", 300000, 20000, 3), S(".pdata", 200000, 200000, 5.6),
+                                 S(".gxfg", 30000, 30000, 4), S(".rodata", 4000, 4096, 5), S("CPADinfo", 56, 512, 0.2), S(".rsrc", 900000, 900000, 7.6), S(".reloc", 60000, 60000, 5.4) };
+            Assert.Null(TraceParsers.PackedVerdict(normal));
+            // And a real file: this test library itself.
+            var own = TraceParsers.InspectPe(File.ReadAllBytes(typeof(TraceParsers).Assembly.Location));
+            Assert.True(own.IsPe);
+            Assert.Null(own.Packer);
+        }
+
+        [Theory]
+        [InlineData(@"C:\Users\a\Downloads\loader\loader.exe", true)]
+        [InlineData(@"C:\matcha\loader.exe", true)]
+        [InlineData(@"C:\Users\a\Desktop\stuff\x.exe", true)]
+        [InlineData(@"C:\Program Files\Discord\Discord.exe", false)]
+        [InlineData(@"C:\Users\a\AppData\Local\Programs\Microsoft VS Code\Code.exe", false)]
+        [InlineData(@"C:\Windows\System32\notepad.exe", false)]
+        [InlineData(@"C:\Users\a\Downloads\notes.txt", false)]
+        public void Programs_outside_install_folders_are_inspected(string path, bool inspect)
+        {
+            Assert.Equal(inspect, TraceParsers.IsOutsideInstalledPlaces(path));
+        }
+
+        [Fact]
+        public void Matcha_is_known_by_fingerprint_and_generic_loader_names_are_worth_asking()
+        {
+            var set = Repo.Signatures();
+            Assert.True(set.KnownBadSha256.ContainsKey("3ad44d0b739b43078efc8a7f794e58a4a27a54cb59b2bdd825fb831e9b40940b"));
+            var m = new Matcher(set);
+            var sig = m.MatchName("loader.exe");
+            Assert.NotNull(sig);
+            Assert.Equal("Unknown loader", sig.Category);
+            Assert.Equal(Severity.Medium, sig.Severity);
+            Assert.Equal("Solara", m.MatchName("SolaraLoader.exe").Name);
+        }
+    }
 }
 

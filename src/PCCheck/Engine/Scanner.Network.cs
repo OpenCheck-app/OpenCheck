@@ -25,6 +25,8 @@ namespace PCCheck.Engine
             ScanFirewallHistory(found);
             Tick("Checking for network drops during games", 0.8);
             ScanDropsDuringGames(found);
+            Tick("Checking recent cheat site lookups", 0.95);
+            ScanDnsCache(found);
             return found.Count == 0 ? "No lag switch or VPN found" : string.Join(", ", found);
         }
 

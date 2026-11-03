@@ -6,18 +6,21 @@ OpenCheck finds what's on the PC. These steps make sure it's really the player's
 1. Get on a **live screenshare** with the player (Discord stream of their whole screen, not one window).
 2. Have them open **your website** and press **Download**, while you watch. Don't accept a copy they already had.
 3. They unzip it and run `OpenCheck.exe`. If Windows asks for admin, they click **Yes**. A check without admin is incomplete.
+4. **Say a session code out loud** (any 6 letters and numbers you make up, like `K7Q2XM`). The player types it into the Session code box before starting. It's printed at the top of the report, so an old or edited report can't be passed off as today's.
 
 ## While it runs
-4. Watch the whole scan (1 to 2 minutes). If they switch windows, minimize it, or close it early, start over.
-5. Scan depth should be **Standard** or **Thorough**. Ask for a redo if it says Quick.
+5. Watch the whole scan (1 to 2 minutes). If they switch windows, minimize it, or close it early, start over.
+6. Scan depth should be **Standard** or **Thorough**. Ask for a redo if it says Quick.
 
 ## Check these on their screen
-6. **Version:** the newest one (top left of the app, and the first lines of the report).
-7. **Fingerprint (SHA-256):** the first 16 characters in the report must match `SHA256SUMS.txt` on the release page.
-8. **PC ID:** write it down. If a player's PC ID changes between checks, ask why: a different PC, a new graphics card, or a VM.
-9. **Admin: yes.**
+7. **Version:** the newest one (top left of the app, and the first lines of the report).
+8. **Fingerprint (SHA-256):** the first 16 characters in the report must match `SHA256SUMS.txt` on the release page.
+9. **PC ID:** write it down. If a player's PC ID changes between checks, ask why: a different PC, a new graphics card, or a VM.
+10. **Admin: yes.**
+11. **Session code:** the same code you said at the start.
 
 ## Reading the result
+- **Cleanup right before this check** (yellow banner): logs cleared, a reset or cleanup commands in the 24 hours before. Ask why, and recheck in a few days.
 - **Flagged:** something on the cheat list was found, ran, was deleted, or is hidden from antivirus. Open each item: the strongest evidence is listed first.
 - **Needs review:** no named cheat, but something worth asking about: cleared logs, a reset this week, a VPN, a deleted program that ran during a game, internet drops during games, a sandbox or spoofer. Ask the player about each one.
 - **Clean:** nothing matched. Strong evidence, not a guarantee.

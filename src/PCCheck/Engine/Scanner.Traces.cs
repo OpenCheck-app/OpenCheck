@@ -200,6 +200,8 @@ namespace PCCheck.Engine
                         try { written = File.GetLastWriteTime(file); } catch { }
                         foreach (var line in SplitLines(TraceParsers.DecodeText(ReadShared(file, 4L << 20))))
                         {
+                            var remote = TraceParsers.RemoteScriptRun(line);
+                            if (remote != null) ReportRemoteScript(remote, written, "PowerShell history");
                             string kind = TraceParsers.CleanupCommand(line);
                             if (kind == null) continue;
                             string cmd = line.Trim();
@@ -253,6 +255,80 @@ namespace PCCheck.Engine
                 });
             }
             catch (Exception ex) { notes.Add("Service install log unavailable: " + ex.Message); }
+        }
+    
+        readonly HashSet<string> remoteScriptsSeen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Reports a script downloaded and run from memory (irm ... | iex), graded by the site it came from.</summary>
+        void ReportRemoteScript(TraceParsers.RemoteScript rs, DateTime? time, string source)
+        {
+            if (rs == null) return;
+            string kind = TraceParsers.RemoteScriptKind(rs.Host, set.CheatSites, set.ScriptInstallerSites);
+            if (!remoteScriptsSeen.Add(kind + "|" + (rs.Host ?? rs.Command))) return;
+            string site = rs.Host ?? "an unknown site";
+            Finding f;
+            if (kind == "cheat")
+            {
+                f = Simple("Cheat run through PowerShell (" + site + ")", "PowerShell cheat", Severity.High, Evidence.Ran, Groups.Cheat, time, rs.Command, source,
+                    "A script was downloaded from " + site + " and run straight from memory (\"irm | iex\"), so no cheat file is left on disk. That site is on the cheat list.");
+                f.IsCheat = true;
+            }
+            else if (kind == "installer")
+            {
+                f = Simple("One-line installer run through PowerShell (" + site + ")", "PowerShell script", Severity.Info, Evidence.Context, Groups.Context, time, rs.Command, source,
+                    "A script from " + site + " was downloaded and run. That's a common installer or tweak tool, not a cheat. Listed for context.");
+            }
+            else
+            {
+                f = Simple("Script from the internet run through PowerShell (" + site + ")", "PowerShell script", Severity.Medium, Evidence.Ran, Groups.Cheat, time, rs.Command, source,
+                    "A script was downloaded from " + site + " and run straight from memory (\"irm | iex\"). Cheats and loaders are started this way so they leave no file behind. Ask what it was.");
+            }
+            if (time.HasValue && kind != "installer") f.RunTimes.Add(time.Value);
+            Add(f);
+        }
+
+        /// <summary>
+        /// Windows' own PowerShell logs: the command line every PowerShell window was started with (event 400/800),
+        /// and script text Windows logs when it looks suspicious (event 4104). Only download-and-run commands and
+        /// cheat sites are kept.
+        /// </summary>
+        void ScanPowerShellLogs(List<string> found)
+        {
+            const string last90Days = "TimeCreated[timediff(@SystemTime) <= 7776000000]";
+            int before = remoteScriptsSeen.Count, cheatMentions = 0;
+            Action<DateTime?, string, string> check = (time, text, source) =>
+            {
+                var rs = TraceParsers.RemoteScriptRun(text);
+                if (rs != null) { ReportRemoteScript(rs, time, source); return; }
+                if (cheatMentions >= 3 || string.IsNullOrEmpty(text)) return;
+                foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(text, @"[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*\.[a-z]{2,}", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                {
+                    string site = Parsers.MatchDomain(m.Value.ToLowerInvariant(), set.CheatSites);
+                    if (site == null || !remoteScriptsSeen.Add("mention|" + site)) continue;
+                    cheatMentions++;
+                    var f = Simple("PowerShell script used a cheat site (" + site + ")", "PowerShell cheat", Severity.Medium, Evidence.Ran, Groups.Cheat, time, site, source,
+                        "A PowerShell script that Windows logged refers to " + site + ", a site on the cheat list. Only the site name is kept, not the script.");
+                    if (time.HasValue) f.RunTimes.Add(time.Value);
+                    Add(f);
+                    break;
+                }
+            };
+            try
+            {
+                ReadEvents("Windows PowerShell", "*[System[(EventID=400 or EventID=800) and " + last90Days + "]]", 3000, (time, id, data) =>
+                    check(time, string.Join(" ", data.Values), "Windows PowerShell log (" + id + ")"));
+            }
+            catch { }
+            try
+            {
+                ReadEvents("Microsoft-Windows-PowerShell/Operational", "*[System[(EventID=4104) and " + last90Days + "]]", 1500, (time, id, data) =>
+                {
+                    string text; data.TryGetValue("ScriptBlockText", out text);
+                    check(time, text, "PowerShell script log (4104)");
+                });
+            }
+            catch { }
+            if (remoteScriptsSeen.Count > before) found.Add("Scripts run from the internet");
         }
     }
 }

@@ -21,6 +21,8 @@ namespace PCCheck.Engine
             ScanRemovableRuns(found, usbTimes);
             Tick("Checking for sandbox and freeze tools", 0.75);
             ScanSandboxes(found);
+            Tick("Checking for DMA flashing tools", 0.9);
+            ScanDmaUsbTools(found);
             return found.Count == 0 ? "No USB programs or sandboxes" : string.Join(", ", found);
         }
 

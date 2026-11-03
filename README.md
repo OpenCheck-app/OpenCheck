@@ -15,7 +15,10 @@ OpenCheck is an open-source, read-only Windows app that checks a PC for Roblox e
 - Deleted files: the Recycle Bin and the drive's change log (NTFS USN journal), read newest first so recent deletions are always covered, filtered to cheat names only.
 - Windows Security (Defender) detections and antivirus exclusions.
 - Cleared event logs, logs that are suspiciously short, clock changes, and wiped Prefetch, Roblox logs or recent-file history.
-- PowerShell history, checked only for commands that wipe the records above (like `fsutil usn deletejournal` or deleting Prefetch). Only those matching lines are kept.
+- The Run box (Win+R) and Explorer address bar history, recent website lookups (DNS cache), Windows Security's current settings, and USB devices used to flash DMA cards. Lookups and typed commands are only compared to the cheat list; nothing else is kept.
+- PowerShell history and Windows' PowerShell logs, checked only for commands that wipe the records above (like `fsutil usn deletejournal`) or download and run a script from the internet (`irm site | iex`, how PowerShell cheats start). Only those matching lines are kept.
+- Programs that ran from outside the normal install folders (Downloads, Desktop, folders the user made) are read to fingerprint them and check whether they're packed, unsigned, draw an overlay and go online, which is how external cheat loaders like Matcha look. They are never run.
+- FastFlags from Roblox and every launcher (Bloxstrap, Fishstrap, Voidstrap and others), each sorted into a category: desync, hitbox, movement, network, visibility (unfair) or FPS, interface, telemetry (allowed).
 - When Windows was last reset or installed, and when the Windows account was created (a reset in the last week is flagged for review).
 - Windows Firewall rules that block Roblox (a common lag-switch trick), and the firewall's own history of Roblox rules being added and removed, which is how lag-switch macros work.
 - Lag switches and VPNs: lag tools installed as drivers or services (WinDivert, NetLimiter and others), VPN and game ping-booster adapters (connected or just installed), and short internet drops that happened while a Roblox game was open. A physical switch on the cable or a macro that turns the network off shows up as these drops. Only adapter names and connect/disconnect times are read, and nothing is sent anywhere.

@@ -170,6 +170,253 @@ namespace PCCheck.Engine
             return null;
         }
 
+        /// <summary>A command typed into the Windows Run box (Win+R). Windows stores it with "\1" on the end.</summary>
+        public static string RunBoxCommand(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return null;
+            string v = value.Trim();
+            if (v.EndsWith("\\1", StringComparison.Ordinal)) v = v.Substring(0, v.Length - 2);
+            return v.Length == 0 ? null : v;
+        }
+
+        /// <summary>
+        /// The program or file a Run-box command or typed path points at, for name matching
+        /// ("C:\x\Solara.exe -arg" gives "C:\x\Solara.exe"; quoted paths are unquoted).
+        /// </summary>
+        public static string RunBoxTarget(string command)
+        {
+            if (string.IsNullOrEmpty(command)) return null;
+            string c = command.Trim();
+            if (c.StartsWith("\"", StringComparison.Ordinal))
+            {
+                int end = c.IndexOf('"', 1);
+                return end > 1 ? c.Substring(1, end - 1) : c.Trim('"');
+            }
+            var m = Regex.Match(c, @"^.+?\.(exe|bat|cmd|lnk|ahk|lua)\b", RegexOptions.IgnoreCase);
+            if (m.Success) return m.Value;
+            int sp = c.IndexOf(' ');
+            return sp > 0 ? c.Substring(0, sp) : c;
+        }
+
+        /// <summary>
+        /// USB devices used with DMA cheats, by vendor and product ID from Windows' device list
+        /// (kept after the device is unplugged). Returns a label, or null.
+        /// </summary>
+        public static string DmaUsbTool(string enumKeyName)
+        {
+            if (string.IsNullOrEmpty(enumKeyName)) return null;
+            string k = enumKeyName.ToUpperInvariant();
+            // WCH CH347: USB to UART + JTAG, the usual flasher for DMA card firmware.
+            if (k.Contains("VID_1A86&PID_55DA") || k.Contains("VID_1A86&PID_55DB") || k.Contains("VID_1A86&PID_55DD") || k.Contains("VID_1A86&PID_55DE"))
+                return "CH347 USB-to-JTAG adapter (DMA firmware flasher)";
+            // FTDI FT601: the USB 3 link on Screamer-style DMA cards.
+            if (k.Contains("VID_0403&PID_601F")) return "FT601 USB 3 bridge (used by DMA cards)";
+            return null;
+        }
+
+        /// <summary>USB serial chips that KMBox-style input boxes use. Also common on Arduinos, so context only.</summary>
+        public static bool IsUsbSerialChip(string enumKeyName)
+        {
+            if (string.IsNullOrEmpty(enumKeyName)) return false;
+            string k = enumKeyName.ToUpperInvariant();
+            return k.Contains("VID_1A86&PID_7523") || k.Contains("VID_1A86&PID_55D3") || k.Contains("VID_1A86&PID_55D4");
+        }
+
+        /// <summary>
+        /// What's switched off in Windows Security right now, worth asking about. Real-time protection off is normal
+        /// when another antivirus is installed, so it only counts when Defender is the only one.
+        /// </summary>
+        public static List<string> DefenderOffNow(bool realtimeOff, int? tamperProtection, bool otherAntivirus)
+        {
+            var list = new List<string>();
+            if (otherAntivirus) return list;
+            if (realtimeOff) list.Add("Real-time protection");
+            if (tamperProtection.HasValue && tamperProtection.Value == 4) list.Add("Tamper protection");
+            return list;
+        }
+
+        // ---------- Program file structure: packed, overlay, online (how external cheat loaders look) ----------
+
+        public sealed class PeSection { public string Name; public uint VirtualSize; public uint RawSize; public uint RawOffset; public double Entropy; }
+
+        public sealed class PeTraits
+        {
+            public bool IsPe;
+            public string Packer;          // a named packer, "unknown protector", or null
+            public bool Overlay;           // draws with DirectX on top of other windows
+            public bool Online;            // downloads or logs in
+            public List<string> Imports = new List<string>();
+            public List<PeSection> Sections = new List<PeSection>();
+        }
+
+        static readonly string[] OverlayDlls = { "d3d11.dll", "d3d9.dll", "dxgi.dll", "d3dcompiler_43.dll", "d3dcompiler_47.dll", "opengl32.dll", "d3d12.dll" };
+        static readonly string[] OnlineDlls = { "wininet.dll", "winhttp.dll", "ws2_32.dll", "urlmon.dll" };
+        static readonly string[] StandardSections = { ".text", ".rdata", ".data", ".pdata", ".rsrc", ".reloc", ".tls", ".idata", ".edata", ".bss", ".crt", ".gfids", ".00cfg", ".didat", "_rdata", ".xdata", ".sxdata", ".voltbl", ".fptable", ".retplne", ".gxfg", ".rodata", ".symtab", "cpadinfo", ".msvcjmc", ".stab", ".stabstr" };
+        static readonly Tuple<string, string>[] NamedPackers =
+        {
+            Tuple.Create(".vmp", "VMProtect"), Tuple.Create(".themida", "Themida"), Tuple.Create(".winlice", "WinLicense"),
+            Tuple.Create(".enigma", "Enigma Protector"), Tuple.Create("upx", "UPX"), Tuple.Create(".mpress", "MPRESS"),
+            Tuple.Create(".aspack", "ASPack"), Tuple.Create(".petite", "Petite"), Tuple.Create(".obsidium", "Obsidium"), Tuple.Create(".boot", "Themida")
+        };
+
+        /// <summary>Entropy of up to 32 evenly spread 64 KB pieces of a range (encrypted data scores near 8).</summary>
+        static double SampledEntropy(byte[] d, int start, int len)
+        {
+            if (len <= 0) return 0;
+            const int piece = 64 * 1024, pieces = 32;
+            if (len <= piece * pieces) return Entropy(d, start, len);
+            var counts = new int[256];
+            long total = 0;
+            long step = len / pieces;
+            for (int k = 0; k < pieces; k++)
+            {
+                int from = start + (int)(k * step);
+                for (int i = from; i < from + piece && i < start + len; i++) { counts[d[i]]++; total++; }
+            }
+            return FromCounts(counts, total);
+        }
+
+        static double FromCounts(int[] counts, long total)
+        {
+            double e = 0;
+            foreach (var c in counts) if (c > 0) { double p = (double)c / total; e -= p * Math.Log(p, 2); }
+            return e;
+        }
+
+        static double Entropy(byte[] d, int start, int len)
+        {
+            if (len <= 0) return 0;
+            var counts = new int[256];
+            for (int i = start; i < start + len; i++) counts[d[i]]++;
+            return FromCounts(counts, len);
+        }
+
+        /// <summary>
+        /// Reads a Windows program's structure from its bytes: sections, imported DLLs, and from those,
+        /// whether it's packed, draws an overlay, or goes online. Never runs anything.
+        /// </summary>
+        public static PeTraits InspectPe(byte[] d)
+        {
+            var t = new PeTraits();
+            try
+            {
+                if (d == null || d.Length < 0x200 || d[0] != 'M' || d[1] != 'Z') return t;
+                int pe = BitConverter.ToInt32(d, 0x3C);
+                if (pe <= 0 || pe + 24 > d.Length || d[pe] != 'P' || d[pe + 1] != 'E') return t;
+                t.IsPe = true;
+                int nsec = BitConverter.ToUInt16(d, pe + 6), optSize = BitConverter.ToUInt16(d, pe + 20), opt = pe + 24;
+                bool pe64 = BitConverter.ToUInt16(d, opt) == 0x20B;
+                int dirs = opt + (pe64 ? 112 : 96);
+                int secStart = opt + optSize;
+                for (int k = 0; k < nsec && k < 40; k++)
+                {
+                    int o = secStart + 40 * k;
+                    if (o + 40 > d.Length) break;
+                    string name = Encoding.ASCII.GetString(d, o, 8).TrimEnd('\0');
+                    uint vs = BitConverter.ToUInt32(d, o + 8), rs = BitConverter.ToUInt32(d, o + 16), rp = BitConverter.ToUInt32(d, o + 20);
+                    var sec = new PeSection { Name = name, VirtualSize = vs, RawSize = rs, RawOffset = rp };
+                    if (rs > 0 && rp < d.Length)
+                        sec.Entropy = SampledEntropy(d, (int)rp, (int)Math.Min(rs, (uint)(d.Length - rp)));
+                    t.Sections.Add(sec);
+                }
+
+                // Imported DLL names.
+                uint importRva = BitConverter.ToUInt32(d, dirs + 8);
+                Func<uint, int> off = rva =>
+                {
+                    foreach (var s in t.Sections)
+                        if (rva >= 0 && s.RawSize > 0 && rva >= VirtualAddress(d, secStart, t.Sections.IndexOf(s)) && rva < VirtualAddress(d, secStart, t.Sections.IndexOf(s)) + Math.Max(s.VirtualSize, s.RawSize))
+                            return (int)(s.RawOffset + rva - VirtualAddress(d, secStart, t.Sections.IndexOf(s)));
+                    return -1;
+                };
+                int io = importRva == 0 ? -1 : off(importRva);
+                for (int n = 0; io >= 0 && io + 20 <= d.Length && n < 200; n++, io += 20)
+                {
+                    uint nameRva = BitConverter.ToUInt32(d, io + 12);
+                    if (nameRva == 0) break;
+                    int no = off(nameRva);
+                    if (no < 0 || no >= d.Length) continue;
+                    int end = no;
+                    while (end < d.Length && end - no < 128 && d[end] != 0) end++;
+                    t.Imports.Add(Encoding.ASCII.GetString(d, no, end - no).ToLowerInvariant());
+                }
+            }
+            catch { }
+            t.Packer = PackedVerdict(t.Sections);
+            t.Overlay = t.Imports.Any(i => OverlayDlls.Contains(i));
+            t.Online = t.Imports.Any(i => OnlineDlls.Contains(i));
+            return t;
+        }
+
+        static uint VirtualAddress(byte[] d, int secStart, int index)
+        {
+            return BitConverter.ToUInt32(d, secStart + 40 * index + 12);
+        }
+
+        /// <summary>
+        /// Whether sections look packed: a known packer's section names, or the VMProtect/Themida shape
+        /// (code sections empty on disk, everything inside one encrypted section, random section names).
+        /// </summary>
+        public static string PackedVerdict(IList<PeSection> sections)
+        {
+            if (sections == null || sections.Count == 0) return null;
+            foreach (var s in sections)
+                foreach (var p in NamedPackers)
+                    if (s.Name.StartsWith(p.Item1, StringComparison.OrdinalIgnoreCase)) return p.Item2;
+            var biggest = sections.OrderByDescending(s => s.RawSize).First();
+            bool encrypted = biggest.RawSize >= 64 * 1024 && biggest.Entropy >= 7.4;
+            // Code that isn't on disk at all: normal compilers never do this; protectors unpack it at run time.
+            bool hollowCode = sections.Any(s => s.RawSize == 0 && s.VirtualSize >= 64 * 1024 && s.Name.Equals(".text", StringComparison.OrdinalIgnoreCase));
+            bool hollow = hollowCode || sections.Any(s => s.RawSize == 0 && s.VirtualSize >= 64 * 1024 && (s.Name.Equals(".rdata", StringComparison.OrdinalIgnoreCase) || s.Name.Equals(".pdata", StringComparison.OrdinalIgnoreCase)));
+            int odd = sections.Count(s => !StandardSections.Contains(s.Name.ToLowerInvariant()));
+            if ((encrypted && (hollow || odd >= 2)) || (hollowCode && odd >= 2)) return "an unknown protector";
+            return null;
+        }
+
+        static readonly string[] InstalledPlaces = { @"\windows\", @"\program files\", @"\program files (x86)\", @"\programdata\microsoft\", @"\appdata\local\microsoft\",
+            @"\appdata\local\programs\", @"\appdata\roaming\microsoft\", @"\steamapps\", @"\windowsapps\", @"\appdata\local\roblox\", @"\appdata\local\discord", @"\appdata\local\packages\" };
+
+        /// <summary>A program that ran from somewhere apps aren't normally installed (Downloads, Desktop, a folder the user made...).</summary>
+        public static bool IsOutsideInstalledPlaces(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) return false;
+            string p = path.ToLowerInvariant();
+            if (p.Length < 4 || p[1] != ':') return false;
+            return !InstalledPlaces.Any(x => p.Contains(x));
+        }
+
+        public sealed class RemoteScript { public string Host; public string Command; }
+
+        static readonly Regex DownloadVerb = new Regex(@"\b(irm|iwr|invoke-restmethod|invoke-webrequest|curl(\.exe)?|wget|downloadstring|downloaddata|start-bitstransfer)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        static readonly Regex RunVerb = new Regex(@"\b(iex|invoke-expression)\b|\[scriptblock\]::create", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        static readonly Regex UrlHost = new Regex(@"https?://([a-z0-9][a-z0-9.-]*\.[a-z]{2,})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        static readonly Regex BareHost = new Regex(@"\b(?:irm|iwr|invoke-restmethod|invoke-webrequest|curl|wget)\s+(?:-uri\s+|-useb\s+|-usebasicparsing\s+)*['""]?([a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*\.[a-z]{2,})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        /// <summary>
+        /// A command that downloads a script and runs it straight from memory ("irm site.com | iex" and its variants).
+        /// Nothing is saved to disk, so this is how PowerShell cheats and loaders are started. Returns the site, or null.
+        /// </summary>
+        public static RemoteScript RemoteScriptRun(string text)
+        {
+            if (string.IsNullOrEmpty(text) || text.Length > 20000) return null;
+            if (!DownloadVerb.IsMatch(text) || !RunVerb.IsMatch(text)) return null;
+            var m = UrlHost.Match(text);
+            string host = m.Success ? m.Groups[1].Value : null;
+            if (host == null) { var b = BareHost.Match(text); if (b.Success) host = b.Groups[1].Value; }
+            string cmd = text.Trim().Replace("\r", " ").Replace("\n", " ");
+            if (cmd.Length > 160) cmd = cmd.Substring(0, 157) + "...";
+            return new RemoteScript { Host = host == null ? null : host.ToLowerInvariant().TrimEnd('.'), Command = cmd };
+        }
+
+        /// <summary>"cheat", "installer" (a common, harmless one-line installer) or "unknown".</summary>
+        public static string RemoteScriptKind(string host, IEnumerable<string> cheatSites, IEnumerable<string> installerSites)
+        {
+            if (string.IsNullOrEmpty(host)) return "unknown";
+            if (Parsers.MatchDomain(host, cheatSites) != null) return "cheat";
+            if (Parsers.MatchDomain(host, installerSites) != null) return "installer";
+            return "unknown";
+        }
+
         /// <summary>A driver file sitting in a user's own folders. Real drivers install under Windows or Program Files.</summary>
         public static bool IsPersonalFolderDriver(string imagePath)
         {

@@ -28,7 +28,7 @@ namespace PCCheck.Engine
 
     public sealed class DeviceInstall { public DateTime Time; public string DeviceId; }
 
-    public sealed class FlagHit { public string Name; public string Value; public string Word; }
+    public sealed class FlagHit { public string Name; public string Value; public string Word; public FlagCategory Category; }
 
     /// <summary>Pure parsing functions for Windows record formats. No file or registry access here, so they're easy to test.</summary>
     public static class Parsers
@@ -583,6 +583,47 @@ namespace PCCheck.Engine
             return hits;
         }
 
+        static readonly Regex FlagName = new Regex(@"^(DF|SF|F)(Flag|Int|String|Log)[A-Za-z0-9_]{2,}$", RegexOptions.Compiled);
+
+        /// <summary>True for names shaped like a Roblox FastFlag (FFlag..., DFInt..., FString..., SFFlag...).</summary>
+        public static bool LooksLikeFlagName(string name) { return !string.IsNullOrEmpty(name) && FlagName.IsMatch(name); }
+
+        /// <summary>
+        /// FastFlag-shaped entries in a JSON object: its own keys, plus one level down (some launchers keep
+        /// flags under a "FastFlags" or preset key). Nothing that isn't flag-shaped is kept.
+        /// </summary>
+        public static Dictionary<string, object> FlagLikeEntries(IDictionary<string, object> json)
+        {
+            var result = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            if (json == null) return result;
+            foreach (var kv in json)
+            {
+                if (LooksLikeFlagName(kv.Key)) { result[kv.Key] = kv.Value; continue; }
+                var child = kv.Value as IDictionary<string, object>;
+                if (child == null) continue;
+                foreach (var c in child)
+                    if (LooksLikeFlagName(c.Key)) result[c.Key] = c.Value;
+            }
+            return result;
+        }
+
+        /// <summary>Puts each flag in the first category whose word its name contains (null category = uncategorized).</summary>
+        public static List<FlagHit> CategorizeFastFlags(IDictionary<string, object> flags, IList<FlagCategory> categories)
+        {
+            var list = new List<FlagHit>();
+            foreach (var kv in flags)
+            {
+                FlagCategory cat = null; string word = null;
+                foreach (var c in categories)
+                {
+                    word = c.Words.FirstOrDefault(w => kv.Key.IndexOf(w, StringComparison.OrdinalIgnoreCase) >= 0);
+                    if (word != null) { cat = c; break; }
+                }
+                list.Add(new FlagHit { Name = kv.Key, Value = kv.Value == null ? "null" : Convert.ToString(kv.Value, CultureInfo.InvariantCulture), Word = word, Category = cat });
+            }
+            return list;
+        }
+
         /// <summary>Times where at least `threshold` deletions happened within `window`. Used to spot Prefetch being wiped.</summary>
         public static DateTime? FindBurst(List<DateTime> times, int threshold, TimeSpan window)
         {
@@ -641,6 +682,19 @@ namespace PCCheck.Engine
         }
 
         /// <summary>Removes characters that could break a Discord message or the report layout.</summary>
+        /// <summary>A staff session code: letters and digits only, upper case, at most 8 characters.</summary>
+        public static string SessionCode(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return null;
+            var sb = new StringBuilder();
+            foreach (char c in s.ToUpperInvariant())
+            {
+                if ((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) sb.Append(c);
+                if (sb.Length >= 8) break;
+            }
+            return sb.Length >= 3 ? sb.ToString() : null;
+        }
+
         public static string SafeName(string s, int max)
         {
             if (string.IsNullOrEmpty(s)) return "";
