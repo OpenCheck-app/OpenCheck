@@ -985,9 +985,9 @@ namespace PCCheck.Tests
         [Fact]
         public void Defender_off_only_counts_when_it_is_the_only_antivirus()
         {
-            Assert.Equal(new[] { "Real-time protection", "Tamper protection" }, TraceParsers.DefenderOffNow(true, 4, false));
-            Assert.Empty(TraceParsers.DefenderOffNow(true, 4, true));
-            Assert.Empty(TraceParsers.DefenderOffNow(false, 5, false));
+            Assert.Equal(new[] { "Real-time protection", "Tamper protection" }, TraceParsers.DefenderOffNow(true, true, false));
+            Assert.Empty(TraceParsers.DefenderOffNow(true, true, true));
+            Assert.Empty(TraceParsers.DefenderOffNow(false, false, false));
         }
 
         [Fact]

@@ -59,18 +59,20 @@ namespace PCCheck.Engine
         /// <summary>Windows Security switched off right now (real-time or tamper protection), when it's the only antivirus.</summary>
         int ScanDefenderStateNow()
         {
-            bool realtimeOff = false;
-            int? tamper = null;
+            bool realtimeOff = false, tamperOff = false, known = false;
             try
             {
-                using (var k = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows Defender\Real-Time Protection"))
-                    if (k != null && k.GetValue("DisableRealtimeMonitoring") is int && (int)k.GetValue("DisableRealtimeMonitoring") == 1) realtimeOff = true;
-                using (var k = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection"))
-                    if (k != null && k.GetValue("DisableRealtimeMonitoring") is int && (int)k.GetValue("DisableRealtimeMonitoring") == 1) realtimeOff = true;
-                using (var k = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows Defender\Features"))
-                    if (k != null && k.GetValue("TamperProtection") is int) tamper = (int)k.GetValue("TamperProtection");
+                // Windows Security's own status report: the same thing the Windows Security app shows.
+                using (var searcher = new ManagementObjectSearcher(new ManagementScope(@"root\Microsoft\Windows\Defender"), new ObjectQuery("SELECT * FROM MSFT_MpComputerStatus")))
+                    foreach (var o in searcher.Get())
+                    {
+                        known = true;
+                        realtimeOff = Prop(o, "RealTimeProtectionEnabled").Equals("False", StringComparison.OrdinalIgnoreCase);
+                        tamperOff = Prop(o, "IsTamperProtected").Equals("False", StringComparison.OrdinalIgnoreCase);
+                    }
             }
             catch { return 0; }
+            if (!known) return 0;
 
             bool otherAv = false;
             try
@@ -84,39 +86,13 @@ namespace PCCheck.Engine
             }
             catch { otherAv = true; }   // can't tell: don't flag
 
-            var off = TraceParsers.DefenderOffNow(realtimeOff, tamper, otherAv);
+            var off = TraceParsers.DefenderOffNow(realtimeOff, tamperOff, otherAv);
             if (off.Count == 0) return 0;
             Add(Simple("Windows Security is partly off right now", "Antivirus turned off", Severity.Medium, Evidence.Tamper, Groups.Tamper, DateTime.Now,
                 string.Join(" and ", off) + " off", "Windows Security settings",
                 "Windows Security is the only antivirus on this PC, and " + string.Join(" and ", off).ToLowerInvariant() + (off.Count == 1 ? " is" : " are") +
                 " switched off. Executor guides tell people to do this so the cheat isn't removed. Ask why."));
             return 1;
-        }
-
-        /// <summary>Cheat and script-key websites in Windows' DNS cache: looked up in the last few hours (the cache clears at restart).</summary>
-        void ScanDnsCache(List<string> found)
-        {
-            var hosts = Native.CachedHostNames();
-            int cheat = 0, key = 0;
-            foreach (var host in hosts)
-            {
-                string site = Parsers.MatchDomain(host, set.CheatSites);
-                if (site != null && cheat < 8)
-                {
-                    cheat++;
-                    Add(Simple("Cheat website visited recently", "Cheat website", Severity.Medium, Evidence.WasHere, Groups.Cheat, null, host, "DNS cache",
-                        "This PC looked up " + site + " in the last few hours (Windows forgets these at restart). It's a Roblox executor or script site. Only cheat sites are listed; no other browsing is read."));
-                    continue;
-                }
-                site = Parsers.MatchDomain(host, set.KeySites);
-                if (site != null && key < 3)
-                {
-                    key++;
-                    Add(Simple("Script key site visited recently", "Cheat website", Severity.Info, Evidence.Context, Groups.Context, null, host, "DNS cache",
-                        "Executor keys usually go through sites like " + site + ", but other things use them too. Context only."));
-                }
-            }
-            if (cheat > 0) found.Add("Cheat site visited recently");
         }
 
         /// <summary>USB tools used with DMA cards, from Windows' device list (kept after unplugging).</summary>

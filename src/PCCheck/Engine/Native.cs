@@ -78,43 +78,6 @@ namespace PCCheck.Engine
             finally { Marshal.DestroyStructure(pFile, typeof(WINTRUST_FILE_INFO)); Marshal.FreeHGlobal(pFile); }
         }
 
-        // ---- Windows' DNS cache: the website names this PC looked up recently. Read-only; cleared at restart. ----
-        [StructLayout(LayoutKind.Sequential)]
-        struct DNS_CACHE_ENTRY
-        {
-            public IntPtr Next;
-            public IntPtr Name;
-            public ushort Type;
-            public ushort DataLength;
-            public uint Flags;
-        }
-
-        [DllImport("dnsapi.dll", EntryPoint = "DnsGetCacheDataTable", SetLastError = true)]
-        static extern bool GetCacheDataTable(out IntPtr first);
-
-        /// <summary>Host names in Windows' DNS cache (lower case). Empty if Windows doesn't allow it.</summary>
-        public static List<string> CachedHostNames()
-        {
-            var names = new List<string>();
-            try
-            {
-                IntPtr p;
-                if (!GetCacheDataTable(out p)) return names;
-                int guard = 0;
-                while (p != IntPtr.Zero && guard++ < 20000)
-                {
-                    var e = (DNS_CACHE_ENTRY)Marshal.PtrToStructure(p, typeof(DNS_CACHE_ENTRY));
-                    if (e.Name != IntPtr.Zero)
-                    {
-                        string n = Marshal.PtrToStringUni(e.Name);
-                        if (!string.IsNullOrEmpty(n)) names.Add(n.Trim().TrimEnd('.').ToLowerInvariant());
-                    }
-                    p = e.Next;
-                }
-            }
-            catch { }
-            return names.Distinct().ToList();
-        }
         const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
         const uint FSCTL_QUERY_USN_JOURNAL = 0x000900F4;
         const uint FSCTL_READ_USN_JOURNAL = 0x000900BB;

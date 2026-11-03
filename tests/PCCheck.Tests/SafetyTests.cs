@@ -65,5 +65,32 @@ namespace PCCheck.Tests
             Assert.Contains("EmbeddedResource Include=\"signatures.json\"", csproj);
             Assert.Contains("EmbeddedResource Include=\"ui\\index.html\"", csproj);
         }
+
+        /// <summary>
+        /// Antivirus heuristics read the text inside a program file. Detection rules that describe malware commands
+        /// (wiping logs, disabling antivirus, download-and-run) are kept ROT13-encoded in the app, so the shipped file never
+        /// contains them as plain text. v1.0.6 got a false positive when some slipped in; this keeps it from happening again.
+        /// </summary>
+        [Fact]
+        public void Shipped_files_contain_no_malware_like_text()
+        {
+            string[] words = { "vssadmin", "deletejournal", "wevtutil", "DisableRealtimeMonitoring", "TamperProtection", "Set-MpPreference", "Add-MpPreference",
+                               "Invoke-Expression", "DownloadString", "irm | iex", "DnsGetCacheDataTable", "dnsapi", "mimikatz", "lsasscleaner" };
+            var files = SourceFiles().ToList();
+            files.Add(Path.Combine(Repo.Root, "src", "PCCheck", "signatures.json"));
+            files.Add(Path.Combine(Repo.Root, "src", "PCCheck", "ui", "index.html"));
+            foreach (var file in files)
+            {
+                string[] lines = File.ReadAllLines(file);
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i].Trim();
+                    if (line.StartsWith("//")) continue;   // comments are not compiled into the program
+                    foreach (var w in words)
+                        Assert.False(line.IndexOf(w, StringComparison.OrdinalIgnoreCase) >= 0,
+                            Path.GetFileName(file) + " line " + (i + 1) + " has \"" + w + "\" as plain text. Encode detection patterns with ROT13 (see TraceParsers.Decode).");
+                }
+            }
+        }
     }
 }
