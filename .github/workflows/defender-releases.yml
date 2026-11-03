@@ -1,0 +1,57 @@
+name: Defender check of published releases
+
+# Diagnostic: downloads each published OpenCheck release and checks it with Microsoft Defender the way a
+# real download is checked: latest definitions, real-time and cloud protection on, and the "downloaded from
+# the internet" mark on each file. OpenCheck is public, so Defender may send it to Microsoft for analysis.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: windows-latest
+    steps:
+      - name: Scan every release like a real download
+        shell: pwsh
+        run: |
+          $mp = Join-Path $env:ProgramFiles "Windows Defender\MpCmdRun.exe"
+          & $mp -SignatureUpdate -MMPC | Out-Host
+          foreach ($pref in @(
+            { Set-MpPreference -MAPSReporting Advanced -ErrorAction Stop },
+            { Set-MpPreference -SubmitSamplesConsent SendAllSamples -ErrorAction Stop },
+            { Set-MpPreference -CloudBlockLevel High -CloudExtendedTimeout 50 -ErrorAction Stop },
+            { Set-MpPreference -DisableBlockAtFirstSeen $false -ErrorAction Stop },
+            { Set-MpPreference -DisableRealtimeMonitoring $false -ErrorAction Stop })) {
+            try { & $pref } catch { Write-Warning "Setting not applied: $_" }
+          }
+          Start-Sleep 5
+          Get-MpComputerStatus | Format-List AMServiceEnabled, AntivirusEnabled, RealTimeProtectionEnabled, IsTamperProtected, AntivirusSignatureVersion, AntivirusSignatureLastUpdated, AMEngineVersion | Out-Host
+          Get-MpPreference | Format-List MAPSReporting, SubmitSamplesConsent, CloudBlockLevel, DisableBlockAtFirstSeen, DisableRealtimeMonitoring | Out-Host
+
+          $tags = @("v1.0.0", "v1.0.1", "v1.0.2", "v1.0.3", "v1.0.4,")
+          foreach ($t in $tags) {
+            $dir = Join-Path $env:RUNNER_TEMP ("r_" + ($t -replace '[^0-9a-z.]', ''))
+            New-Item -ItemType Directory -Force $dir | Out-Null
+            $url = "https://github.com/${{ github.repository }}/releases/download/$([uri]::EscapeDataString($t))/OpenCheck.zip"
+            $zip = Join-Path $dir "OpenCheck.zip"
+            try { Invoke-WebRequest $url -OutFile $zip -ErrorAction Stop } catch { "$t download failed"; continue }
+            Set-Content -Path "${zip}:Zone.Identifier" -Value "[ZoneTransfer]`r`nZoneId=3`r`nHostUrl=$url"
+            Expand-Archive $zip -DestinationPath (Join-Path $dir "x") -Force
+            $exe = Get-ChildItem (Join-Path $dir "x") -Recurse -Filter OpenCheck.exe | Select-Object -First 1
+            Set-Content -Path "$($exe.FullName):Zone.Identifier" -Value "[ZoneTransfer]`r`nZoneId=3`r`nHostUrl=$url"
+            $res = @()
+            foreach ($f in @($zip, $exe.FullName)) {
+              & $mp -Scan -ScanType 3 -File $f | Out-Null
+              $code = $LASTEXITCODE
+              try { [IO.File]::ReadAllBytes($f) | Out-Null; $open = "opened" } catch { $open = "BLOCKED on open" }
+              $res += "$([IO.Path]::GetFileName($f)): scan=$(if ($code -eq 0) {'clean'} elseif ($code -eq 2) {'FLAGGED'} else {"error $code"}), $open"
+            }
+            "$t  " + ($res -join "  |  ")
+          }
+          Start-Sleep 20
+          "--- Detections ---"
+          Get-MpThreat | Format-List ThreatName, ThreatID, SeverityID | Out-Host
+          Get-MpThreatDetection | Format-List ThreatID, Resources, InitialDetectionTime, ActionSuccess | Out-Host
