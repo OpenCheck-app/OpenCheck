@@ -121,6 +121,14 @@ namespace PCCheck.Engine
 
         static readonly Regex UserProfilePrefix = new Regex(@"^(\\\\\?\\)?[A-Za-z]:\\Users\\[^\\]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        /// <summary>The cheat whose telltale files are all in this folder (names compared in lower case), or null.</summary>
+        public FileLayout MatchFileLayout(ICollection<string> fileNamesLower)
+        {
+            foreach (var layout in set.FileLayouts)
+                if (layout.Files.All(fileNamesLower.Contains)) return layout;
+            return null;
+        }
+
         /// <summary>Hides the Windows user name in a path: C:\Users\alex\Downloads -> ~\Downloads.</summary>
         public static string MaskUser(string path)
         {

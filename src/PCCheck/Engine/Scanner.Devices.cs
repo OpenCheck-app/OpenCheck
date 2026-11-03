@@ -8,22 +8,8 @@ namespace PCCheck.Engine
 {
     public sealed partial class Scanner
     {
-        /// <summary>Hardware serials scrambled into a short PC ID. Only the scrambled ID leaves this method.</summary>
-        string ComputePcId()
-        {
-            try
-            {
-                var parts = new List<string>();
-                foreach (var o in Wmi("SELECT SerialNumber FROM Win32_BaseBoard")) parts.Add(Prop(o, "SerialNumber"));
-                foreach (var o in Wmi("SELECT SerialNumber FROM Win32_BIOS")) parts.Add(Prop(o, "SerialNumber"));
-                foreach (var o in Wmi("SELECT UUID FROM Win32_ComputerSystemProduct")) parts.Add(Prop(o, "UUID"));
-                var id = Parsers.PcId(parts);
-                if (id != null) return id;
-                using (var k = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Cryptography"))
-                    return Parsers.PcId(new[] { k == null ? null : k.GetValue("MachineGuid") as string });
-            }
-            catch { return null; }
-        }
+        /// <summary>PCIe hardware IDs seen by the DMA check, used for the PC ID.</summary>
+        readonly List<string> pciIds = new List<string>();
 
         /// <summary>USB drives that were plugged in, programs run from drives that aren't connected now, and sandbox or freeze tools.</summary>
         string ScanDevicesAndSandboxes()

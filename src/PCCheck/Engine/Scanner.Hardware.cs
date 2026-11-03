@@ -104,6 +104,7 @@ namespace PCCheck.Engine
             {
                 pciCount++;
                 string id = Prop(o, "PNPDeviceID"), name = Prop(o, "Name");
+                pciIds.Add(id);
                 string vendor = Parsers.PciVendor(id), vendorName;
                 if (vendor != null && set.DmaVendors.TryGetValue(vendor, out vendorName))
                 {

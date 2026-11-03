@@ -76,6 +76,7 @@ namespace PCCheck.Engine
 
                     var childDirs = new List<string>();
                     var childNames = new HashSet<string>(StringComparer.Ordinal);
+                    var childFiles = new HashSet<string>(StringComparer.Ordinal);
                     try
                     {
                         foreach (var e in new DirectoryInfo(dir).EnumerateFileSystemInfos())
@@ -100,6 +101,7 @@ namespace PCCheck.Engine
                             }
                             else
                             {
+                                childFiles.Add(e.Name.ToLowerInvariant());
                                 string ext = Path.GetExtension(e.Name);
                                 if (IsScriptCandidate(ext, dir)) CheckScript((FileInfo)e);
                                 if (IsDownloadCandidate(ext, e.FullName)) CheckDownloadSource((FileInfo)e);
@@ -134,6 +136,18 @@ namespace PCCheck.Engine
                     catch (UnauthorizedAccessException) { }
                     catch (IOException) { }
                     catch (System.Security.SecurityException) { }
+
+                    var fileLayout = matcher.MatchFileLayout(childFiles);
+                    if (fileLayout != null)
+                    {
+                        DateTime? t = null;
+                        try { t = Directory.GetLastWriteTime(dir); } catch { }
+                        var f = Simple(fileLayout.Name, fileLayout.Category ?? "Cheat files", Severity.High, Evidence.Found, Groups.Cheat, t, dir,
+                            "Cheat files: " + string.Join(" + ", fileLayout.Files),
+                            (fileLayout.Note ?? "") + " Found by the files it keeps together, so renaming the programs doesn't hide it.");
+                        f.IsCheat = true;
+                        Add(f);
+                    }
 
                     var layout = matcher.MatchLayout(childNames);
                     if (layout != null)

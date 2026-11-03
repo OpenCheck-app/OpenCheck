@@ -385,14 +385,19 @@ namespace PCCheck.Tests
         [InlineData("WinDivert64.sys", "WinDivert")]
         [InlineData("Voidstrap.exe", "Roblox bootstrapper")]
         [InlineData("Fishstrap.exe", "Roblox bootstrapper")]
-        [InlineData("Matrix.exe", "Matrix Hub")]
+        [InlineData("Matrix.exe", "Matrix Hub app")]
         [InlineData("Matrix External.exe", "Matrix Hub")]
         [InlineData("Matrix Hub.exe", "Matrix Hub")]
+        [InlineData("newui.exe", "Matrix Hub app")]
+        [InlineData("NEWUI.EXE-1A2B3C4D.pf", "Matrix Hub app")]
+        [InlineData("newuimatrix.exe", "Matrix Hub")]
+        [InlineData("olduimatrix.exe", "Matrix Hub")]
+        [InlineData("newui (1).exe", "Matrix Hub app")]
         [InlineData("Matrix_Hub_v2.exe", "Matrix Hub")]
         [InlineData("MatrixHubLoader.exe", "Matrix Hub")]
         [InlineData("matrix-external-3.1.exe", "Matrix Hub")]
-        [InlineData("MATRIX.EXE-1A2B3C4D.pf", "Matrix Hub")]
-        [InlineData("MatrixV2.exe", "Matrix Hub")]
+        [InlineData("MATRIX.EXE-1A2B3C4D.pf", "Matrix Hub app")]
+        [InlineData("MatrixV2.exe", "Matrix Hub app")]
         [InlineData("DX9WARE V2.exe", "DX9WARE")]
         [InlineData("Photon.exe", "Photon")]
         [InlineData("Melatonin.exe", "Melatonin")]
@@ -425,9 +430,13 @@ namespace PCCheck.Tests
         [InlineData("lag switch.ahk", "Lag switch tool")]
         [InlineData("LagMacro.ahk", "Lag switch tool")]
         [InlineData("SandboxiePlus.exe", "Sandbox or freeze tool")]
-        [InlineData("SbieSvc.exe", "Sandbox or freeze tool")]
         [InlineData("DeepFreeze.exe", "Sandbox or freeze tool")]
         [InlineData("ShadowDefender.exe", "Sandbox or freeze tool")]
+        [InlineData("HWID Spoofer.exe", "HWID spoofer")]
+        [InlineData("AMIDEWINx64.EXE", "HWID spoofer")]
+        [InlineData("Technitium MAC Address Changer.exe", "HWID spoofer")]
+        [InlineData("ImDisk.exe", "RAM disk tool")]
+        [InlineData("SoftPerfect RAM Disk.exe", "RAM disk tool")]
         [InlineData("Matcha External.exe", "Matcha")]
         public void Detects_new_categories(string file, string expected)
         {
@@ -452,6 +461,8 @@ namespace PCCheck.Tests
         [InlineData("CosmicTweaks.exe")]
         [InlineData("RealtekAudio.exe")]
         [InlineData("MatrixMultiply.dll")]
+        [InlineData("NewUIDemo.exe")]
+        [InlineData("renewui.exe")]
         [InlineData("Wavelength.exe")]
         [InlineData("Severeweatheralerts.exe")]
         [InlineData("vector.exe")]
@@ -459,6 +470,7 @@ namespace PCCheck.Tests
         [InlineData("PredatorSense.exe")]
         [InlineData("TekkitLauncher.exe")]
         [InlineData("Ignite.exe")]
+        [InlineData("SmartMacro.exe")]
         [InlineData("svchost.exe")]
         [InlineData("RasMan.dll")]
         [InlineData("chrome.exe")]
@@ -748,16 +760,21 @@ namespace PCCheck.Tests
     public class DeviceTests
     {
         [Fact]
-        public void Pc_id_is_stable_short_and_ignores_placeholders()
+        public void Pc_id_comes_from_hardware_models_not_serials()
         {
-            var a = Parsers.PcId(new[] { "BSN12345678", "To be filled by O.E.M.", "4C4C4544-0042-3510-8054-B4C04F4E4B32" });
-            var b = Parsers.PcId(new[] { "BSN12345678", "Default string", "4C4C4544-0042-3510-8054-B4C04F4E4B32" });
-            Assert.NotNull(a);
-            Assert.Equal(a, b);
+            var pc = new[]
+            {
+                @"PCI\VEN_10DE&DEV_2484&SUBSYS_146710DE&REV_A1\4&2B3F1C9&0&0008",
+                @"PCI\VEN_8086&DEV_7AF0&SUBSYS_00748086&REV_11\3&11583659&0&A3",
+                @"PCI\VEN_10EC&DEV_8125&SUBSYS_7D251462&REV_05\4&1A2B3C&0&00E4",
+                @"USB\VID_046D&PID_C52B\5&2A5B9&0&2"
+            };
+            var a = Parsers.PcIdFromHardware(pc);
+            var sameHardwareOtherSlots = pc.Select(x => x.Replace("&0&0008", "&0&0010")).Reverse().ToArray();
             Assert.Matches("^[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$", a);
-            Assert.NotEqual(a, Parsers.PcId(new[] { "OTHERBOARD99", "4C4C4544-0042-3510-8054-B4C04F4E4B32" }));
-            Assert.Null(Parsers.PcId(new[] { "Default string", "0", "", null }));
-            Assert.DoesNotContain("BSN12345678", a);
+            Assert.Equal(a, Parsers.PcIdFromHardware(sameHardwareOtherSlots));
+            Assert.NotEqual(a, Parsers.PcIdFromHardware(pc.Take(2).Concat(new[] { @"PCI\VEN_1022&DEV_1480&SUBSYS_7C371462&REV_00\3&2411E6FE&0&00" })));
+            Assert.Null(Parsers.PcIdFromHardware(pc.Take(2)));
         }
 
         [Theory]
@@ -770,4 +787,165 @@ namespace PCCheck.Tests
             Assert.Equal(expected, Parsers.UsbStorageName(id));
         }
     }
+
+    public class MatrixRegressionTests
+    {
+        readonly Matcher m = new Matcher(Repo.Signatures());
+
+        // Missed on a real PC (Nov 2026): Matrix Hub's loader is newui.exe and the program files are
+        // newuimatrix.exe / olduimatrix.exe, which the old "starts with matrix" rule never matched.
+        [Fact]
+        public void Matrix_folder_is_found_even_if_every_program_is_renamed()
+        {
+            var folder = new HashSet<string> { "x7f2k.exe", "version.dat", "mcache.dat", "_license.dat" };
+            var hit = m.MatchFileLayout(folder);
+            Assert.NotNull(hit);
+            Assert.Equal("Matrix Hub", hit.Name);
+            Assert.Null(m.MatchFileLayout(new HashSet<string> { "version.dat", "settings.dat", "readme.txt" }));
+            Assert.Null(m.MatchFileLayout(new HashSet<string> { "_license.dat" }));
+        }
+
+        [Fact]
+        public void Matrix_loader_fingerprint_is_known()
+        {
+            Assert.True(Repo.Signatures().KnownBadSha256.ContainsKey("74e704b51c1c1d2ffd2c58d2c10026d88c5a50134c9989b87c98db315f341400"));
+        }
+    }
+
+    public class DisguiseTests
+    {
+        [Theory]
+        [InlineData(@"C:\Users\a\Downloads\svchost.exe", true)]
+        [InlineData(@"C:\Users\a\AppData\Roaming\RuntimeBroker.exe", true)]
+        [InlineData(@"C:\Users\a\AppData\Local\Temp\x\explorer.exe", true)]
+        [InlineData(@"C:\Windows\System32\svchost.exe", false)]
+        [InlineData(@"C:\Windows\explorer.exe", false)]
+        [InlineData(@"C:\Users\a\Downloads\Discord.exe", false)]
+        public void Finds_windows_names_in_personal_folders(string path, bool expected)
+        {
+            Assert.Equal(expected, Parsers.IsDisguisedAsWindows(path));
+        }
+    }
+
+    /// <summary>Records that cleaners usually miss: PCA launch log, Defender log, crash reports, PowerShell history, driver installs.</summary>
+    public class TraceTests
+    {
+        readonly Matcher m = new Matcher(Repo.Signatures());
+
+        [Fact]
+        public void Pca_launch_log_lines_give_path_and_time()
+        {
+            var a = TraceParsers.ParsePcaLine(@"C:\Users\a\Downloads\Solara\Solara.exe|2026-10-30 18:04:11.250");
+            Assert.NotNull(a);
+            Assert.Equal(@"C:\Users\a\Downloads\Solara\Solara.exe", a.Path);
+            Assert.True(a.Time.HasValue);
+            Assert.Equal(new DateTime(2026, 10, 30, 18, 4, 11, 250, DateTimeKind.Utc).ToLocalTime(), a.Time.Value);
+            Assert.NotNull(m.MatchName(a.Path));
+
+            var b = TraceParsers.ParsePcaLine(@"2026-10-29 09:00:00.000|2|C:\Users\a\Desktop\x7f2k.exe|x7f2k|||0000|0");
+            Assert.Equal(@"C:\Users\a\Desktop\x7f2k.exe", b.Path);
+            Assert.True(b.Time.HasValue);
+
+            Assert.Null(TraceParsers.ParsePcaLine("garbage line"));
+            Assert.Null(TraceParsers.ParsePcaLine(""));
+        }
+
+        [Fact]
+        public void Utf16_logs_without_a_byte_order_mark_are_read()
+        {
+            var bytes = System.Text.Encoding.Unicode.GetBytes(@"C:\a\b.exe|2026-10-30 18:04:11.250" + "\r\n");
+            Assert.StartsWith(@"C:\a\b.exe|", TraceParsers.DecodeText(bytes));
+            Assert.Equal("plain", TraceParsers.DecodeText(System.Text.Encoding.UTF8.GetBytes("plain")));
+        }
+
+        [Fact]
+        public void Defender_log_lines_give_program_paths()
+        {
+            var runs = TraceParsers.MpLogRuns(@"2026-10-30T18:04:12.511Z SDN:Issuing SDN query for \Device\HarddiskVolume3\Users\a\Downloads\Wave\Wave.exe (\Device\HarddiskVolume3\Users\a\Downloads\Wave\Wave.exe) (sha1=abc)");
+            Assert.Single(runs);
+            Assert.EndsWith(@"\Wave.exe", runs[0].Path);
+            Assert.True(runs[0].Time.HasValue);
+
+            var img = TraceParsers.MpLogRuns(@"2026-10-30T18:04:12.511Z ProcessImageName: Xeno.exe, Pid: 4412, TotalTime: 31, Count: 2");
+            Assert.Single(img);
+            Assert.Equal("Xeno.exe", img[0].Path);
+
+            Assert.Empty(TraceParsers.MpLogRuns("2026-10-30T18:04:12.511Z Engine: signatures updated"));
+        }
+
+        [Theory]
+        [InlineData("AppCrash_Solara.exe_7a3c1e9f0b2d4e5f6a7b8c9d0e1f2a3b4c5d_9c1f2e3a_cab_0a1b2c3d", "Solara.exe")]
+        [InlineData("AppHang_RobloxPlayerBeta._3f2a1b_cab_77", null)]
+        [InlineData("AppCrash_RobloxPlayerBeta.exe_3f2a1b0c_cab_77aa", "RobloxPlayerBeta.exe")]
+        [InlineData("Kernel_141_abc", null)]
+        public void Crash_report_folder_names_give_the_program(string folder, string expected)
+        {
+            Assert.Equal(expected, TraceParsers.WerFolderProgram(folder));
+        }
+
+        [Fact]
+        public void Roblox_crash_report_lists_injected_files_but_not_overlays()
+        {
+            var report = new[]
+            {
+                "Version=1",
+                @"AppPath=C:\Users\a\AppData\Local\Roblox\Versions\version-1\RobloxPlayerBeta.exe",
+                @"LoadedModule[0]=C:\Users\a\AppData\Local\Roblox\Versions\version-1\RobloxPlayerBeta.exe",
+                @"LoadedModule[1]=C:\WINDOWS\SYSTEM32\ntdll.dll",
+                @"LoadedModule[2]=C:\Users\a\AppData\Local\Discord\app-1.0.9\modules\discord_hook\DiscordHook64.dll",
+                @"LoadedModule[3]=C:\Program Files\NVIDIA Corporation\NVIDIA app\nvspcap64.dll",
+                @"LoadedModule[4]=C:\Users\a\AppData\Local\Temp\x1\module.dll",
+                @"LoadedModule[5]=C:\ProgramData\Solara\Solara.dll",
+            };
+            var odd = TraceParsers.UnusualRobloxModules(report);
+            Assert.Equal(2, odd.Count);
+            Assert.Contains(@"C:\Users\a\AppData\Local\Temp\x1\module.dll", odd);
+            Assert.Contains(@"C:\ProgramData\Solara\Solara.dll", odd);
+
+            // Not a Roblox crash: nothing is reported, even with odd modules.
+            var other = new[] { @"AppPath=C:\Games\other.exe", @"LoadedModule[0]=C:\Users\a\AppData\Local\Temp\x1\module.dll" };
+            Assert.Empty(TraceParsers.UnusualRobloxModules(other));
+        }
+
+        [Theory]
+        [InlineData("fsutil usn deletejournal /d c:", "Deleted the drive change log")]
+        [InlineData("wevtutil cl Security", "Cleared event logs")]
+        [InlineData("Clear-EventLog -LogName System", "Cleared event logs")]
+        [InlineData(@"Remove-Item C:\Windows\Prefetch\* -Force", "Deleted Prefetch")]
+        [InlineData(@"del /q /f C:\Windows\Prefetch\*.pf", "Deleted Prefetch")]
+        [InlineData(@"reg delete HKLM\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings /f", "Deleted program history from the registry")]
+        [InlineData(@"Remove-Item -Recurse HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\UserAssist", "Deleted program history from the registry")]
+        [InlineData("vssadmin delete shadows /all /quiet", "Deleted restore points")]
+        [InlineData(@"rm -r $env:LOCALAPPDATA\Roblox\logs", "Deleted Roblox logs")]
+        [InlineData("Set-MpPreference -DisableRealtimeMonitoring $true", "Changed antivirus settings")]
+        [InlineData(@"Add-MpPreference -ExclusionPath C:\Users\a\Downloads", "Changed antivirus settings")]
+        public void Cleanup_commands_are_recognized(string command, string expected)
+        {
+            Assert.Equal(expected, TraceParsers.CleanupCommand(command));
+        }
+
+        [Theory]
+        [InlineData("Get-ChildItem C:\\Windows\\Prefetch")]
+        [InlineData("winget install Discord.Discord")]
+        [InlineData("Set-MpPreference -DisableRealtimeMonitoring $false")]
+        [InlineData("git rm README.md")]
+        [InlineData("wevtutil qe System /c:5")]
+        [InlineData("npm run build")]
+        public void Normal_commands_are_not_flagged(string command)
+        {
+            Assert.Null(TraceParsers.CleanupCommand(command));
+        }
+
+        [Theory]
+        [InlineData(@"\??\C:\Users\a\AppData\Local\Temp\iqvw64e.sys", true)]
+        [InlineData(@"C:\Users\a\Downloads\driver\mapper.sys", true)]
+        [InlineData(@"\SystemRoot\System32\drivers\nvlddmkm.sys", false)]
+        [InlineData(@"C:\Program Files\Riot Vanguard\vgk.sys", false)]
+        [InlineData(@"C:\Users\a\AppData\Local\Temp\setup.exe", false)]
+        public void Drivers_in_personal_folders_are_flagged(string image, bool expected)
+        {
+            Assert.Equal(expected, TraceParsers.IsPersonalFolderDriver(image));
+        }
+    }
 }
+

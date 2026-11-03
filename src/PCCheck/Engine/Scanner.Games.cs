@@ -127,6 +127,25 @@ namespace PCCheck.Engine
         /// A program run from Downloads, Desktop, Documents or Temp while a Roblox game was open, and deleted since.
         /// This catches renamed or brand-new loaders that no name list knows about.
         /// </summary>
+        /// <summary>Windows system program names run from personal folders, where the real ones never are.</summary>
+        void CheckDisguisedPrograms()
+        {
+            int added = 0;
+            foreach (var run in bamRuns.OrderByDescending(r => r.Item2))
+            {
+                if (added >= 10) break;
+                if (!Parsers.IsDisguisedAsWindows(run.Item1)) continue;
+                var game = sessions.FirstOrDefault(s => run.Item2 >= s.Start.AddMinutes(-5) && run.Item2 <= (s.End ?? s.Start).AddMinutes(5));
+                var f = Simple("Program disguised as a Windows file", "Disguised program", Severity.Medium, Evidence.Ran, Groups.Cheat, run.Item2, run.Item1, "BAM",
+                    "This has the name of a Windows system program, but ran from a personal folder, where the real one never is. Cheats and loaders rename themselves like this to blend in." +
+                    (game != null ? " It ran while Roblox place " + game.PlaceId + " was open." : ""));
+                f.RunTimes.Add(run.Item2);
+                if (game != null) f.Games.Add(new GameLink { Session = game, How = "during" });
+                Add(f);
+                added++;
+            }
+        }
+
         void CheckDeletedRunsDuringGames()
         {
             if (sessions.Count == 0 || bamRuns.Count == 0) return;

@@ -37,6 +37,8 @@ namespace PCCheck.Engine
         /// <summary>Websites cheats are downloaded from, and ad-link "key system" sites.</summary>
         public List<string> CheatSites = new List<string>();
         public List<string> KeySites = new List<string>();
+        /// <summary>Sets of file names a cheat always keeps together (name, category, note, files).</summary>
+        public List<FileLayout> FileLayouts = new List<FileLayout>();
         public Dictionary<string, string> DmaVendors = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> VmMacPrefixes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> KnownBadSha256 = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -104,6 +106,12 @@ namespace PCCheck.Engine
             var sites = Json.Object(Json.Get(root, "downloadSites"));
             foreach (var w in Json.Array(Json.Get(sites, "cheat"))) set.CheatSites.Add(Convert.ToString(w));
             foreach (var w in Json.Array(Json.Get(sites, "keySystem"))) set.KeySites.Add(Convert.ToString(w));
+            foreach (var o in Json.Array(Json.Get(Json.Object(Json.Get(root, "cheatFileLayouts")), "items")))
+            {
+                var item = Json.Object(o);
+                var files = Json.Array(Json.Get(item, "files")).Select(x => Convert.ToString(x).ToLowerInvariant()).Where(x => x.Length > 0).ToArray();
+                if (files.Length >= 2) set.FileLayouts.Add(new FileLayout { Name = Json.Str(item, "name"), Category = Json.Str(item, "category"), Note = Json.Str(item, "note"), Files = files });
+            }
 
             var dma = Json.Object(Json.Get(root, "dma"));
             foreach (var kv in Json.Object(Json.Get(dma, "suspiciousVendorIds"))) set.DmaVendors[kv.Key] = Convert.ToString(kv.Value);
@@ -137,6 +145,12 @@ namespace PCCheck.Engine
     }
 
     /// <summary>Small helpers over the built-in .NET JSON reader.</summary>
+    public sealed class FileLayout
+    {
+        public string Name, Category, Note;
+        public string[] Files;
+    }
+
     public static class Json
     {
         public static object Parse(string json)

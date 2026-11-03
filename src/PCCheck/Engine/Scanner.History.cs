@@ -8,7 +8,7 @@ namespace PCCheck.Engine
 {
     public sealed partial class Scanner
     {
-        /// <summary>Windows' own records of programs that ran: Prefetch, BAM, UserAssist, MuiCache, Compatibility Assistant and Recent files.</summary>
+        /// <summary>Windows' own records of programs that ran: Prefetch, BAM, UserAssist, MuiCache, Compatibility Assistant, Recent files, the PCA launch log, crash reports, the Defender log and ShimCache.</summary>
         string ScanProgramHistory()
         {
             ScanPrefetch();
@@ -25,7 +25,13 @@ namespace PCCheck.Engine
             ScanRegistryPathNames(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers", "Compatibility settings", false);
             Tick("Reading recent files", 0.85);
             ScanRecentShortcuts();
-            Tick("Reading compatibility cache", 0.95);
+            Tick("Reading the program launch log", 0.88);
+            ScanPcaLog();
+            Tick("Reading crash reports", 0.9);
+            ScanCrashReports();
+            Tick("Reading the Windows Defender log", 0.92);
+            ScanDefenderSupportLog();
+            Tick("Reading compatibility cache", 0.97);
             ScanShimCache();
 
             var ran = areaFindings.Where(f => f.Evidence == Evidence.Ran && f.Group == Groups.Cheat).ToList();

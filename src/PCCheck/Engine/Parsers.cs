@@ -407,29 +407,24 @@ namespace PCCheck.Engine
             return !string.IsNullOrEmpty(reason) && reason != "268" && CheatWords.IsMatch(reason);
         }
 
-        static readonly HashSet<string> JunkSerials = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        { "", "0", "none", "default string", "to be filled by o.e.m", "system serial number", "not specified", "not applicable", "n/a", "123456789", "0123456789", "base board serial number", "chassis serial number" };
-
-        /// <summary>True when a hardware serial is a real value, not a placeholder.</summary>
-        public static bool IsRealSerial(string serial)
-        {
-            if (serial == null) return false;
-            string s = serial.Trim().Trim('.');
-            return s.Length >= 4 && !JunkSerials.Contains(s) && s.Distinct().Count() > 2;
-        }
-
         /// <summary>
-        /// A short ID for this PC: a SHA-256 of hardware serials (salted), cut to 12 characters as XXXX-XXXX-XXXX.
-        /// It can't be turned back into the serials, but it's the same every time OpenCheck runs on the same PC.
+        /// A short ID for this PC built from which PCIe hardware it has (vendor, device and model IDs, e.g. a GPU or
+        /// network card), not from serial numbers. Same hardware, same ID: XXXX-XXXX-XXXX. Null if too little hardware is known.
         /// </summary>
-        public static string PcId(IEnumerable<string> parts)
+        public static string PcIdFromHardware(IEnumerable<string> pnpDeviceIds)
         {
-            var real = parts.Where(IsRealSerial).Select(x => x.Trim().ToUpperInvariant()).ToList();
-            if (real.Count == 0) return null;
+            var parts = pnpDeviceIds
+                .Where(x => !string.IsNullOrEmpty(x) && x.StartsWith(@"PCI\", StringComparison.OrdinalIgnoreCase))
+                .Select(x => { var seg = x.Split('\\'); return seg.Length >= 2 ? (seg[0] + "\\" + seg[1]).ToUpperInvariant() : null; })
+                .Where(x => x != null)
+                .Distinct()
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToList();
+            if (parts.Count < 3) return null;
             using (var sha = System.Security.Cryptography.SHA256.Create())
             {
-                var hash = sha.ComputeHash(Encoding.UTF8.GetBytes("OpenCheck PC ID v1|" + string.Join("|", real)));
-                string hex = BitConverter.ToString(hash).Replace("-", "").Substring(0, 12).ToUpperInvariant();
+                var hash = sha.ComputeHash(Encoding.UTF8.GetBytes("OpenCheck PC ID v2|" + string.Join("|", parts)));
+                string hex = BitConverter.ToString(hash).Replace("-", "").Substring(0, 12);
                 return hex.Substring(0, 4) + "-" + hex.Substring(4, 4) + "-" + hex.Substring(8, 4);
             }
         }
@@ -446,6 +441,27 @@ namespace PCCheck.Engine
             }
             string name = ((ven ?? "") + " " + (prod ?? "")).Trim();
             return name.Length == 0 ? "USB drive" : name;
+        }
+
+        static readonly HashSet<string> WindowsProgramNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "svchost.exe", "explorer.exe", "csrss.exe", "lsass.exe", "winlogon.exe", "services.exe", "smss.exe", "wininit.exe",
+            "dwm.exe", "conhost.exe", "runtimebroker.exe", "taskhostw.exe", "sihost.exe", "dllhost.exe", "spoolsv.exe",
+            "rundll32.exe", "ctfmon.exe", "fontdrvhost.exe", "searchhost.exe", "searchindexer.exe", "audiodg.exe",
+            "lsaiso.exe", "wudfhost.exe", "msmpeng.exe", "securityhealthservice.exe", "smartscreen.exe", "taskmgr.exe", "regedit.exe"
+        };
+
+        /// <summary>
+        /// A Windows system program name running from a personal folder (Downloads, Desktop, Documents, Temp, AppData\Roaming),
+        /// where the real one never lives. Cheats and loaders rename themselves like this to blend in.
+        /// </summary>
+        public static bool IsDisguisedAsWindows(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            int slash = path.LastIndexOf('\\');
+            if (slash < 0 || !WindowsProgramNames.Contains(path.Substring(slash + 1))) return false;
+            string p = path.ToLowerInvariant();
+            return p.Contains(@"\downloads\") || p.Contains(@"\desktop\") || p.Contains(@"\documents\") || p.Contains(@"\appdata\local\temp\") || p.Contains(@"\appdata\roaming\") || p.Contains(@"\users\public\");
         }
 
         public static List<UsnRecord> ParseUsnBuffer(byte[] buffer, int length)

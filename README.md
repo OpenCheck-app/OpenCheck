@@ -11,9 +11,11 @@ OpenCheck is an open-source, read-only Windows app that checks a PC for Roblox e
 **What it looks at**
 - File and folder **names** in your user folders, ProgramData and Program Files. File contents are never opened, with four exceptions: a file that already matched the cheat list gets a fingerprint (SHA-256), Roblox FastFlag files are read for flags, Roblox's own logs are read for game join times, and Roblox script files (.lua/.luau, and .txt inside an executor's folders) are read for executor-only functions like getgenv or hookfunction. Only the names of those functions are reported, never the script.
 - Windows' records of programs that ran or were on the PC: Prefetch, BAM, UserAssist, MuiCache, Compatibility Assistant, the compatibility cache (ShimCache, which keeps program paths for months, even after they're deleted) and Recent files.
+- Records cleaners usually miss: the Program Compatibility Assistant launch log, Windows Defender's own support log, Windows crash reports (including which files were loaded inside Roblox when it crashed), and drivers installed in the last 90 days.
 - Deleted files: the Recycle Bin and the drive's change log (NTFS USN journal), read newest first so recent deletions are always covered, filtered to cheat names only.
 - Windows Security (Defender) detections and antivirus exclusions.
 - Cleared event logs, logs that are suspiciously short, clock changes, and wiped Prefetch, Roblox logs or recent-file history.
+- PowerShell history, checked only for commands that wipe the records above (like `fsutil usn deletejournal` or deleting Prefetch). Only those matching lines are kept.
 - When Windows was last reset or installed, and when the Windows account was created (a reset in the last week is flagged for review).
 - Windows Firewall rules that block Roblox (a common lag-switch trick), and the firewall's own history of Roblox rules being added and removed, which is how lag-switch macros work.
 - Lag switches and VPNs: lag tools installed as drivers or services (WinDivert, NetLimiter and others), VPN and game ping-booster adapters (connected or just installed), and short internet drops that happened while a Roblox game was open. A physical switch on the cable or a macro that turns the network off shows up as these drops. Only adapter names and connect/disconnect times are read, and nothing is sent anywhere.
@@ -23,7 +25,7 @@ OpenCheck is an open-source, read-only Windows app that checks a PC for Roblox e
 - Whether the PC is a virtual machine, whether VM software or Android emulators are installed or were used, and PCIe devices that could be DMA cards.
 - Programs running right now.
 - USB drives plugged in during the last 30 days, programs run from USB or external drives, and sandbox or "freeze" tools (Sandboxie, Deep Freeze, Shadow Defender and similar), including cheat files inside Sandboxie's container folder.
-- A **PC ID**: a scrambled ID made from hardware serial numbers. The same PC always gets the same ID, so staff can tell if someone checks a different PC. It can't be turned back into the serial numbers.
+- A **PC ID**: a scrambled ID made from which PCIe hardware the PC has (like the graphics and network card models). No serial numbers are read for it. The same PC gets the same ID, so staff can tell if someone checks a different PC. Two identical prebuilt PCs can share an ID.
 - Renamed or unknown cheats, without relying on names:
   - any `autoexec` folder (executors run scripts from it)
   - Roblox scripts that use executor-only functions
@@ -65,6 +67,8 @@ gh attestation verify OpenCheck.zip --repo OWNER/REPO
 Replace `OWNER/REPO` with this repository's name.
 
 ## For moderators
+
+Read the **[staff guide](STAFF-GUIDE.md)** for how to run a check that can't be faked, and the **[threat model](THREAT-MODEL.md)** for every known way to beat a check and what catches it.
 
 1. Send the player the link to this repo's Releases page.
 2. They run it, tick the box and press **Start check**. It takes about 1 to 2 minutes.

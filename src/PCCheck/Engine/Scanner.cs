@@ -76,8 +76,7 @@ namespace PCCheck.Engine
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(3),
                 AppSha256 = SafeHash(Assembly.GetExecutingAssembly().Location),
                 Pc = WindowsName(),
-                Mode = options.Summary,
-                PcId = ComputePcId()
+                Mode = options.Summary
             };
 
             if (options.LowCpu)
@@ -132,7 +131,9 @@ namespace PCCheck.Engine
 
             try { LinkGames(); } catch (Exception ex) { notes.Add("games: " + ex.Message); }
             try { CheckDeletedRunsDuringGames(); } catch (Exception ex) { notes.Add("deleted runs: " + ex.Message); }
+            try { CheckDisguisedPrograms(); } catch (Exception ex) { notes.Add("disguised programs: " + ex.Message); }
             report.Sessions = sessions.Take(40).ToList();
+            report.PcId = Parsers.PcIdFromHardware(pciIds);
             report.Findings = findings.Values.ToList();
             report.Notes = notes;
             if (!admin) notes.Add("Not run as administrator, so Prefetch, the drive change log and the Security log could not be read.");
@@ -190,7 +191,8 @@ namespace PCCheck.Engine
             string cat = sig.Category ?? "";
             if (sig.Severity == Severity.Info) group = Groups.Context;
             else if (cat.IndexOf("Virtual", StringComparison.OrdinalIgnoreCase) >= 0 || cat.IndexOf("Emulator", StringComparison.OrdinalIgnoreCase) >= 0 || cat == "DMA") group = Groups.Hardware;
-            else if (cat.IndexOf("cleaner", StringComparison.OrdinalIgnoreCase) >= 0 || cat.IndexOf("Sandbox", StringComparison.OrdinalIgnoreCase) >= 0) group = Groups.Tamper;
+            else if (cat.IndexOf("cleaner", StringComparison.OrdinalIgnoreCase) >= 0 || cat.IndexOf("Sandbox", StringComparison.OrdinalIgnoreCase) >= 0
+                  || cat == "Spoofer" || cat == "RAM disk") group = Groups.Tamper;
             else if (cat.IndexOf("VPN", StringComparison.OrdinalIgnoreCase) >= 0 || cat.IndexOf("ping booster", StringComparison.OrdinalIgnoreCase) >= 0) group = Groups.Network;
             else group = Groups.Cheat;
 

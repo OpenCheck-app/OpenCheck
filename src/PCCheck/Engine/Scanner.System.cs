@@ -82,7 +82,6 @@ namespace PCCheck.Engine
                             if (eq > 0) path = path.Substring(0, eq);
                             excl.Add(Tuple.Create(time.Value, path.Trim()));
                         }
-                        else if (nv.IndexOf("DisableRealtimeMonitoring = 0x1", StringComparison.OrdinalIgnoreCase) >= 0) offTimes.Add(time.Value);
                     });
             }
             catch (Exception ex) { notes.Add("Couldn't read Windows Security's change history: " + ex.Message); return 0; }
@@ -203,6 +202,11 @@ namespace PCCheck.Engine
                 });
             }
             catch { }
+
+            Tick("Reading PowerShell history", 0.4);
+            ScanShellHistory(found);
+            Tick("Checking installed drivers", 0.45);
+            ScanServiceInstalls(found);
 
             Tick("Checking when Windows was reset", 0.5);
             DateTime? resetDate = ScanResets(found);
