@@ -388,6 +388,11 @@ namespace PCCheck.Tests
         [InlineData("Matrix.exe", "Matrix Hub")]
         [InlineData("Matrix External.exe", "Matrix Hub")]
         [InlineData("Matrix Hub.exe", "Matrix Hub")]
+        [InlineData("newui.exe", "Matrix Hub")]
+        [InlineData("NEWUI.EXE-1A2B3C4D.pf", "Matrix Hub")]
+        [InlineData("newuimatrix.exe", "Matrix Hub")]
+        [InlineData("olduimatrix.exe", "Matrix Hub")]
+        [InlineData("newui (1).exe", "Matrix Hub")]
         [InlineData("Matrix_Hub_v2.exe", "Matrix Hub")]
         [InlineData("MatrixHubLoader.exe", "Matrix Hub")]
         [InlineData("matrix-external-3.1.exe", "Matrix Hub")]
@@ -451,6 +456,8 @@ namespace PCCheck.Tests
         [InlineData("CosmicTweaks.exe")]
         [InlineData("RealtekAudio.exe")]
         [InlineData("MatrixMultiply.dll")]
+        [InlineData("NewUIDemo.exe")]
+        [InlineData("renewui.exe")]
         [InlineData("Wavelength.exe")]
         [InlineData("Severeweatheralerts.exe")]
         [InlineData("vector.exe")]
@@ -772,6 +779,30 @@ namespace PCCheck.Tests
         public void Names_usb_drives(string id, string expected)
         {
             Assert.Equal(expected, Parsers.UsbStorageName(id));
+        }
+    }
+
+    public class MatrixRegressionTests
+    {
+        readonly Matcher m = new Matcher(Repo.Signatures());
+
+        // Missed on a real PC (Nov 2026): Matrix Hub's loader is newui.exe and the program files are
+        // newuimatrix.exe / olduimatrix.exe, which the old "starts with matrix" rule never matched.
+        [Fact]
+        public void Matrix_folder_is_found_even_if_every_program_is_renamed()
+        {
+            var folder = new HashSet<string> { "x7f2k.exe", "version.dat", "mcache.dat", "_license.dat" };
+            var hit = m.MatchFileLayout(folder);
+            Assert.NotNull(hit);
+            Assert.Equal("Matrix Hub", hit.Name);
+            Assert.Null(m.MatchFileLayout(new HashSet<string> { "version.dat", "settings.dat", "readme.txt" }));
+            Assert.Null(m.MatchFileLayout(new HashSet<string> { "_license.dat" }));
+        }
+
+        [Fact]
+        public void Matrix_loader_fingerprint_is_known()
+        {
+            Assert.True(Repo.Signatures().KnownBadSha256.ContainsKey("74e704b51c1c1d2ffd2c58d2c10026d88c5a50134c9989b87c98db315f341400"));
         }
     }
 }

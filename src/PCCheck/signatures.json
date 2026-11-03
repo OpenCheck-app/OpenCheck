@@ -8,7 +8,7 @@
     "severity: high = cheat, medium = suspicious tool, info = context only (never causes FLAGGED by itself).",
     "Generic tokens (like 'robloxexecutor') catch renamed or unknown tools. No list can catch every cheat, so the checker also looks at behavior: executor folders, deleted files, antivirus exclusions and firewall rules."
   ],
-  "version": "2026-11-02e",
+  "version": "2026-11-02f",
   "nameSuffixes": [
     "ui",
     "bootstrapper",
@@ -704,11 +704,39 @@
       "category": "External",
       "severity": "high",
       "match": [
+        "newuimatrix",
+        "olduimatrix",
+        "uimatrix",
+        "matrixhub",
+        "matrixexternal",
+        "matrixloader"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "Roblox external (Matrix Hub). Its loader is usually called newui.exe, and the cheat itself is kept encrypted in version.dat next to mcache.dat and _license.dat."
+    },
+    {
+      "name": "Matrix Hub",
+      "category": "External",
+      "severity": "high",
+      "match": [
+        "newui",
+        "oldui"
+      ],
+      "strict": true,
+      "folders": [],
+      "note": "Matrix Hub's loader file name. Only the exact name (and versions like newui2) is matched."
+    },
+    {
+      "name": "Matrix Hub",
+      "category": "External",
+      "severity": "high",
+      "match": [
         "matrix"
       ],
       "strict": true,
       "folders": [],
-      "note": "Roblox external (Matrix Hub). \"Matrix\" is also a common word, so check the path if it's the only match."
+      "note": "Roblox external (Matrix Hub). Its loader is usually called newui.exe, and the cheat itself is kept encrypted in version.dat next to mcache.dat and _license.dat."
     },
     {
       "name": "Photon",
@@ -1304,7 +1332,8 @@
     "525400": "QEMU/KVM"
   },
   "knownBadSha256": {
-    "_readme": "Optional: add 'sha256': 'name' pairs for exact cheat builds. Catches renamed files in scanned folders."
+    "_readme": "Optional: add 'sha256': 'name' pairs for exact cheat builds. Catches renamed files in scanned folders.",
+    "74e704b51c1c1d2ffd2c58d2c10026d88c5a50134c9989b87c98db315f341400": "Matrix Hub loader (newui.exe)"
   },
   "looseFastFlagFiles": {
     "_readme": "FastFlag list files people download. Looked for by name in Desktop, Downloads and Documents.",
@@ -1435,6 +1464,20 @@
       "sub2get.com",
       "sub2unlock.com",
       "rekonise.com"
+    ]
+  },
+  "cheatFileLayouts": {
+    "_readme": "Files a cheat always keeps together. If a folder has every file in 'files', it's reported even if every program was renamed.",
+    "items": [
+      {
+        "name": "Matrix Hub",
+        "category": "External",
+        "files": [
+          "mcache.dat",
+          "_license.dat"
+        ],
+        "note": "Matrix Hub keeps its update notes (mcache.dat) and license key (_license.dat) together, usually beside the encrypted cheat (version.dat) and its loader."
+      }
     ]
   }
 }
