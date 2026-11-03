@@ -704,39 +704,29 @@
       "category": "External",
       "severity": "high",
       "match": [
-        "newuimatrix",
-        "olduimatrix",
-        "uimatrix",
         "matrixhub",
         "matrixexternal",
-        "matrixloader"
+        "matrixloader",
+        "newuimatrix",
+        "olduimatrix",
+        "uimatrix"
       ],
       "strict": false,
       "folders": [],
-      "note": "Roblox external (Matrix Hub). Its loader is usually called newui.exe, and the cheat itself is kept encrypted in version.dat next to mcache.dat and _license.dat."
+      "note": "Roblox external (Matrix Hub). Its loader is usually newui.exe, and the cheat itself is kept encrypted in version.dat next to mcache.dat and _license.dat."
     },
     {
-      "name": "Matrix Hub",
+      "name": "Matrix Hub app",
       "category": "External",
       "severity": "high",
       "match": [
         "newui",
-        "oldui"
-      ],
-      "strict": true,
-      "folders": [],
-      "note": "Matrix Hub's loader file name. Only the exact name (and versions like newui2) is matched."
-    },
-    {
-      "name": "Matrix Hub",
-      "category": "External",
-      "severity": "high",
-      "match": [
+        "oldui",
         "matrix"
       ],
       "strict": true,
       "folders": [],
-      "note": "Roblox external (Matrix Hub). Its loader is usually called newui.exe, and the cheat itself is kept encrypted in version.dat next to mcache.dat and _license.dat."
+      "note": "Matrix Hub's program names (its loader is newui.exe). Only exact names and versions like newui2 are matched, because \"matrix\" is a common word."
     },
     {
       "name": "Photon",
