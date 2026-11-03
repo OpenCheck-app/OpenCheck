@@ -248,6 +248,43 @@ h2{font:600 13px/1.3 var(--ui);color:var(--muted);margin:0 0 4px}
 .find dd{margin:0;user-select:text;word-break:break-all}
 .find dd code{font:12px var(--mono)}
 .empty{padding:60px 20px;text-align:center;color:var(--muted)}
+.why{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.why li{display:flex;gap:9px;align-items:baseline;font-size:14px;color:var(--ink)}
+.why li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--v,var(--faint));transform:translateY(-2px)}
+.toprow{display:grid;grid-template-columns:1fr 1.25fr;gap:14px;margin-bottom:20px}
+.counts{display:grid;grid-template-columns:1fr 1fr}
+.counts > div{padding:15px 18px}
+.counts > div:nth-child(2n){border-left:1px solid var(--line)}
+.counts > div:nth-child(n+3){border-top:1px solid var(--line)}
+.counts b{display:block;font:600 24px/1.1 var(--display);font-variant-numeric:tabular-nums;margin-bottom:3px}
+.counts span{color:var(--muted);font-size:12.5px}
+.counts .strong b{color:var(--flag-ink)} .counts .ask b{color:var(--review-ink)}
+.verify{padding:14px 18px}
+.verify h3{margin:0 0 8px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;gap:10px}
+.verify h3 span{color:var(--faint);font-weight:500}
+.verify dl{margin:0;display:grid;grid-template-columns:18px 92px 1fr;gap:6px 8px;font-size:12.5px;align-items:center}
+.verify dt{color:var(--muted)}
+.verify dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums;word-break:break-all;user-select:text}
+.verify dd code{font:12px var(--mono)}
+.verify .st{width:16px;height:16px;border-radius:50%;display:grid;place-items:center}
+.verify .st.ok{color:var(--clean-ink)} .verify .st.warn{color:var(--review-ink)} .verify .st.na{color:var(--faint)}
+.verify dd small{color:var(--muted);margin-left:6px}
+.sec{display:flex;align-items:baseline;gap:10px;margin:6px 0 10px;font-size:15px;font-weight:600}
+.sec span{color:var(--faint);font-size:12.5px;font-weight:500}
+.keys{margin-bottom:20px}
+#keys{display:grid;gap:10px}
+.key{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;padding:14px 18px;border-radius:14px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--kc,var(--line))}
+.key.strong{--kc:var(--flag)} .key.ask{--kc:var(--review)}
+.key .pill{grid-row:1 / span 2;align-self:start;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;background:var(--sunk);color:var(--muted)}
+.key.strong .pill{background:var(--flag-soft);color:var(--flag-ink)} .key.ask .pill{background:var(--review-soft);color:var(--review-ink)}
+.key .t{font-weight:600;font-size:14.5px}
+.key .t small{color:var(--muted);font-weight:500;font-size:12.5px;margin-left:8px}
+.key .d{color:var(--muted);font-size:13.5px;line-height:1.5}
+.key .d code{font:12px var(--mono);color:var(--ink);word-break:break-all}
+.key .q{grid-column:2;margin-top:6px;font-size:13px;color:var(--ink);display:flex;gap:8px;align-items:baseline}
+.key .q b{flex:none;font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;color:var(--accent-fg)}
+@media (max-width:860px){.toprow{grid-template-columns:1fr}}
+
 .empty.clean{padding:44px 24px}
 .empty.clean b{display:block;color:var(--ink);font-size:15px;font-weight:600;margin-bottom:6px}
 .empty.clean span{display:block;max-width:52ch;margin:0 auto;font-size:13.5px;line-height:1.55}
@@ -435,11 +472,19 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
     <div class="scroll" id="resultsScroll"><div class="col">
       <div class="verdict" id="verdict">
         <div class="seal" id="seal"></div>
-        <div class="in d1"><div class="word" id="vWord">Clean</div><p id="vText"></p></div>
+        <div class="in d1"><div class="word" id="vWord">Clean</div><p id="vText"></p><ul class="why" id="why"></ul></div>
       </div>
       <div class="lead in d2" id="lead" hidden></div>
-      <div class="panel summary in d2" id="summary"></div>
-      <div class="panel acts in d2" id="acts" hidden></div>
+      <div class="toprow in d2">
+        <div class="panel counts" id="summary" aria-label="Evidence counts"></div>
+        <div class="panel verify" id="verify" aria-label="Verify this check"></div>
+      </div>
+      <section class="keys in d3" id="keysBox" hidden>
+        <h2 class="sec">Key evidence <span>Strongest first. Open any item for the details.</span></h2>
+        <div id="keys"></div>
+      </section>
+      <div class="panel acts in d3" id="acts" hidden></div>
+      <h2 class="sec in d3">All evidence</h2>
       <div class="in d3">
         <div class="seg" id="filters" role="tablist"><span class="ind" id="segInd"></span></div>
         <div class="panel list" id="list"></div>
@@ -447,9 +492,9 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
     </div></div>
     <div class="bar"><div class="col">
       <button class="btn" id="saveBtn"><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m-4-4l4 4 4-4M4 15h12"/></svg>Save report</button>
-      <button class="btn" id="sendBtn"><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M7 7V4h9v9h-3M4 7h9v9H4z"/></svg>Copy for Discord</button>
+      <button class="btn primary" id="sendBtn"><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M7 7V4h9v9h-3M4 7h9v9H4z"/></svg>Copy for staff</button>
       <span class="grow"></span>
-      <button class="btn primary" id="doneBtn">Done</button>
+      <button class="btn" id="doneBtn">Close</button>
     </div></div>
   </section>
 </main>
@@ -532,6 +577,8 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
       <p>A match is evidence, not proof. Files can be renamed, and an innocent file can share a name with a cheat. A moderator makes the final call.</p>
       <p>A fingerprint (SHA-256) is a unique ID worked out from a file's contents. The same file always gets the same fingerprint, and changing even one byte gives a completely different one.</p>
       <p>The report shows this app's own fingerprint, so moderators can compare it with the official download and know the app wasn't modified. Cheat files that match the list get a fingerprint too, so the exact version can be identified even if it was renamed.</p>
+      <h2>For staff</h2>
+      <p>Run checks on a live screenshare, with OpenCheck downloaded fresh from the official site while you watch. On the results screen, compare the version, the fingerprint and the PC ID in "Verify this check" with what's on their screen. Evidence is ranked: <b>Strong</b> is a cheat match, <b>Worth asking</b> needs an answer from the player, and <b>Context</b> is background. Each item suggests what to ask.</p>
       <p>OpenCheck never asks you to turn off your antivirus. If a copy of it does, it isn't the real one. OpenCheck is not affiliated with Roblox Corporation.</p>
     </div>
     <div class="mf"><button class="btn primary" id="closeHelp">Got it</button></div>
@@ -770,8 +817,8 @@ const FILTERS = [
   ["info","Context", f => f.severity === "info"]
 ];
 const VERDICT = {
-  flag:  ["Flagged","Cheat software was found on this PC or ran on it. A moderator should review the evidence below."],
-  review:["Needs review","No cheats matched, but some things here are worth asking about."],
+  flag:  ["Flagged","Cheat software was found on this PC or ran on it. Staff should review the evidence below."],
+  review:["Needs review","No cheat was found by name, but some things here are worth asking about."],
   clean: ["Clean","Nothing on the cheat list was found. A clean check is strong evidence, not a guarantee."]
 };
 const SEAL = {
@@ -798,6 +845,7 @@ function span(g){
 }
 const COPY = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M7 7V4h9v9h-3M4 7h9v9H4z"/></svg>';
 const TICK = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg>';
+let appSha = null;
 const ICONS = {pad: PAD, clock: CLOCK, copy: COPY, tick: TICK};
 const copyButtons = new Map();
 function copyBtn(placeId){
@@ -840,23 +888,18 @@ function onDone(r){
   $("vWord").textContent = VERDICT[r.verdict][0];
   $("vText").textContent = VERDICT[r.verdict][1];
 
+  const ranked = r.findings.slice().sort(byStrength);
+  renderWhy(r, ranked);
   const sum = $("summary"); sum.textContent = "";
   const counts = [
-    [r.findings.filter(f=>f.group!=="context" && f.severity!=="info" && (f.evidence==="Found on this PC"||f.evidence==="Running right now")).length, "Found now"],
-    [r.findings.filter(f=>f.evidence==="Ran on this PC").length, "Ran before"],
-    [r.findings.filter(f=>f.evidence==="Deleted"||f.evidence==="Renamed").length, "Deleted"],
-    [new Set(r.findings.filter(f=>f.group==="cheat").flatMap(f=>(f.games||[]).map(sessKey))).size, "Cheat in game"]
+    [r.findings.filter(f => strength(f) === "strong").length, "Strong evidence", "strong"],
+    [r.findings.filter(f => strength(f) === "ask").length, "Worth asking about", "ask"],
+    [new Set(r.findings.filter(f => f.group === "cheat").flatMap(f => (f.games || []).map(sessKey))).size, "Games with a cheat open", ""],
+    [r.findings.filter(f => strength(f) === "context").length, "Context only", ""]
   ];
-  const nums = counts.map(([n,l]) => { const d = el("div"), b = el("b",null,"0"); d.append(b, el("span",null,l)); sum.append(d); return [b,n]; });
-  const meta = el("div","meta");
-  const line = (k,v) => { const dv = el("div"); dv.append(k + " ", el("em",null,v)); meta.append(dv); };
-  if (r.who) line("Checked", r.who);
-  line("PC", r.pc);
-  if (r.pcId) line("PC ID", r.pcId);
-  line("Finished", new Date(r.finished).toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"}) + ", " + r.seconds + " s");
-  line("Scan", (r.mode || "Standard") + (r.admin ? "" : ", partial (no admin)"));
-  sum.append(meta);
-
+  const nums = counts.map(([n,l,c]) => { const d = el("div", n > 0 ? c : ""), b = el("b",null,"0"); d.append(b, el("span",null,l)); sum.append(d); return [b,n]; });
+  renderVerify(r);
+  renderKeys(ranked);
   renderLead(r); renderActivity(r);
   filter = "all";
   renderFilters(); renderList(true);
@@ -864,6 +907,85 @@ function onDone(r){
     go("s-results");
     setTimeout(() => { nums.forEach(([b,n]) => tween(b, n, 900)); slideTo($("segInd"), $("filters").querySelector(".chip.on")); }, 350);
   }, 1100);
+}
+const STRENGTH = {strong:["Strong","strong"], ask:["Worth asking","ask"], context:["Context",""]};
+function strength(f){ return f.cheat ? "strong" : (f.severity === "info" ? "context" : "ask"); }
+const SRANK = {strong:0, ask:1, context:2};
+function byStrength(a, b){
+  const d = SRANK[strength(a)] - SRANK[strength(b)];
+  if (d) return d;
+  const ta = fmtDate(a.time), tb = fmtDate(b.time);
+  return (tb ? +tb : 0) - (ta ? +ta : 0);
+}
+function askFor(f){
+  const c = (f.category || "").toLowerCase(), n = (f.name || "").toLowerCase();
+  if (f.group === "fflags") return "Ask them to remove this flag, then run the check again.";
+  if (c.includes("vpn") || c.includes("ping booster")) return "Ask why it was on during the check. Legal, but it changes their connection.";
+  if (c.includes("lag")) return "Ask about it and compare with their VODs around those times.";
+  if (c.includes("unknown program") || c.includes("disguised") || c.includes("usb program")) return "Ask what this program was. A real answer is easy to give.";
+  if (f.group === "tamper") return "Ask why this was changed or cleared. Timing right before a check matters.";
+  if (f.group === "hw") return "Ask what it is. For a high-stakes case, ask for a short video of the PC.";
+  if (n.includes("kicked") || c.includes("anti-cheat")) return "Ask what happened in that game, and check the VOD if there is one.";
+  if (f.evidence === "Deleted" || f.evidence === "Renamed") return "Ask when and why it was deleted or renamed.";
+  if (f.group === "cheat") return "Ask what this is and when they last used it.";
+  return null;
+}
+function renderWhy(r, ranked){
+  const ul = $("why"); ul.textContent = "";
+  const top = ranked.filter(f => strength(f) !== "context").slice(0, 3);
+  for (const f of top){
+    const d = fmtDate(f.time);
+    const ev = f.evidence.charAt(0).toLowerCase() + f.evidence.slice(1);
+    ul.append(el("li", null, f.name + ": " + ev + (d ? ", " + ago(d) : "")));
+  }
+  const more = ranked.filter(f => strength(f) !== "context").length - top.length;
+  if (more > 0) ul.append(el("li", null, "and " + more + " more below"));
+}
+const ST = {
+  ok:'<svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg>',
+  warn:'<svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M10 5v6M10 14.5v.1"/></svg>',
+  na:'<svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 10h8"/></svg>'
+};
+function renderVerify(r){
+  const box = $("verify"); box.textContent = "";
+  const h = el("h3", null, "Verify this check"); h.append(el("span", null, "Staff: compare these on the player's screen"));
+  const dl = el("dl");
+  const row = (state, k, v, note) => {
+    const st = el("span", "st " + state); st.innerHTML = ST[state]; st.setAttribute("aria-label", state === "ok" ? "OK" : state === "warn" ? "Check this" : "Not available");
+    const dd = el("dd"); if (v instanceof Node) dd.append(v); else dd.textContent = v; if (note) dd.append(el("small", null, note));
+    dl.append(st, el("dt", null, k), dd);
+  };
+  const ver = (r.appVersion || $("ver").textContent.replace(/^v/, "")) || "unknown";
+  row("ok", "App version", "v" + ver);
+  const sha = r.appSha256 || appSha;
+  row(sha ? "ok" : "na", "Fingerprint", sha ? el("code", null, sha.slice(0, 16) + "...") : "unknown", sha ? "match on the release page" : null);
+  row(r.pcId ? "ok" : "na", "PC ID", r.pcId ? el("code", null, r.pcId) : "not available", r.pcId ? "same PC, same ID" : null);
+  const quick = /^quick/i.test(r.mode || "");
+  row(quick ? "warn" : "ok", "Scan", r.mode || "Standard", quick ? "ask for Standard" : null);
+  row(r.admin ? "ok" : "warn", "Admin", r.admin ? "Yes" : "No", r.admin ? null : "partial check, ask for a redo");
+  row("ok", "Finished", new Date(r.finished).toLocaleString(undefined, {dateStyle:"medium", timeStyle:"short"}) + ", " + r.seconds + " s" + (r.who ? ", " + r.who : ""));
+  box.append(h, dl);
+}
+function renderKeys(ranked){
+  const wrap = $("keysBox"), box = $("keys"); box.textContent = "";
+  const top = ranked.filter(f => strength(f) !== "context").slice(0, 5);
+  wrap.hidden = top.length === 0;
+  top.forEach((f, i) => {
+    const sk = strength(f), card = el("article", "key " + STRENGTH[sk][1] + " in");
+    card.style.animationDelay = (0.5 + i * 0.05) + "s";
+    const t = el("div", "t", f.name); t.append(el("small", null, f.category));
+    const d = fmtDate(f.time);
+    const desc = el("div", "d");
+    desc.append(f.evidence + (d ? ", " + dhm(d) + " (" + ago(d) + ")" : ""));
+    if (f.runCount > 1) desc.append(", " + f.runCount + " runs");
+    const g = (f.games || [])[0];
+    if (g){ desc.append(g.how === "before" ? ". Then joined place " : ". Roblox place "); desc.append(el("b", null, g.placeId), copyBtn(g.placeId), g.how === "before" ? "" : " was open"); }
+    if (f.path){ desc.append(el("br"), el("code", null, f.path)); }
+    card.append(el("span", "pill", STRENGTH[sk][0]), t, desc);
+    const q = askFor(f);
+    if (q){ const qa = el("div", "q"); qa.append(el("b", null, "Ask"), q); card.append(qa); }
+    box.append(card);
+  });
 }
 function renderLead(r){
   const box = $("lead"); box.textContent = ""; box.hidden = true; box.className = "lead in d2 " + r.verdict;
@@ -963,6 +1085,8 @@ function renderList(animate, baseDelay){
     const chev = el("div","chev"); chev.innerHTML = CHEV;
     const more = el("div","more"), inner = el("div"), dl = el("dl");
     const add = (k,v,code) => { if(!v) return; dl.append(el("dt",null,k)); const dd = el("dd"); if(code) dd.append(el("code",null,v)); else dd.textContent = v; dl.append(dd); };
+    add("Strength", STRENGTH[strength(f)][0]);
+    add("Ask", askFor(f));
     add("Seen in", (f.sources||[]).join(", "));
     add("Runs counted", f.runCount ? String(f.runCount) : null);
     if ((f.runTimes||[]).length > 1) add("Run times", f.runTimes.map(t => dhm(fmtDate(t))).join(" · "));
@@ -1006,6 +1130,7 @@ function onMessage(m){
   switch(m.type){
     case "version":
       $("ver").textContent = "v" + m.version;
+      appSha = m.sha256 || null;
       if (m.sha256){
         const fp = $("fp"); fp.textContent = "Fingerprint";
         const code = el("code", null, m.sha256.slice(0,16) + "..."); code.title = "SHA-256: " + m.sha256; fp.append(code);
@@ -1029,7 +1154,7 @@ requestAnimationFrame(paintSteps);
 const Demo = {
   handle(msg){
     if (msg.type === "start") this.run();
-    if (msg.type === "previewCopy") onMessage({type:"copyPreview", text: "**OpenCheck: FLAGGED**\nChecked: builderman\nWindows 11 Home 24H2 | 2026-10-27 22:17 | Standard scan | admin: yes\n\nHIGH **Solara** (Internal executor) Found on this PC\n`C:\\ProgramData\\Solara\\Solara.exe`\nMED **Potassium** (Internal executor) Ran on this PC, 7 runs\n`C:\\Program Files\\Epic Games\\OpXOyuApWKTlFzrV\\Potassium.exe`\n..."});
+    if (msg.type === "previewCopy") onMessage({type:"copyPreview", text: "**OpenCheck: FLAGGED** (5 strong, 4 worth asking)\nChecked: builderman\nWindows 11 Home 24H2 | 2026-11-02 22:17 | Standard scan | admin: yes\nVerify: v1.0.5 | SHA-256 `9c41d07be5a8c2f1...` | PC ID `7F3A-91C2-0B5E`\n\n__Strong evidence__\n🔴 **Solara** (Internal executor): Found on this PC, 2026-11-02 20:12\n`C:\\ProgramData\\Solara\\Solara.exe`\n🔴 **Potassium** (Internal executor): Ran on this PC, last opened 2026-11-02 19:06, 7 runs\n🎮 Roblox open: place 920587237 (2026-11-02 18:46 to 19:13)\n..."});
     if (msg.type === "copy") onMessage({type:"copied"});
     if (msg.type === "copyPlace") onMessage({type:"copiedPlace", placeId: msg.placeId});
     if (msg.type === "save") onMessage({type:"saved", path:"OpenCheck - builderman - 2026-10-27.txt"});
@@ -1055,7 +1180,7 @@ const Demo = {
   report(){
     const now = Date.now(), h = 36e5;
     const t = (hrs) => new Date(now - hrs*h).toISOString();
-    return { verdict:"flag", who: $("who").value.trim() || "builderman", pc:"Windows 11 Home 24H2", pcId:"7F3A-91C2-0B5E", mode: DEPTH_TEXT[settings.depth][0], finished: new Date().toISOString(), seconds: 74, admin: true,
+    return { verdict:"flag", who: $("who").value.trim() || "builderman", pc:"Windows 11 Home 24H2", pcId:"7F3A-91C2-0B5E", appVersion:"1.0.5", appSha256:"9c41d07be5a8c2f13f2a9c41d07be5a8c2f1e96d4b0a7c3e5f8d2b1a6c9e0f4d", mode: DEPTH_TEXT[settings.depth][0], finished: new Date().toISOString(), seconds: 74, admin: true,
       findings: [
         {name:"Solara", category:"Internal executor", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(2.2), path:"C:\\ProgramData\\Solara\\Solara.exe", sources:["File"], sha256:"d1e4a542fa75f6a6fb636b5de6f7616e2827a79556d3d9a4afc3ecb47f0beb2b"},
         {name:"Executor workspace", category:"Executor files", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(2.3), path:"~\\AppData\\Local\\Potassium", sources:["Folder layout: workspace + autoexec"], note:"Executors keep scripts in these folders. They are often left behind after the executor itself is deleted."},

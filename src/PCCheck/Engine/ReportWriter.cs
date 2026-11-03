@@ -63,21 +63,40 @@ namespace PCCheck.Engine
 
         static string Ticks(string s) { return (s ?? "").Replace("`", "'"); }
 
-        /// <summary>Discord-ready text. Kept under Discord's 2000 character limit; the full list is in the saved file.</summary>
+        /// <summary>"Strong" for cheat matches, "Worth asking" for other warnings, "Context" for the rest (same as the app).</summary>
+        static string Strength(Finding f)
+        {
+            return f.IsCheat ? "Strong" : f.Severity == Severity.Info ? "Context" : "Worth asking";
+        }
+
+        static int StrengthRank(Finding f) { return f.IsCheat ? 0 : f.Severity == Severity.Info ? 2 : 1; }
+
+        /// <summary>
+        /// Discord-ready text, laid out for staff: verdict and counts, what to verify, then the evidence grouped by strength.
+        /// Kept under Discord's 2000 character limit; the full list is in the saved file.
+        /// </summary>
         public static string BuildDiscordText(Report r)
         {
+            var ordered = r.Findings.OrderBy(StrengthRank).ThenByDescending(f => f.Time ?? DateTime.MinValue).ToList();
+            int strong = ordered.Count(f => StrengthRank(f) == 0), ask = ordered.Count(f => StrengthRank(f) == 1);
+
             var head = new StringBuilder();
-            head.AppendLine("**OpenCheck: " + VerdictWord(r.Verdict) + "**");
+            head.Append("**OpenCheck: ").Append(VerdictWord(r.Verdict)).Append("**");
+            if (strong + ask > 0) head.Append(" (").Append(strong).Append(" strong, ").Append(ask).Append(" worth asking)");
+            head.AppendLine();
             if (!string.IsNullOrEmpty(r.Who)) head.AppendLine("Checked: " + r.Who);
-            head.AppendLine(r.Pc + " | " + Time(r.Finished) + " | " + r.Mode + " scan | admin: " + (r.Admin ? "yes" : "no"));
-            head.AppendLine("App v" + r.AppVersion + ", SHA-256 `" + Short(r.AppSha256) + "`" + (r.PcId != null ? " | PC ID `" + r.PcId + "`" : ""));
+            head.AppendLine(r.Pc + " | " + Time(r.Finished) + " | " + r.Mode + " scan | admin: " + (r.Admin ? "yes" : "**no (partial)**"));
+            head.AppendLine("Verify: v" + r.AppVersion + " | SHA-256 `" + Short(r.AppSha256) + "`" + (r.PcId != null ? " | PC ID `" + r.PcId + "`" : ""));
             head.AppendLine();
 
             var lines = new List<string>();
-            foreach (var f in Ordered(r).Where(f => f.Severity != Severity.Info))
+            string group = null;
+            foreach (var f in ordered.Where(f => StrengthRank(f) < 2))
             {
+                string g = Strength(f);
+                if (g != group) { lines.Add("__" + (g == "Strong" ? "Strong evidence" : "Worth asking about") + "__\n"); group = g; }
                 var sb = new StringBuilder();
-                sb.Append(SevTag(f.Severity).Trim()).Append(' ').Append("**").Append(Ticks(f.Name)).Append("** (").Append(f.Category).Append(") ")
+                sb.Append(g == "Strong" ? "🔴 " : "🟡 ").Append("**").Append(Ticks(f.Name)).Append("** (").Append(f.Category).Append("): ")
                   .Append(f.Evidence).Append(", ").Append(LastOpenedText(f));
                 if (f.RunCount > 1) sb.Append(", ").Append(f.RunCount).Append(" runs");
                 sb.AppendLine();
@@ -86,11 +105,11 @@ namespace PCCheck.Engine
                 if (games != null) sb.Append("🎮 Roblox open: ").Append(games).AppendLine();
                 lines.Add(sb.ToString());
             }
-            if (lines.Count == 0) lines.Add("Nothing on the cheat list was found.\n");
+            if (lines.Count == 0) lines.Add("Nothing on the cheat list was found, and nothing else needs asking about.\n");
             if (r.Sessions.Count > 0)
             {
                 var last = r.Sessions[0];
-                lines.Add("Last Roblox game: place " + last.PlaceId + ", " + Clock(last.Start) + " (" + r.Sessions.Count + " sessions in logs)\n");
+                lines.Add("\nLast Roblox game: place " + last.PlaceId + " (roblox.com/games/" + last.PlaceId + "), " + Clock(last.Start) + ". " + r.Sessions.Count + " sessions in the logs.\n");
             }
 
             var body = new StringBuilder(head.ToString());
@@ -241,6 +260,9 @@ namespace PCCheck.Engine
                 { "who", r.Who },
                 { "pc", r.Pc },
                 { "pcId", r.PcId },
+                { "appVersion", r.AppVersion },
+                { "appSha256", r.AppSha256 },
+                { "listVersion", r.ListVersion },
                 { "finished", r.Finished.ToString("o", CultureInfo.InvariantCulture) },
                 { "seconds", (int)Math.Round((r.Finished - r.Started).TotalSeconds) },
                 { "admin", r.Admin },
