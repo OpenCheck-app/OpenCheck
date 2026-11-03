@@ -6,8 +6,6 @@ name: Defender check of published releases
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ci-defender]
 
 permissions:
   contents: read
