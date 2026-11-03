@@ -44,7 +44,7 @@ namespace PCCheck
             AutoScaleDimensions = new SizeF(96F, 96F);
             ClientSize = new Size(1120, 740);
             MinimumSize = new Size(980, 680);
-            BackColor = dark ? Color.FromArgb(0x0D, 0x10, 0x15) : Color.FromArgb(0xF4, 0xF5, 0xF7);
+            BackColor = dark ? Color.FromArgb(0x08, 0x08, 0x0A) : Color.FromArgb(0xF2, 0xF2, 0xF4);
 
             web = new WebView2 { Dock = DockStyle.Fill, DefaultBackgroundColor = BackColor };
             Controls.Add(web);
@@ -271,7 +271,7 @@ namespace PCCheck
         /// <summary>Theme chosen in Settings: match the window frame and background to it.</summary>
         void ApplyTheme(bool dark)
         {
-            BackColor = dark ? Color.FromArgb(0x0D, 0x10, 0x15) : Color.FromArgb(0xF4, 0xF5, 0xF7);
+            BackColor = dark ? Color.FromArgb(0x08, 0x08, 0x0A) : Color.FromArgb(0xF2, 0xF2, 0xF4);
             try { web.DefaultBackgroundColor = BackColor; } catch { }
             if (IsHandleCreated) SetTitleBarDark(dark);
         }

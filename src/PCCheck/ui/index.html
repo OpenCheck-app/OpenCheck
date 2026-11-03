@@ -6,505 +6,546 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'">
 <title>OpenCheck</title>
 <style>
+/* ===== tokens: true black with the shield's mint ===== */
 :root{
-  --bg:#F4F5F7; --panel:#FFFFFF; --sunk:#F0F2F5; --hover:#ECEFF3; --ink:#111827; --muted:#4B5465; --faint:#646C7C;
-  --line:#E3E6EB; --line-strong:#D2D8E0; --accent:#2F5BE0; --accent-ink:#FFFFFF; --accent-soft:#E9EEFD;
-  --clean:#178A5A; --clean-soft:#E3F4EC; --review:#A86E06; --review-soft:#FCF2DC; --flag:#C8362F; --flag-soft:#FCE7E5; --info:#4A6280; --info-soft:#EAEFF5;
-  --lift:0 1px 2px rgba(17,24,39,.05), 0 8px 24px -14px rgba(17,24,39,.18);
-  --pop:0 28px 70px -14px rgba(10,16,30,.32), 0 2px 8px rgba(10,16,30,.06);
-  --ui:"Segoe UI Variable Text","Segoe UI",Inter,system-ui,sans-serif;
-  --display:"Segoe UI Variable Display","Segoe UI",Inter,system-ui,sans-serif;
-  --mono:"Cascadia Mono",Consolas,"DejaVu Sans Mono",monospace;
-  --ease:cubic-bezier(.22,1,.36,1);
-  --col:780px;
-  --raise:#FFFFFF; --accent-fg:#2F5BE0; --glow:none; --clean-ink:#127249; --flag-ink:#B02A24; --review-ink:#8A5A00;
+  --bg:#F2F2F4; --panel:#FFFFFF; --raise:#F6F6F8; --sunk:#EEEEF1; --hover:#F3F3F6;
+  --ink:#111114; --muted:#4A4A52; --faint:#62626C; --line:#E2E2E7; --line-strong:#CDCDD4;
+  --mint:#0E9F6E; --mint-ink:#08734F; --mint-soft:#DDF4EA; --btn:#08734F; --btn-ink:#FFFFFF;
+  --flag:#D92D20; --flag-ink:#B42318; --flag-soft:#FDE7E5;
+  --review:#D08A00; --review-ink:#8A5300; --review-soft:#FCF0D6;
+  --blue:#1A7FD0; --blue-ink:#0B62A8; --blue-soft:#E0EEFB;
+  --on-hc:#FFFFFF; --hc:var(--mint);
+  --shadow:0 1px 2px rgba(0,0,0,.05), 0 10px 30px -14px rgba(0,0,0,.2);
+  --pop:0 30px 80px -20px rgba(0,0,0,.45), 0 2px 10px rgba(0,0,0,.08);
+  --cardtop:rgba(255,255,255,1);
+  --ui:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --display:"Segoe UI Variable Display","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --mono:"Cascadia Mono","Cascadia Code",Consolas,"DejaVu Sans Mono",monospace;
+  --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.45,.5,1);
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
-  --clean-ink:#3DD68C; --flag-ink:#FF6B61; --review-ink:#F2B84B; --bg:#0D1015; --panel:#151920; --sunk:#11141A; --hover:#1C212A; --raise:#20262F; --ink:#ECEFF4; --muted:#A4ACBB; --faint:#858E9F;
-  --line:#22272F; --line-strong:#2E3440; --accent:#3F63F0; --accent-ink:#FFFFFF; --accent-fg:#96ABFF; --accent-soft:rgba(79,116,255,.16);
-  --clean:#3DD68C; --clean-soft:rgba(61,214,140,.13); --review:#F2B84B; --review-soft:rgba(242,184,75,.13); --flag:#FF6B61; --flag-soft:rgba(255,107,97,.14); --info:#A5B6D0; --info-soft:rgba(165,182,208,.12);
-  --lift:0 0 0 1px rgba(255,255,255,.05), 0 6px 18px -8px rgba(0,0,0,.7);
-  --pop:0 0 0 1px rgba(255,255,255,.06), 0 30px 80px -16px rgba(0,0,0,.85);
-  --glow:radial-gradient(900px 340px at 50% -120px, rgba(79,116,255,.13), transparent 70%);
+  --bg:#08080A; --panel:#121214; --raise:#1A1A1D; --sunk:#0D0D0F; --hover:#18181B;
+  --ink:#F2F2F3; --muted:#B0B0B8; --faint:#8C8C96; --line:#232327; --line-strong:#323238;
+  --mint:#3DDC9C; --mint-ink:#3DDC9C; --mint-soft:rgba(61,220,156,.12); --btn:#3DDC9C; --btn-ink:#04241A;
+  --flag:#FF7A70; --flag-ink:#FF7A70; --flag-soft:rgba(255,122,112,.13);
+  --review:#FFC14D; --review-ink:#FFC14D; --review-soft:rgba(255,193,77,.13);
+  --blue:#5CC2FF; --blue-ink:#5CC2FF; --blue-soft:rgba(92,194,255,.12);
+  --on-hc:#06140F;
+  --shadow:0 0 0 1px rgba(255,255,255,.02), 0 18px 40px -22px rgba(0,0,0,.9);
+  --pop:0 0 0 1px rgba(255,255,255,.06), 0 30px 80px -16px rgba(0,0,0,.9);
+  --cardtop:rgba(255,255,255,.03);
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --clean-ink:#3DD68C; --flag-ink:#FF6B61; --review-ink:#F2B84B; --bg:#0D1015; --panel:#151920; --sunk:#11141A; --hover:#1C212A; --raise:#20262F; --ink:#ECEFF4; --muted:#A4ACBB; --faint:#858E9F;
-  --line:#22272F; --line-strong:#2E3440; --accent:#3F63F0; --accent-ink:#FFFFFF; --accent-fg:#96ABFF; --accent-soft:rgba(79,116,255,.16);
-  --clean:#3DD68C; --clean-soft:rgba(61,214,140,.13); --review:#F2B84B; --review-soft:rgba(242,184,75,.13); --flag:#FF6B61; --flag-soft:rgba(255,107,97,.14); --info:#A5B6D0; --info-soft:rgba(165,182,208,.12);
-  --lift:0 0 0 1px rgba(255,255,255,.05), 0 6px 18px -8px rgba(0,0,0,.7);
-  --pop:0 0 0 1px rgba(255,255,255,.06), 0 30px 80px -16px rgba(0,0,0,.85);
-  --glow:radial-gradient(900px 340px at 50% -120px, rgba(79,116,255,.13), transparent 70%);
+  --bg:#08080A; --panel:#121214; --raise:#1A1A1D; --sunk:#0D0D0F; --hover:#18181B;
+  --ink:#F2F2F3; --muted:#B0B0B8; --faint:#8C8C96; --line:#232327; --line-strong:#323238;
+  --mint:#3DDC9C; --mint-ink:#3DDC9C; --mint-soft:rgba(61,220,156,.12); --btn:#3DDC9C; --btn-ink:#04241A;
+  --flag:#FF7A70; --flag-ink:#FF7A70; --flag-soft:rgba(255,122,112,.13);
+  --review:#FFC14D; --review-ink:#FFC14D; --review-soft:rgba(255,193,77,.13);
+  --blue:#5CC2FF; --blue-ink:#5CC2FF; --blue-soft:rgba(92,194,255,.12);
+  --on-hc:#06140F;
+  --shadow:0 0 0 1px rgba(255,255,255,.02), 0 18px 40px -22px rgba(0,0,0,.9);
+  --pop:0 0 0 1px rgba(255,255,255,.06), 0 30px 80px -16px rgba(0,0,0,.9);
+  --cardtop:rgba(255,255,255,.03);
   color-scheme:dark;
 }
+
+/* ===== base ===== */
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{background:var(--glow),var(--bg);background-repeat:no-repeat;color:var(--ink);font:14px/1.5 var(--ui);-webkit-font-smoothing:antialiased;overflow:hidden;user-select:none;cursor:default;display:flex;flex-direction:column;transition:background-color .35s,color .35s}
+body{background:var(--bg);color:var(--ink);font:14px/1.55 var(--ui);-webkit-font-smoothing:antialiased;overflow:hidden;user-select:none;transition:background-color .4s,color .4s}
+body[data-glow="flag"]{--hc:var(--flag)} body[data-glow="review"]{--hc:var(--review)} body[data-glow="clean"]{--hc:var(--mint)}
+/* soft glow behind the hero; tinted by the verdict */
+.glow{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(640px 340px at 50% -40px, color-mix(in srgb,var(--hc) 18%,transparent), transparent 70%);transition:background .8s}
 button{font:inherit;color:inherit}
-:focus{outline:none}
-:focus-visible{outline:2px solid var(--accent-fg);outline-offset:2px;border-radius:6px}
-::-webkit-scrollbar{width:12px}
-::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:12px;border:4px solid transparent;background-clip:padding-box}
-::-webkit-scrollbar-track{background:transparent}
+:focus-visible{outline:2px solid var(--blue-ink);outline-offset:2px;border-radius:8px}
+code{font-family:var(--mono)}
+h1,h2,h3,p{margin:0}
 
-/* ---------- top bar ---------- */
-.top{height:60px;flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 16px 0 22px;background:transparent;transition:background-color .35s}
+/* ===== header ===== */
+.app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh}
+.top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;height:64px;padding:0 22px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(12px)}
 .brand{display:flex;align-items:center;gap:10px}
-.brand b{font:600 15px/1 var(--display);letter-spacing:-.01em}
-.brand small{color:var(--faint);font-size:12px;font-variant-numeric:tabular-nums}
-.stepper{position:relative;display:flex;gap:2px;padding:4px;background:var(--sunk);border-radius:999px;transition:background-color .35s}
-.stepper .ind{position:absolute;top:4px;left:0;height:calc(100% - 8px);border-radius:999px;background:var(--raise);box-shadow:var(--lift);transition:transform .55s var(--ease),width .55s var(--ease),background-color .35s}
-.stepper span.s{position:relative;display:flex;align-items:center;gap:7px;padding:5px 14px 5px 10px;border-radius:999px;font-size:13px;font-weight:500;color:var(--faint);transition:color .35s}
-.stepper .n{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;background:var(--line);color:var(--ink);transition:background-color .35s,color .35s;position:relative}
-.stepper .n svg{position:absolute;opacity:0;transform:scale(.4);transition:opacity .25s,transform .4s var(--ease)}
-.stepper .n i{font-style:normal;transition:opacity .2s}
-.stepper span.s.on{color:var(--ink)}
-.stepper span.s.on .n{background:var(--accent);color:var(--accent-ink)}
-.stepper span.s.done{color:var(--muted)}
-.stepper span.s.done .n{background:var(--accent-soft);color:var(--accent-fg)}
-.stepper span.s.done .n i{opacity:0}
-.stepper span.s.done .n svg{opacity:1;transform:none}
-.tools{justify-self:end;display:flex;align-items:center;gap:4px}
-.badge{display:flex;align-items:center;gap:7px;height:30px;padding:0 12px 0 10px;margin-right:6px;background:var(--clean-soft);border-radius:999px;font-size:12px;font-weight:600;color:var(--clean-ink);white-space:nowrap}
-.badge i{width:6px;height:6px;border-radius:50%;background:var(--clean)}
-.iconbtn{width:34px;height:34px;display:grid;place-items:center;border:0;background:none;border-radius:9px;color:var(--muted);cursor:pointer;transition:background-color .2s,color .2s,transform .15s var(--ease)}
-.iconbtn:hover{background:var(--hover);color:var(--ink)}
+.brand b{font:700 16px/1 var(--display);letter-spacing:-.01em}
+.brand small{color:var(--faint);font-size:12px;font-variant-numeric:tabular-nums;padding:3px 8px;border:1px solid var(--line);border-radius:999px}
+.steps{display:flex;align-items:center;list-style:none;margin:0;padding:0}
+.steps li{display:flex;align-items:center;gap:8px;color:var(--faint);font-size:13px;font-weight:600;white-space:nowrap}
+.steps li + li::before{content:"";width:34px;height:2px;border-radius:2px;margin:0 10px;background:var(--line-strong);transition:background-color .5s}
+.steps li.done + li::before{background:var(--mint)}
+.steps .dot{position:relative;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line-strong);font-size:11px;font-weight:700;transition:all .4s var(--ease)}
+.steps .dot svg{display:none}
+.steps li.on{color:var(--ink)}
+.steps li.on .dot{border-color:var(--mint);color:var(--mint-ink);box-shadow:0 0 0 4px var(--mint-soft)}
+.steps li.done{color:var(--muted)}
+.steps li.done .dot{border-color:var(--mint);background:var(--mint);color:var(--on-hc)}
+.steps li.done .dot i{display:none}
+.steps li.done .dot svg{display:block}
+.steps .dot i{font-style:normal}
+.steps small{display:none;font-weight:500;color:var(--faint);font-variant-numeric:tabular-nums}
+.steps li.on small{display:inline}
+.right{display:flex;justify-content:flex-end;align-items:center;gap:8px}
+.safe{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:999px;background:var(--mint-soft);color:var(--mint-ink);font-size:12.5px;font-weight:600;white-space:nowrap}
+.safe svg{flex:none}
+.iconbtn{display:inline-grid;place-items:center;width:36px;height:36px;border:1px solid var(--line);background:var(--panel);border-radius:10px;cursor:pointer;color:var(--muted);transition:color .2s,border-color .2s,transform .15s}
+.iconbtn:hover{color:var(--ink);border-color:var(--line-strong)}
 .iconbtn:active{transform:scale(.94)}
-.iconbtn svg{transition:transform .6s var(--ease)}
-#settingsBtn:hover svg{transform:rotate(60deg)}
 
-/* ---------- screens ---------- */
-.stage{position:relative;flex:1;min-height:0}
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(10px) scale(.992);transition:opacity .3s var(--ease),transform .5s var(--ease),visibility 0s .5s}
-.screen.show{opacity:1;visibility:visible;transform:none;transition:opacity .45s var(--ease) .1s,transform .65s var(--ease) .1s,visibility 0s}
-.scroll{flex:1;overflow:auto;min-height:0}
-.col{width:min(var(--col),100% - 48px);margin:0 auto}
-.content{padding:40px 0 28px}
-.bar{flex:none;border-top:1px solid var(--line);background:var(--panel);transition:background-color .35s,border-color .35s}
-.bar .col{display:flex;align-items:center;gap:12px;height:68px}
+/* ===== stage ===== */
+.stage{position:relative;flex:1;min-height:0;overflow:hidden}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:scale(.985);transition:opacity .25s var(--ease),transform .5s var(--ease),visibility 0s .5s}
+.screen.show{opacity:1;visibility:visible;transform:none;transition:opacity .45s var(--ease) .06s,transform .6s var(--ease) .06s,visibility 0s}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
+.col{width:min(940px,100% - 56px);margin:0 auto}
+.bar{border-top:1px solid var(--line);background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px)}
+.bar .col{display:flex;align-items:center;gap:10px;height:72px}
 .grow{flex:1}
-h1{font:600 30px/1.15 var(--display);letter-spacing:-.022em;margin:0 0 10px}
-.lede{color:var(--muted);font-size:15.5px;line-height:1.55;margin:0 0 30px;max-width:60ch}
-h2{font:600 13px/1.3 var(--ui);color:var(--muted);margin:0 0 4px}
-@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.screen.show .in{animation:rise .6s var(--ease) both}
-.screen.show .in.d1{animation-delay:.14s} .screen.show .in.d2{animation-delay:.2s} .screen.show .in.d3{animation-delay:.26s} .screen.show .in.d4{animation-delay:.32s}
+.center{text-align:center}
 
-/* ---------- buttons ---------- */
-.btn{display:inline-flex;align-items:center;gap:8px;height:38px;border:1px solid var(--line-strong);background:var(--panel);padding:0 16px;border-radius:10px;cursor:pointer;font-weight:600;font-size:13.5px;transition:background-color .2s,border-color .2s,box-shadow .25s,transform .15s var(--ease),opacity .3s}
+/* ===== shared keyframes ===== */
+@keyframes breathe{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes rot{to{transform:rotate(360deg)}}
+@keyframes pop{from{opacity:0;transform:scale(.6) translateY(8px)}to{opacity:1;transform:none}}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* ===== buttons, chips, switches ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 20px;border-radius:12px;border:1px solid var(--line-strong);background:var(--panel);font-weight:600;font-size:14px;cursor:pointer;transition:transform .15s var(--ease),background-color .2s,border-color .2s,box-shadow .25s,filter .2s}
 .btn:hover{background:var(--hover)}
 .btn:active{transform:scale(.97)}
-.btn.primary{background:var(--accent);border-color:transparent;color:var(--accent-ink);padding:0 22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(47,91,224,.25),0 8px 18px -10px rgba(47,91,224,.7)}
-.btn.primary:hover{filter:brightness(1.07)}
-.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
-.btn.ghost:hover{background:var(--hover);color:var(--ink)}
-.btn[disabled]{opacity:.38;cursor:not-allowed;transform:none;filter:none;box-shadow:none}
+.btn.primary{background:var(--btn);border-color:transparent;color:var(--btn-ink);box-shadow:0 10px 28px -10px color-mix(in srgb,var(--btn) 70%,transparent)}
+.btn.primary:hover{background:var(--btn);filter:brightness(1.07);box-shadow:0 14px 34px -10px color-mix(in srgb,var(--btn) 85%,transparent)}
+.btn.big{height:50px;padding:0 30px;font-size:15px;border-radius:14px}
+.btn[disabled]{opacity:.4;cursor:not-allowed;transform:none;filter:none;box-shadow:none}
+.btn.ghost{background:none;border-color:transparent}
+.btn svg{flex:none}
+.seg{position:relative;display:inline-flex;gap:2px;padding:4px;background:var(--sunk);border:1px solid var(--line);border-radius:12px}
+.seg .ind{position:absolute;top:4px;left:0;height:calc(100% - 8px);border-radius:9px;background:var(--raise);box-shadow:var(--shadow);border:1px solid var(--line);transition:transform .45s var(--ease),width .45s var(--ease)}
+.chip{position:relative;border:0;background:none;padding:6px 13px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:500;font-size:13px;transition:color .25s;white-space:nowrap}
+.chip:hover,.chip.on{color:var(--ink)}
+.chip em{font-style:normal;color:var(--faint);margin-left:6px;font-variant-numeric:tabular-nums}
+.switch{position:relative;flex:none;width:42px;height:24px;border-radius:999px;border:0;background:var(--line-strong);cursor:pointer;transition:background-color .25s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .35s var(--spring)}
+.switch[aria-checked="true"]{background:var(--btn)}
+.switch[aria-checked="true"]::after{transform:translateX(18px)}
 
-/* ---------- panels ---------- */
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;transition:background-color .35s,border-color .35s}
-.rows{list-style:none;margin:0;padding:0}
-.rows > li + li{border-top:1px solid var(--line)}
+/* ===== cards ===== */
+.card{position:relative;background:linear-gradient(180deg,var(--cardtop),transparent 60%),var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.tile{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--tc-soft,var(--mint-soft));color:var(--tc,var(--mint-ink));flex:none}
 
-/* ---------- welcome ---------- */
-.welcome .content{padding-top:54px}
-.mark{display:block;margin:0 0 18px -6px}
-.welcome h1{font-size:40px;letter-spacing:-.03em}
-.trust{display:grid;grid-template-columns:repeat(3,1fr)}
-.trust > div{padding:20px 22px}
-.trust > div:nth-child(-n+3){border-bottom:1px solid var(--line)}
-.trust > div:not(:nth-child(3n+1)){border-left:1px solid var(--line)}
-.trust svg{color:var(--accent-fg);display:block;margin-bottom:12px}
-.trust b{display:block;font-weight:600;font-size:14px;margin-bottom:4px}
-.trust span{display:block;color:var(--muted);font-size:13px;line-height:1.5}
-.fp{color:var(--faint);font-size:12.5px;display:flex;align-items:center;gap:9px}
-.fp code{font:12px var(--mono);color:var(--muted);background:var(--sunk);border:1px solid var(--line);padding:3px 8px;border-radius:6px;user-select:text;cursor:text}
+/* ===== welcome ===== */
+.wel{padding:22px 0 26px}
+.wel h1{font:750 40px/1.06 var(--display);letter-spacing:-.035em;margin:10px auto 12px;max-width:18ch}
+.lede{font-size:16px;line-height:1.6;color:var(--muted);max-width:58ch;margin:0 auto}
+.promises{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:26px;text-align:left}
+.promise{padding:16px}
+.promise b{display:block;font:650 15px/1.3 var(--display);margin:12px 0 4px}
+.promise > span:not(.tile){color:var(--muted);font-size:13px;line-height:1.5;display:block}
+.wfoot{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:24px}
+.disclaim{font-size:12.5px;color:var(--faint)}
+.fp{font-size:12.5px;color:var(--faint)}
+.fp code{font-size:12px;color:var(--muted);margin-left:6px;user-select:text}
 
-/* ---------- agree ---------- */
-#s-consent .content{padding-top:30px}
-#s-consent .lede{margin-bottom:20px}
-.agreegrid{display:grid;grid-template-columns:1.2fr 1fr;overflow:hidden}
-.agreegrid > div{padding:16px 24px}
-.agreegrid > div + div{border-left:1px solid var(--line);background:var(--sunk)}
-.reads li{display:grid;grid-template-columns:18px 1fr;gap:12px;padding:8px 0}
-.reads li svg{margin-top:2px;color:var(--accent-fg)}
-.reads b{display:block;font-weight:600;font-size:13.5px}
-.reads span{color:var(--muted);font-size:12.5px}
-.nevers{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
-.nevers li{display:grid;grid-template-columns:18px 1fr;gap:10px;font-size:13.5px}
-.nevers svg{color:var(--clean);margin-top:2px}
-.nevers + p{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
-.field{margin-top:16px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
-.field label{font-weight:600;font-size:13.5px}
-.field label small{display:block;font-weight:400;color:var(--faint);font-size:12px}
-.field input{width:100%;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line-strong);border-radius:10px;padding:10px 12px;user-select:text;transition:border-color .2s,box-shadow .25s,background-color .35s}
-.field input::placeholder{color:var(--faint)}
-.field input:hover{border-color:var(--faint)}
-.field input:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
-.agree{display:flex;gap:11px;align-items:center;cursor:pointer;font-weight:500}
+/* ===== agree ===== */
+.pagehead{padding:34px 0 22px;display:flex;align-items:center;gap:18px}
+.pagehead h1{font:750 30px/1.15 var(--display);letter-spacing:-.025em}
+.pagehead p{color:var(--muted);margin-top:4px;font-size:15px}
+.pagehead .tile{width:56px;height:56px;border-radius:16px}
+.two{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+.two .card{padding:20px 22px}
+.two h2{display:flex;align-items:center;gap:10px;font:650 15px/1.3 var(--display);margin-bottom:6px}
+.two h2 i{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.two .never h2 i{background:var(--mint)}
+.reads,.nevers{list-style:none;margin:0;padding:0}
+.reads li{display:grid;grid-template-columns:34px 1fr;gap:12px;padding:12px 0}
+.reads li + li{border-top:1px solid var(--line)}
+.reads .tile{width:34px;height:34px;border-radius:10px;--tc:var(--blue-ink);--tc-soft:var(--blue-soft)}
+.reads b{display:block;font-weight:600}
+.reads span{color:var(--muted);font-size:13px}
+.nevers li{display:flex;gap:12px;align-items:center;padding:12px 0;font-size:14px;font-weight:500}
+.nevers li + li{border-top:1px solid var(--line)}
+.nevers .x{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--mint-soft);color:var(--mint-ink)}
+.never .foot{margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--sunk);color:var(--muted);font-size:13px}
+.field{margin:14px 0 30px;padding:18px 22px;display:flex;align-items:center;gap:18px}
+.field label{font-weight:600;flex:1}
+.field label small{display:block;font-weight:400;color:var(--faint);font-size:12.5px}
+.field input{width:300px;height:44px;border-radius:12px;border:1px solid var(--line-strong);background:var(--sunk);color:var(--ink);padding:0 14px;font:inherit;user-select:text;transition:border-color .2s,box-shadow .2s}
+.field input:focus{outline:none;border-color:var(--mint);box-shadow:0 0 0 4px var(--mint-soft)}
+.agree{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:500}
 .agree input{position:absolute;opacity:0;pointer-events:none}
-.box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line-strong);background:var(--panel);display:grid;place-items:center;flex:none;transition:background-color .25s,border-color .25s,transform .2s var(--ease)}
-.box path{stroke-dasharray:16;stroke-dashoffset:16;transition:stroke-dashoffset .35s var(--ease) .05s}
-.agree:hover .box{border-color:var(--faint)}
-.agree:active .box{transform:scale(.9)}
-.agree input:checked + .box{background:var(--accent);border-color:var(--accent)}
-.agree input:checked + .box path{stroke-dashoffset:0}
-.agree input:focus-visible + .box{outline:2px solid var(--accent);outline-offset:2px}
+.agree .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--line-strong);display:grid;place-items:center;background:var(--panel);transition:background-color .2s,border-color .2s}
+.agree .box svg{opacity:0;transform:scale(.4);transition:opacity .2s,transform .35s var(--spring);stroke:var(--btn-ink)}
+.agree input:checked + .box{background:var(--btn);border-color:var(--btn)}
+.agree input:checked + .box svg{opacity:1;transform:none}
+.agree input:focus-visible + .box{outline:2px solid var(--blue-ink);outline-offset:2px}
 .hint{color:var(--faint);font-size:12.5px}
 .hint b{color:var(--muted);font-weight:600}
 
-/* ---------- check ---------- */
-.checkhead{display:flex;flex-direction:column;align-items:center;text-align:center;padding:30px 0 22px}
-.dial{position:relative;width:128px;height:128px;margin-bottom:18px}
-.dial svg{position:absolute;inset:0;transform:rotate(-90deg)}
-.dial .track{fill:none;stroke:var(--line);stroke-width:6}
-.dial .arc{fill:none;stroke:var(--accent);filter:drop-shadow(0 0 6px var(--accent-soft));stroke-width:6;stroke-linecap:round;stroke-dasharray:282.74;stroke-dashoffset:282.74;transition:stroke-dashoffset 1s var(--ease),opacity .3s}
-.dial .arc.zero{opacity:0}
-.dial .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:600 34px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.dial .num small{font-size:15px;color:var(--faint);font-weight:600;margin:8px 0 0 2px}
-.dial::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid var(--accent);opacity:0}
-.dial.busy::after{animation:ping 2.6s var(--ease) infinite}
-@keyframes ping{0%{transform:scale(.92);opacity:.35}100%{transform:scale(1.12);opacity:0}}
-.checkhead h1{font-size:24px;margin-bottom:6px}
-.now{color:var(--muted);font-size:14.5px;margin:0;min-height:22px}
-.now span{display:inline-block}
-.now span.fresh{animation:fadein .4s var(--ease)}
+/* ===== check ===== */
+.checkhead{padding:30px 0 26px;display:flex;flex-direction:column;align-items:center}
+.scanner{position:relative;width:232px;height:232px;display:grid;place-items:center}
+.scanner::before{content:"";position:absolute;inset:-26px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--mint) 16%,transparent), transparent 64%)}
+.scanner svg.prog{position:absolute;inset:0;transform:rotate(-90deg)}
+.scanner .trk{stroke:var(--line)}
+.scanner .val{stroke:var(--mint);transition:stroke-dashoffset .8s var(--ease);filter:drop-shadow(0 0 8px color-mix(in srgb,var(--mint) 60%,transparent))}
+.scanner.busy .val{animation:glowpulse 1.6s ease-in-out infinite}
+@keyframes glowpulse{50%{filter:drop-shadow(0 0 16px color-mix(in srgb,var(--mint) 80%,transparent))}}
+.scanner .mid{position:relative;text-align:center}
+.num{font:750 64px/1 var(--display);letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.num small{font-size:24px;color:var(--faint);font-weight:600;letter-spacing:0;margin-left:2px}
+.scanner .mid > span{display:block;color:var(--muted);font-size:12.5px;font-weight:600;margin-top:2px}
+.checkhead h1{font:700 22px/1.2 var(--display);letter-spacing:-.015em;margin-top:22px}
+.now{color:var(--muted);min-height:22px;margin-top:4px;text-align:center}
+.now .fresh{display:inline-block;animation:fadein .4s var(--ease)}
 @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-.dots{display:flex;gap:5px;margin-top:14px}
-.dots i{width:16px;height:4px;border-radius:4px;background:var(--line-strong);transition:background-color .45s,width .45s var(--ease),opacity .45s}
-.dots i.done{background:var(--accent)}
-.dots i.cur{background:var(--accent);opacity:.5;width:26px}
-.areas{position:relative;list-style:none;margin:0;padding:6px}
-.areas .hl{position:absolute;left:6px;right:6px;top:0;border-radius:10px;background:var(--sunk);opacity:0;transition:transform .55s var(--ease),height .55s var(--ease),opacity .35s;pointer-events:none}
-.areas .hl.on{opacity:1}
-.areas li{position:relative;display:grid;grid-template-columns:24px 1fr auto;gap:14px;align-items:center;padding:9px 14px;transition:opacity .5s var(--ease)}
-.areas li + li::before{content:"";position:absolute;left:14px;right:14px;top:0;border-top:1px solid var(--line)}
-.areas li.pending b{color:var(--muted)} .areas li.pending span,.areas li.pending .d{color:var(--faint)} .areas li.pending .st{opacity:.45}
-.areas .t b{font-weight:600;font-size:13.5px}
-.areas .t span{color:var(--faint);font-size:12.5px;margin-left:8px}
-.areas .d{font-size:12.5px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
-.areas .d.hit{color:var(--flag-ink);font-weight:600}
-.areas .d.warn{color:var(--review-ink);font-weight:600}
+.areas{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.areas li{position:relative;display:grid;grid-template-columns:30px 1fr;gap:4px 12px;align-items:center;padding:13px 14px;border-radius:14px;background:var(--panel);border:1px solid var(--line);overflow:hidden;transition:border-color .4s,background-color .4s,opacity .4s}
+.areas li.pending b{color:var(--muted)}
+.areas li.active{border-color:color-mix(in srgb,var(--mint) 60%,var(--line));box-shadow:0 0 0 3px var(--mint-soft)}
+.areas li.active::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,color-mix(in srgb,var(--mint) 10%,transparent) 50%,transparent 70%);animation:shine 1.4s linear infinite}
+@keyframes shine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.areas li.r-hit{border-color:color-mix(in srgb,var(--flag) 45%,var(--line))}
+.areas li.r-warn{border-color:color-mix(in srgb,var(--review) 40%,var(--line))}
+.areas .st{grid-row:1 / span 2;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--sunk)}
+.areas li.r-ok .st{background:var(--mint-soft)} .areas li.r-hit .st{background:var(--flag-soft)} .areas li.r-warn .st{background:var(--review-soft)}
+.areas .ring{width:12px;height:12px;border-radius:50%;border:2px solid var(--line-strong)}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--mint-soft);border-top-color:var(--mint);animation:rot .8s linear infinite}
+.areas svg.ok{color:var(--mint-ink)} .areas svg.hit{color:var(--flag-ink)} .areas svg.warn{color:var(--review-ink)}
+.areas svg .draw{stroke-dasharray:14;stroke-dashoffset:14;animation:draw .45s var(--ease) forwards}
+.areas .st > svg{animation:pop .45s var(--spring)}
+.areas b{font-weight:600;font-size:13.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.areas .d{font-size:12.5px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.areas .d.hit{color:var(--flag-ink);font-weight:600} .areas .d.warn{color:var(--review-ink);font-weight:600}
 .areas .d.fresh{animation:fadein .35s var(--ease)}
-.st{width:22px;height:22px;display:grid;place-items:center}
-.st > *{animation:pop .45s var(--ease) both}
-.st .ring{width:16px;height:16px;border-radius:50%;border:2px solid var(--line-strong)}
-.st .spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--accent-soft);border-top-color:var(--accent-fg);animation:spin .75s linear infinite}
-.st .ok{color:var(--clean)} .st .hit{color:var(--flag)} .st .warn{color:var(--review)}
-.draw{stroke-dasharray:14;stroke-dashoffset:14;animation:draw .4s var(--ease) .12s forwards}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
-@keyframes draw{to{stroke-dashoffset:0}}
-.calm{text-align:center;color:var(--faint);font-size:12.5px;margin:16px 0 0}
+.calm{color:var(--faint);font-size:12.5px;margin:18px 0 28px;text-align:center}
 
-/* ---------- results ---------- */
-.results-col{--col:860px}
-.verdict{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;padding:34px 0 20px}
-.verdict.flag{--v:var(--flag);--vs:var(--flag-soft)} .verdict.review{--v:var(--review);--vs:var(--review-soft)} .verdict.clean{--v:var(--clean);--vs:var(--clean-soft)}
-.seal{width:58px;height:58px;border-radius:18px;background:var(--vs);color:var(--v);display:grid;place-items:center;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--v) 22%,transparent)}
-.word{font:700 38px/1 var(--display);letter-spacing:-.03em;color:var(--v);margin:0 0 8px}
-.verdict p{margin:0;color:var(--muted);font-size:15px;max-width:62ch}
-.summary{display:grid;grid-template-columns:repeat(4,1fr) 1.7fr;margin-bottom:20px}
-.summary > div{padding:16px 20px}
-.summary > div + div{border-left:1px solid var(--line)}
-.summary b{display:block;font:600 24px/1.1 var(--display);font-variant-numeric:tabular-nums;margin-bottom:3px}
-.summary span{color:var(--muted);font-size:12.5px}
-.summary .meta{font-size:12px;color:var(--faint);line-height:1.65}
-.summary .meta em{font-style:normal;color:var(--muted);font-weight:600}
-.screen.show .seal{animation:pop .6s var(--ease) .15s both}
-.seg{position:relative;display:inline-flex;gap:2px;padding:4px;background:var(--sunk);border-radius:999px;transition:background-color .35s}
-.seg .ind{position:absolute;top:4px;left:0;height:calc(100% - 8px);border-radius:999px;background:var(--raise);box-shadow:var(--lift);transition:transform .45s var(--ease),width .45s var(--ease),background-color .35s}
-.chip{position:relative;border:0;background:none;padding:5px 13px;border-radius:999px;cursor:pointer;color:var(--muted);font-weight:500;font-size:13px;transition:color .3s}
-.chip:hover{color:var(--ink)}
-.chip.on{color:var(--ink)}
-.chip em{font-style:normal;color:var(--faint);margin-left:5px;font-variant-numeric:tabular-nums}
-#filters{margin-bottom:14px}
-#list{transition:opacity .15s}
-#list.swap{opacity:0}
-.list{margin-bottom:28px;overflow:hidden}
-.day{padding:10px 20px 6px;color:var(--faint);font-size:12px;font-weight:600;background:var(--sunk);border-bottom:1px solid var(--line)}
-.find + .day{border-top:1px solid var(--line)}
-.find{display:grid;grid-template-columns:3px 1fr auto 16px;gap:0 14px;padding:13px 18px 13px 0;cursor:pointer;transition:background-color .2s}
+/* ===== report ===== */
+.verdict{margin-top:26px;padding:24px 26px;display:grid;grid-template-columns:auto 1fr;gap:4px 22px;align-items:center;border-radius:20px;background:linear-gradient(180deg,var(--cardtop),transparent 60%),var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.verdict::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--hc)}
+.wbadge{margin:8px auto 0;width:84px;height:84px;border-radius:24px;--hc:var(--mint)}
+.badge{grid-row:1 / span 3;align-self:start;width:72px;height:72px;border-radius:20px;display:grid;place-items:center;background:var(--hc);color:var(--on-hc);animation:pop .6s var(--spring) both}
+.screen:not(.show) .badge,.screen:not(.show) .badge svg .draw{animation:none}
+.badge svg .draw{stroke-dasharray:40;stroke-dashoffset:40;animation:draw .5s var(--ease) .35s forwards}
+.word{font:800 44px/1 var(--display);letter-spacing:-.035em;color:var(--vi,var(--ink))}
+.verdict.flag{--vi:var(--flag-ink)} .verdict.review{--vi:var(--review-ink)} .verdict.clean{--vi:var(--mint-ink)}
+.verdict > p{margin:6px 0 0;color:var(--muted);font-size:15px;max-width:64ch}
+.why{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.why li{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;border-radius:999px;background:var(--raise);border:1px solid var(--line);font-size:13px;font-weight:500}
+.why li::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--hc)}
+.why li.more{background:none;border-style:dashed;color:var(--muted)}
+.why li.more::before{display:none}
+.lead{margin:12px 0 0;padding:14px 18px;border-radius:14px;background:var(--ls,var(--sunk));border:1px solid color-mix(in srgb,var(--lc,var(--line)) 35%,transparent);font-size:14px;line-height:1.6}
+.lead[hidden],.acts[hidden],.keys[hidden]{display:none}
+.lead.flag{--ls:var(--flag-soft);--lc:var(--flag)} .lead.review{--ls:var(--review-soft);--lc:var(--review)} .lead.clean{--ls:var(--mint-soft);--lc:var(--mint)}
+.lead b{font-weight:650}
+.g{font-variant-numeric:tabular-nums}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 14px}
+.stat{padding:16px 18px;display:flex;gap:14px;align-items:center}
+.stat b{display:block;font:750 30px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.stat div > span{display:block;color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.3}
+.stat.strong{--tc:var(--flag-ink);--tc-soft:var(--flag-soft)} .stat.ask{--tc:var(--review-ink);--tc-soft:var(--review-soft)} .stat.games{--tc:var(--blue-ink);--tc-soft:var(--blue-soft)} .stat.ctx{--tc:var(--muted);--tc-soft:var(--sunk)}
+.stat.strong.has b{color:var(--flag-ink)} .stat.ask.has b{color:var(--review-ink)}
+
+.sec{scroll-margin-top:16px;margin-bottom:14px}
+.sech{display:flex;align-items:center;gap:12px;padding:16px 20px 0}
+.sech h2{font:650 16px/1.3 var(--display);letter-spacing:-.01em}
+.sech span{color:var(--faint);font-size:12.5px}
+.sech .tile{width:32px;height:32px;border-radius:10px}
+.split{display:grid;grid-template-columns:1.45fr 1fr;gap:14px;align-items:start;margin-bottom:14px}
+.split .sec{margin-bottom:0}
+
+.verify{padding-bottom:16px}
+.verify dl{margin:12px 20px 0;display:grid;grid-template-columns:18px 86px 1fr;gap:9px 8px;font-size:12.5px;align-items:center}
+.verify dt{color:var(--muted)}
+.verify dd{margin:0;font-variant-numeric:tabular-nums;word-break:break-all;user-select:text}
+.verify dd code{font-size:12px}
+.verify dd small{display:block;color:var(--faint);font-size:11.5px}
+.verify .st{width:18px;height:18px;border-radius:50%;display:grid;place-items:center}
+.verify .st.ok{color:var(--mint-ink);background:var(--mint-soft)} .verify .st.warn{color:var(--review-ink);background:var(--review-soft)} .verify .st.na{color:var(--faint);background:var(--sunk)}
+
+/* timeline */
+.tl{padding:14px 20px 16px}
+.tl .lanes{position:relative;display:grid;gap:10px}
+.tl .lane{display:grid;grid-template-columns:104px 1fr;gap:12px;align-items:center}
+.tl .lane > b{font-size:12.5px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:8px}
+.tl .lane > b i{width:8px;height:8px;border-radius:50%;background:var(--lc)}
+.tl .strip{position:relative;height:32px;border-radius:9px;background:var(--sunk)}
+.tl .strip::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)}
+.tl .day{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+.tl .mk{position:absolute;top:0;bottom:0;width:24px;margin-left:-12px;background:none;border:0;padding:0;cursor:pointer;transform-origin:50% 100%}
+.tl .mk::before{content:"";position:absolute;left:9px;top:5px;bottom:5px;width:6px;border-radius:3px;background:var(--lc);box-shadow:0 0 10px color-mix(in srgb,var(--lc) 55%,transparent);transition:box-shadow .2s,transform .2s var(--ease)}
+.tl .mk:hover::before,.tl .mk:focus-visible::before{transform:scaleY(1.15);box-shadow:0 0 0 3px var(--panel),0 0 0 5px var(--lc)}
+.tl .mk:focus-visible{outline:2px solid var(--blue-ink);outline-offset:-2px;border-radius:6px}
+.tl .mk.grow{animation:grow .7s var(--spring) both}
+@keyframes grow{from{transform:scaleY(0);opacity:0}to{transform:none;opacity:1}}
+.tl .bar-g{position:absolute;top:10px;bottom:10px;min-width:4px;border-radius:4px;background:var(--lc);opacity:.8}
+.tl .bar-g.hit{opacity:1;box-shadow:0 0 0 2px var(--flag)}
+.tl .axis{display:grid;grid-template-columns:104px 1fr;gap:12px;margin-top:8px}
+.tl .ticks{position:relative;height:18px;font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+.tl .ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.tl .ticks span:first-child{transform:none}
+.tl .ticks span:last-child{transform:translateX(-100%)}
+.tl .tip{position:absolute;z-index:5;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;line-height:1.4;padding:7px 10px;border-radius:9px;max-width:280px;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .2s var(--ease)}
+.tl .tip.show{opacity:1;transform:none}
+.tl .empty-tl{padding:10px 0 4px;color:var(--faint);font-size:13px}
+
+/* key evidence */
+.keys{display:grid;gap:10px;padding:14px}
+.key{position:relative;display:grid;grid-template-columns:auto 1fr;gap:3px 14px;padding:14px 16px;border-radius:14px;background:var(--raise);border:1px solid var(--line)}
+.key .pill{grid-row:1 / span 3;align-self:start;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;background:var(--sunk);color:var(--muted)}
+.key.strong .pill{background:var(--flag-soft);color:var(--flag-ink)} .key.ask .pill{background:var(--review-soft);color:var(--review-ink)}
+.key .t{font:650 14.5px/1.35 var(--display)}
+.key .t small{color:var(--muted);font:500 12.5px var(--ui);margin-left:8px}
+.key .d{color:var(--muted);font-size:13px;line-height:1.55}
+.key .d code{font-size:12px;color:var(--ink);word-break:break-all;user-select:text}
+.key .q{margin-top:6px;font-size:13px;display:flex;gap:8px;align-items:baseline}
+.key .q b{flex:none;font-size:12px;font-weight:700;color:var(--blue-ink)}
+
+/* games */
+.acts{overflow:hidden}
+.acts .rows{margin-top:12px}
+.sess{display:grid;grid-template-columns:190px 1fr auto;gap:12px;align-items:center;padding:10px 20px;font-size:13px;border-top:1px solid var(--line)}
+.sess .t{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sess .p{font-variant-numeric:tabular-nums;font-weight:600}
+.sess .p small{font-weight:400;color:var(--faint);margin-left:8px}
+.sess .hit{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--flag-ink);background:var(--flag-soft);padding:2px 10px;border-radius:999px;white-space:nowrap}
+.sess .hit i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.sess.cheat{background:color-mix(in srgb,var(--flag-soft) 55%,transparent)}
+.cp{display:inline-grid;place-items:center;width:26px;height:26px;margin-left:6px;vertical-align:middle;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--muted);cursor:pointer;transition:color .2s,border-color .2s,transform .15s}
+.cp:hover{color:var(--ink);border-color:var(--line-strong)}
+.cp:active{transform:scale(.92)}
+.cp.ok{color:var(--mint-ink);border-color:color-mix(in srgb,var(--mint) 50%,var(--line))}
+
+/* all evidence */
+.filters-row{padding:14px 20px 12px}
+.list{overflow:hidden;border-top:1px solid var(--line);border-radius:0 0 18px 18px}
+#list.swap{opacity:0;transition:opacity .15s}
+.dayh{padding:9px 20px 7px;color:var(--faint);font-size:12px;font-weight:600;background:var(--sunk);border-bottom:1px solid var(--line)}
+.find + .dayh{border-top:1px solid var(--line)}
+.find{position:relative;display:grid;grid-template-columns:1fr auto 18px;gap:0 14px;padding:13px 20px 13px 22px;cursor:pointer;transition:background-color .2s}
 .find + .find{border-top:1px solid var(--line)}
+.find::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--faint);opacity:.4}
+.find.s-strong::before{background:var(--flag);opacity:1} .find.s-ask::before{background:var(--review);opacity:1}
 .find:hover{background:var(--hover)}
-.find.in{animation:rise .5s var(--ease) both}
-.find .bar{border-radius:0 3px 3px 0;background:var(--info);opacity:.6}
-.find.high .bar{background:var(--flag);opacity:1} .find.medium .bar{background:var(--review);opacity:1}
+.find.flash{animation:flash 1.6s var(--ease)}
+@keyframes flash{0%,40%{background:var(--blue-soft)}100%{background:transparent}}
 .find .h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
-.find .h b{font-weight:600;font-size:14px}
+.find .h b{font-weight:600}
 .find .h span{color:var(--muted);font-size:12.5px}
-.find .ev{font-size:11.5px;font-weight:600;padding:1px 9px;border-radius:999px;background:var(--info-soft);color:var(--info)}
-.find.high .ev{background:var(--flag-soft);color:var(--flag-ink)} .find.medium .ev{background:var(--review-soft);color:var(--review-ink)}
+.find .ev{font-size:11.5px;font-weight:600;padding:1px 9px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.find.s-strong .ev{background:var(--flag-soft);color:var(--flag-ink)} .find.s-ask .ev{background:var(--review-soft);color:var(--review-ink)}
+.find .path{font:12px/1.5 var(--mono);color:var(--muted);margin-top:4px;word-break:break-all;user-select:text;cursor:text}
 .find .when{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap;padding-top:1px}
 .find .chev{color:var(--faint);padding-top:2px;transition:transform .35s var(--ease)}
 .find.open .chev{transform:rotate(180deg)}
-.find .path{font:12px/1.5 var(--mono);color:var(--muted);margin-top:4px;word-break:break-all;user-select:text;cursor:text}
-.find .more{grid-column:2 / 5;display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s var(--ease)}
+.find .more{grid-column:1 / 4;display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s var(--ease)}
 .find.open .more{grid-template-rows:1fr}
 .find .more > div{overflow:hidden;min-height:0}
 .find dl{margin:10px 0 2px;display:grid;grid-template-columns:110px 1fr;gap:5px 12px;font-size:12.5px;opacity:0;transform:translateY(-4px);transition:opacity .3s,transform .4s var(--ease)}
 .find.open dl{opacity:1;transform:none;transition-delay:.08s}
 .find dt{color:var(--faint)}
 .find dd{margin:0;user-select:text;word-break:break-all}
-.find dd code{font:12px var(--mono)}
-.empty{padding:60px 20px;text-align:center;color:var(--muted)}
-.why{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
-.why li{display:flex;gap:9px;align-items:baseline;font-size:14px;color:var(--ink)}
-.why li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--v,var(--faint));transform:translateY(-2px)}
-.toprow{display:grid;grid-template-columns:1fr 1.25fr;gap:14px;margin-bottom:20px}
-.counts{display:grid;grid-template-columns:1fr 1fr}
-.counts > div{padding:15px 18px}
-.counts > div:nth-child(2n){border-left:1px solid var(--line)}
-.counts > div:nth-child(n+3){border-top:1px solid var(--line)}
-.counts b{display:block;font:600 24px/1.1 var(--display);font-variant-numeric:tabular-nums;margin-bottom:3px}
-.counts span{color:var(--muted);font-size:12.5px}
-.counts .strong b{color:var(--flag-ink)} .counts .ask b{color:var(--review-ink)}
-.verify{padding:14px 18px}
-.verify h3{margin:0 0 8px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;gap:10px}
-.verify h3 span{color:var(--faint);font-weight:500}
-.verify dl{margin:0;display:grid;grid-template-columns:18px 92px 1fr;gap:6px 8px;font-size:12.5px;align-items:center}
-.verify dt{color:var(--muted)}
-.verify dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums;word-break:break-all;user-select:text}
-.verify dd code{font:12px var(--mono)}
-.verify .st{width:16px;height:16px;border-radius:50%;display:grid;place-items:center}
-.verify .st.ok{color:var(--clean-ink)} .verify .st.warn{color:var(--review-ink)} .verify .st.na{color:var(--faint)}
-.verify dd small{color:var(--muted);margin-left:6px}
-.sec{display:flex;align-items:baseline;gap:10px;margin:6px 0 10px;font-size:15px;font-weight:600}
-.sec span{color:var(--faint);font-size:12.5px;font-weight:500}
-.keys{margin-bottom:20px}
-#keys{display:grid;gap:10px}
-.key{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;padding:14px 18px;border-radius:14px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--kc,var(--line))}
-.key.strong{--kc:var(--flag)} .key.ask{--kc:var(--review)}
-.key .pill{grid-row:1 / span 2;align-self:start;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;background:var(--sunk);color:var(--muted)}
-.key.strong .pill{background:var(--flag-soft);color:var(--flag-ink)} .key.ask .pill{background:var(--review-soft);color:var(--review-ink)}
-.key .t{font-weight:600;font-size:14.5px}
-.key .t small{color:var(--muted);font-weight:500;font-size:12.5px;margin-left:8px}
-.key .d{color:var(--muted);font-size:13.5px;line-height:1.5}
-.key .d code{font:12px var(--mono);color:var(--ink);word-break:break-all}
-.key .q{grid-column:2;margin-top:6px;font-size:13px;color:var(--ink);display:flex;gap:8px;align-items:baseline}
-.key .q b{flex:none;font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;color:var(--accent-fg)}
-@media (max-width:860px){.toprow{grid-template-columns:1fr}}
-
-.empty.clean{padding:44px 24px}
-.empty.clean b{display:block;color:var(--ink);font-size:15px;font-weight:600;margin-bottom:6px}
-.empty.clean span{display:block;max-width:52ch;margin:0 auto;font-size:13.5px;line-height:1.55}
-.lead{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:14px 18px;margin:-4px 0 16px;border-radius:14px;background:var(--vs,var(--sunk));border:1px solid color-mix(in srgb,var(--v,var(--line)) 22%,transparent);font-size:14px;line-height:1.5}
-.lead[hidden],.acts[hidden]{display:none}
-.lead.flag{--v:var(--flag);--vs:var(--flag-soft)} .lead.review{--v:var(--review);--vs:var(--review-soft)} .lead.clean{--v:var(--clean);--vs:var(--clean-soft)}
-.lead svg{color:var(--v,var(--muted));margin-top:2px}
-.lead b{font-weight:600}
-.lead .g{font-variant-numeric:tabular-nums}
+.find dd code{font-size:12px}
+.find dd .gl{display:block}
+.find dd small{color:var(--faint)}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
 .tag{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:7px;background:var(--sunk);border:1px solid var(--line);color:var(--muted);font-size:11.5px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
-.tag svg{opacity:.85}
-.tag.game{background:var(--accent-soft);border-color:transparent;color:var(--accent-fg)}
-.find dd .gl{display:block}
-.find dd .gl + .gl{margin-top:3px}
-.find dd small{color:var(--faint)}
-.acts{margin-bottom:20px}
-.acts h3{display:flex;align-items:baseline;gap:10px;margin:0;padding:14px 20px 10px;font-size:13.5px;font-weight:600}
-.acts h3 span{color:var(--faint);font-weight:500;font-size:12px}
-.sess{display:grid;grid-template-columns:200px 1fr auto;gap:12px;align-items:center;padding:10px 20px;border-top:1px solid var(--line);font-size:13px}
-.sess .t{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-.sess .p{font:12.5px var(--mono);color:var(--ink)}
-.sess .p small{font:12px var(--ui);color:var(--faint);margin-left:8px}
-.sess .hit{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--flag-ink);background:var(--flag-soft);padding:2px 9px;border-radius:999px;white-space:nowrap}
-.cp{display:inline-grid;place-items:center;width:26px;height:26px;margin-left:6px;vertical-align:middle;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--muted);cursor:pointer;transition:color .2s,background-color .2s,border-color .2s}
-.cp:hover{color:var(--ink);background:var(--hover);border-color:var(--line-strong)}
-.cp.ok{color:var(--clean-ink);border-color:color-mix(in srgb,var(--clean) 45%,var(--line))}
-.sess .hit i{width:6px;height:6px;border-radius:50%;background:currentColor}
-.sess.cheat{background:color-mix(in srgb,var(--flag-soft) 45%,transparent)}
-.sess.in{animation:rise .5s var(--ease) both}
-@media (max-width:700px){.sess{grid-template-columns:1fr auto}.sess .t{grid-column:1 / 3}}
+.tag.game{background:var(--blue-soft);border-color:transparent;color:var(--blue-ink)}
+.empty{padding:50px 24px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:15px;font-weight:600;margin-bottom:6px}
+.empty span{display:block;max-width:52ch;margin:0 auto;font-size:13.5px}
+.pad-b{height:16px}
 
+/* ===== entrance: one sequence per screen ===== */
+.in{opacity:0;animation:rise .65s var(--ease) forwards}
+.screen:not(.show) .in{animation:none}
+.d1{animation-delay:.1s} .d2{animation-delay:.18s} .d3{animation-delay:.26s} .d4{animation-delay:.34s} .d5{animation-delay:.42s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
-/* ---------- settings drawer ---------- */
-.drawer{position:fixed;top:0;right:0;bottom:0;z-index:55;width:min(440px,100vw);background:var(--panel);border-left:1px solid var(--line);box-shadow:var(--pop);display:flex;flex-direction:column;transform:translateX(104%);transition:transform .5s var(--ease),background-color .35s;visibility:hidden}
-.drawer.show{transform:none;visibility:visible}
-.drawer:focus{outline:none}
-.drawer.closing{visibility:visible}
-.dhead{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 14px 24px;border-bottom:1px solid var(--line)}
-.dhead h1{font-size:20px;margin:0}
-.dbody{flex:1;overflow:auto;padding:8px 24px 24px}
-.group{padding:18px 0;border-bottom:1px solid var(--line)}
-.group:last-child{border-bottom:0}
-.group > h2{margin-bottom:14px;font-size:12px;letter-spacing:.02em}
-.setting{display:grid;grid-template-columns:1fr auto;gap:6px 18px;align-items:center;padding:10px 0}
-.setting b{font-weight:600;font-size:13.5px}
-.setting p{grid-column:1;margin:0;color:var(--muted);font-size:12.5px;line-height:1.5}
-.setting.stack{grid-template-columns:1fr}
-.setting.stack .seg{justify-self:start;margin-top:6px}
-.depthnote{margin-top:6px;color:var(--muted);font-size:12.5px;min-height:38px}
-.depthnote b{font-size:12.5px;color:var(--ink)}
-.switch{position:relative;width:40px;height:24px;border-radius:999px;border:0;background:var(--line-strong);cursor:pointer;transition:background-color .3s;flex:none;grid-row:1 / span 2;grid-column:2}
-.switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .35s var(--ease)}
-.switch[aria-checked="true"]{background:var(--accent)}
-.switch[aria-checked="true"]::after{transform:translateX(16px)}
-.switch:active::after{width:22px}
-.switch[aria-checked="true"]:active::after{transform:translateX(12px)}
-.dfoot{display:flex;align-items:center;gap:10px;padding:14px 18px 14px 24px;border-top:1px solid var(--line)}
-.dfoot .hint{flex:1}
-.locked{font-size:12.5px;color:var(--review-ink);background:var(--review-soft);border-radius:10px;padding:10px 12px;margin-top:14px;display:none}
-.drawer.busy .locked{display:block}
-
-/* ---------- modal, scrim and toast ---------- */
-.scrim{position:fixed;inset:0;z-index:50;background:rgba(12,17,28,.34);backdrop-filter:blur(4px);display:grid;place-items:center;opacity:0;visibility:hidden;transition:opacity .3s var(--ease),visibility 0s .3s}
+/* ===== drawer, modals, toast ===== */
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:grid;place-items:center;opacity:0;visibility:hidden;transition:opacity .3s var(--ease),visibility 0s .3s}
 .scrim.show{opacity:1;visibility:visible;transition:opacity .3s var(--ease),visibility 0s}
-.modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:min(580px,92vw);max-height:84vh;display:flex;flex-direction:column;box-shadow:var(--pop);transform:translateY(14px) scale(.97);opacity:0;transition:transform .45s var(--ease),opacity .3s var(--ease)}
+.drawer{position:fixed;z-index:60;top:0;right:0;bottom:0;width:min(420px,92vw);background:var(--panel);border-left:1px solid var(--line);box-shadow:var(--pop);display:flex;flex-direction:column;transform:translateX(105%);transition:transform .5s var(--ease);outline:none}
+.drawer.show{transform:none}
+.dhead{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 8px}
+.dhead h1{font:700 20px var(--display)}
+.dbody{flex:1;overflow-y:auto;padding:4px 22px 18px}
+.group h2{font-size:12.5px;font-weight:600;color:var(--faint);margin:18px 0 6px}
+.setting{display:grid;grid-template-columns:1fr auto;gap:4px 16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.setting b{font-weight:600}
+.setting p{grid-column:1;color:var(--muted);font-size:12.5px;margin:0}
+.setting .switch{grid-row:1 / span 2;grid-column:2}
+.setting.stack{grid-template-columns:1fr;gap:8px}
+.setting.stack .seg{justify-self:start}
+.depthnote{color:var(--muted);font-size:12.5px}
+.depthnote b{color:var(--ink);font-weight:600}
+.locked{display:none;font-size:12.5px;color:var(--review-ink);background:var(--review-soft);border-radius:10px;padding:10px 12px;margin-top:14px}
+.drawer.busy .locked{display:block}
+.dfoot{display:flex;align-items:center;gap:8px;padding:14px 22px;border-top:1px solid var(--line)}
+.dfoot .hint{flex:1}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:20px;width:min(600px,92vw);max-height:84vh;display:flex;flex-direction:column;box-shadow:var(--pop);transform:translateY(14px) scale(.97);opacity:0;transition:transform .45s var(--ease),opacity .3s var(--ease)}
 .scrim.show .modal{transform:none;opacity:1}
-.modal .mb{padding:26px 28px 20px;overflow:auto}
-.modal h1{font-size:20px}
-.modal p{color:var(--muted);font-size:14px;line-height:1.55;margin:0 0 12px}
-.modal .mf{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line)}
-.preview{font:12px/1.6 var(--mono);background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;white-space:pre-wrap;max-height:250px;overflow:auto;user-select:text;cursor:text}
-.toast{position:fixed;z-index:60;left:50%;bottom:86px;display:flex;align-items:center;gap:8px;transform:translate(-50%,16px) scale(.96);background:var(--ink);color:var(--panel);padding:9px 16px 9px 12px;border-radius:999px;font-size:13px;font-weight:500;box-shadow:var(--pop);opacity:0;transition:opacity .3s var(--ease),transform .45s var(--ease);pointer-events:none;max-width:80vw}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-.toast svg{flex:none;color:var(--clean)}
+.mb{padding:24px 24px 8px;overflow-y:auto}
+.mb h1{font:700 20px var(--display);margin-bottom:10px}
+.mb h2{font-size:14px;font-weight:650;margin:16px 0 6px}
+.mb p{color:var(--muted);margin:0 0 10px}
+.preview{white-space:pre-wrap;font:12px/1.55 var(--mono);background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:12px 14px;max-height:44vh;overflow:auto;user-select:text}
+.mf{display:flex;justify-content:flex-end;gap:8px;padding:14px 24px 20px}
+.toast{position:fixed;z-index:70;left:50%;bottom:88px;display:flex;align-items:center;gap:9px;padding:11px 16px;border-radius:12px;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;box-shadow:var(--pop);transform:translate(-50%,16px);opacity:0;pointer-events:none;transition:transform .45s var(--spring),opacity .25s}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.toast svg{color:var(--mint)}
 
-/* Reduce motion: from Windows, or from Settings */
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01s!important;animation-duration:.01s!important;animation-delay:0s!important;animation-iteration-count:1!important}}
-html.still *,html.still *::before,html.still *::after{transition-duration:.01s!important;animation-duration:.01s!important;animation-delay:0s!important;animation-iteration-count:1!important}
+@media (max-width:1060px){.steps li + li::before{width:18px;margin:0 7px}.steps li span.l{display:none}.steps li.on span.l{display:inline}.promises{grid-template-columns:repeat(2,1fr)}.areas{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:900px){.two,.split{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.safe span{display:none}.word{font-size:44px}.sess{grid-template-columns:1fr auto}.sess .t{grid-column:1 / 3}.field{flex-wrap:wrap}.field input{width:100%}}
+:root.still *,:root.still *::before,:root.still *::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
 </head>
-<body>
-<header class="top">
-  <div class="brand">
-    <svg width="30" height="30" aria-hidden="true" viewBox="0 0 256 256"> <defs> <linearGradient id="tt-back" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3A2F9E"/><stop offset="1" stop-color="#1A1559"/></linearGradient> <linearGradient id="tt-front" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#5EF0C2"/><stop offset="1" stop-color="#10A37F"/></linearGradient> <filter id="tt-sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#0B3D33" flood-opacity=".45"/></filter> </defs> <path d="M100 20c30 0 60 6 86 16v66c0 52-34 86-86 104-52-18-86-52-86-104V36c26-10 56-16 86-16z" fill="url(#tt-back)"/> <path d="M150 54c30 0 60 6 86 16v66c0 52-34 86-86 104-52-18-86-52-86-104V70c26-10 56-16 86-16z" fill="url(#tt-front)" filter="url(#tt-sh)"/> <path d="M114 146l25 25 47-53" fill="none" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/> </svg>
-    <b>OpenCheck</b><small id="ver">v1.0.0</small>
-  </div>
-  <nav class="stepper" id="steps" aria-label="Progress">
-    <span class="ind" id="stepInd"></span>
-    <span class="s on"><span class="n"><i>1</i><svg width="10" height="10" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span>Welcome</span>
-    <span class="s"><span class="n"><i>2</i><svg width="10" height="10" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span>Agree</span>
-    <span class="s"><span class="n"><i>3</i><svg width="10" height="10" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span>Check</span>
-    <span class="s"><span class="n"><i>4</i><svg width="10" height="10" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span>Results</span>
-  </nav>
-  <div class="tools">
-    <span class="badge" title="OpenCheck has no internet code and never changes your files."><i></i>Offline and read-only</span>
-    <button class="iconbtn" id="howLink" title="How it works" aria-label="How it works"><svg width="18" height="18" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M7.9 7.9a2.2 2.2 0 1 1 3 2.1c-.6.2-.9.7-.9 1.2v.4M10 14v.1"/></svg></button>
-    <button class="iconbtn" id="settingsBtn" title="Settings" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M8.4 2.6h3.2l.5 2.1 1.4.8 2.1-.6 1.6 2.8-1.6 1.5v1.6l1.6 1.5-1.6 2.8-2.1-.6-1.4.8-.5 2.1H8.4l-.5-2.1-1.4-.8-2.1.6-1.6-2.8L4.4 10.8V9.2L2.8 7.7l1.6-2.8 2.1.6 1.4-.8z"/><circle cx="10" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></button>
-  </div>
-</header>
+<body data-glow="clean">
+<div class="glow" aria-hidden="true"></div>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="30" height="30" aria-hidden="true" viewBox="0 0 256 256"><defs><linearGradient id="bf" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#6FF2C2"/><stop offset="1" stop-color="#0E9F6E"/></linearGradient></defs><path d="M128 14c36 0 70 8 100 21v78c0 64-42 108-100 131C70 221 28 177 28 113V35c30-13 64-21 100-21z" fill="url(#bf)"/><path d="M84 130l30 30 58-62" fill="none" stroke="#06140F" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <b>OpenCheck</b><small id="ver">v1.0.0</small>
+    </div>
+    <ol class="steps" id="steps" aria-label="Progress">
+      <li><span class="dot"><i>1</i><svg width="12" height="12" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span><span class="l">Welcome</span></li>
+      <li><span class="dot"><i>2</i><svg width="12" height="12" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span><span class="l">Agree</span></li>
+      <li><span class="dot"><i>3</i><svg width="12" height="12" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span><span class="l">Check</span><small id="stepCheck"></small></li>
+      <li><span class="dot"><i>4</i><svg width="12" height="12" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span><span class="l">Report</span><small id="stepReport"></small></li>
+    </ol>
+    <div class="right">
+      <span class="safe" title="OpenCheck has no internet code and never changes your files."><svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M10 2.5c2.4 0 4.6.5 6.5 1.4v5c0 4.1-2.7 6.9-6.5 8.6-3.8-1.7-6.5-4.5-6.5-8.6v-5c1.9-.9 4.1-1.4 6.5-1.4z"/></svg><span>Offline and read-only</span></span>
+      <button class="iconbtn" id="howLink" aria-label="Help" title="How OpenCheck works"><svg width="17" height="17" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M7.9 7.9a2.2 2.2 0 1 1 3 2.1c-.6.2-.9.7-.9 1.2v.4M10 14v.1"/></svg></button>
+      <button class="iconbtn" id="settingsBtn" aria-label="Settings" title="Settings"><svg width="17" height="17" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M8.4 2.6h3.2l.5 2.1 1.4.8 2.1-.6 1.6 2.8-1.6 1.5v1.6l1.6 1.5-1.6 2.8-2.1-.6-1.4.8-.5 2.1H8.4l-.5-2.1-1.4-.8-2.1.6-1.6-2.8L4.4 10.8V9.2L2.8 7.7l1.6-2.8 2.1.6 1.4-.8z"/><circle cx="10" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+    </div>
+  </header>
 
-<main class="stage">
-  <!-- welcome -->
-  <section class="screen show welcome" id="s-welcome" aria-label="Welcome">
-    <div class="scroll"><div class="col content">
-      <svg class="mark in" width="72" height="72" aria-hidden="true" viewBox="0 0 256 256"> <defs> <linearGradient id="tw-back" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3A2F9E"/><stop offset="1" stop-color="#1A1559"/></linearGradient> <linearGradient id="tw-front" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#5EF0C2"/><stop offset="1" stop-color="#10A37F"/></linearGradient> <filter id="tw-sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#0B3D33" flood-opacity=".45"/></filter> </defs> <path d="M100 20c30 0 60 6 86 16v66c0 52-34 86-86 104-52-18-86-52-86-104V36c26-10 56-16 86-16z" fill="url(#tw-back)"/> <path d="M150 54c30 0 60 6 86 16v66c0 52-34 86-86 104-52-18-86-52-86-104V70c26-10 56-16 86-16z" fill="url(#tw-front)" filter="url(#tw-sh)"/> <path d="M114 146l25 25 47-53" fill="none" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/> </svg>
-      <h1 class="in d1">Welcome to OpenCheck</h1>
-      <p class="lede in d2">A free, open-source PC check for Roblox communities. It looks for executors, externals, unfair FastFlags, macros and lag switches, even ones that were deleted, and shows you every result before anyone else sees it.</p>
-      <div class="panel trust in d3">
-        <div><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M2.5 10s2.7-5 7.5-5 7.5 5 7.5 5-2.7 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.2" fill="currentColor"/></svg><b>Read-only</b><span>It only looks. It never deletes, moves or changes a file or setting.</span></div>
-        <div><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M3 3l14 14M8.2 8.3A3 3 0 0 0 7 10.7M5.4 5.6A7.5 7.5 0 0 0 3 8.4M11.9 6.2A7.5 7.5 0 0 1 17 8.4M10 15h.01"/></svg><b>Works offline</b><span>No internet code at all. Your report only leaves this PC if you share it.</span></div>
-        <div><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M10 2.5l6 2.5v4.5c0 4-2.7 6.8-6 8-3.3-1.2-6-4-6-8V5z"/></svg><b>Private</b><span>No passwords, browsing, Discord, photos or documents. Your Windows name is hidden.</span></div>
-        <div><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M7 6L3 10l4 4M13 6l4 4-4 4"/></svg><b>Open source</b><span>Every line is public on GitHub, and the app is built there from that code.</span></div>
-        <div><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 10.5l3.5 3.5L16 6"/></svg><b>Safety tested</b><span>Code that could delete, change or upload anything fails every build.</span></div>
-        <div><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M6 9V6.5a4 4 0 0 1 8 0V9M5 9h10v8H5zM10 12v2"/></svg><b>Verifiable</b><span>The report shows this copy's fingerprint, so anyone can confirm it's official.</span></div>
-      </div>
-    </div></div>
-    <div class="bar"><div class="col">
-      <span class="fp" id="fp">Not affiliated with Roblox Corporation.</span>
-      <span class="grow"></span>
-      <button class="btn primary" id="welcomeBtn">Get started</button>
-    </div></div>
-  </section>
-
-  <!-- agree -->
-  <section class="screen" id="s-consent" aria-label="Agree">
-    <div class="scroll"><div class="col content">
-      <h1 class="in">Before the check starts</h1>
-      <p class="lede in d1">Here is exactly what OpenCheck reads, and what it will never do.</p>
-      <div class="panel agreegrid in d2">
-        <div>
-          <h2>What it reads</h2>
-          <ul class="rows reads">
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="currentColor" d="M3 5a2 2 0 012-2h3.6l1.6 2H15a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><div><b>File and folder names</b><span>Compared to the cheat list. Other files are never opened, except Roblox script files, which are checked for executor-only functions.</span></div></li>
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M10 3a7 7 0 107 7M10 6v4l3 2"/></svg><div><b>Program history</b><span>Windows' records of which programs ran and when.</span></div></li>
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M4 6h12M8 6V4h4v2m-6 0l1 10h6l1-10"/></svg><div><b>Deleted files</b><span>The drive's change log and Recycle Bin, cheat names only.</span></div></li>
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M4 4h12v12H4zM4 8h12M8 8v8"/></svg><div><b>Roblox settings and game history</b><span>FastFlags, plus which games were open and when, from Roblox's own logs. Only game IDs and times are kept.</span></div></li>
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M3 5h14v8H3zM7 17h6M10 13v4"/></svg><div><b>System, network and device checks</b><span>Cleared logs, PC resets, VMs, emulators, DMA hardware, VPN adapters, firewall history, internet drops, USB drives and sandbox tools. A scrambled PC ID is added to the report. Nothing is sent anywhere.</span></div></li>
-          </ul>
+  <main class="stage">
+    <!-- welcome -->
+    <section class="screen show" id="s-welcome" aria-label="Welcome">
+      <div class="scroll"><div class="col wel center">
+        <div class="badge wbadge" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24"><path class="draw" d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h1 class="in d1">Prove your PC is clean, in about two minutes.</h1>
+        <p class="lede in d2">OpenCheck looks for Roblox executors, externals, unfair FastFlags, macros and lag switches, even ones that were deleted. You see every result before you share it.</p>
+        <div class="promises">
+          <div class="card promise in d3"><span class="tile"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" d="M2.5 10s2.8-5 7.5-5 7.5 5 7.5 5-2.8 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.3" fill="currentColor"/></svg></span><b>Read-only</b><span>It only looks. It never deletes, moves or changes a file or setting.</span></div>
+          <div class="card promise in d3"><span class="tile"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="M3 3l14 14M6.2 8.6a6 6 0 0 0-1.6 1.3M2 7a11 11 0 0 1 3-2M9 4.6A11 11 0 0 1 18 7M12.6 9.2a6 6 0 0 1 2.8 1.7M8 13a3 3 0 0 1 4 0"/></svg></span><b>Offline</b><span>No internet code in it. The report leaves this PC only if you share it.</span></div>
+          <div class="card promise in d4"><span class="tile"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="9" width="12" height="8.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.9"/><path fill="none" stroke="currentColor" stroke-width="1.9" d="M6.8 9V6.6a3.2 3.2 0 0 1 6.4 0V9"/></svg></span><b>Private</b><span>No passwords, browsing, Discord, photos or documents. Your Windows name is hidden.</span></div>
+          <div class="card promise in d4"><span class="tile"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M7 6l-4 4 4 4M13 6l4 4-4 4M11 4l-2 12"/></svg></span><b>Open source</b><span>Every line is public on GitHub, and every release is built there from it.</span></div>
         </div>
-        <div>
-          <h2>What it never does</h2>
-          <ul class="nevers">
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg>Delete, move or change anything</li>
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg>Connect to the internet or send your report anywhere</li>
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg>Read passwords, browsing, Discord, photos or documents</li>
-            <li><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg>Install itself or keep running after you close it</li>
-          </ul>
-          <p>The report only lists matches. Your other files are never written down.</p>
+        <div class="wfoot in d5">
+          <button class="btn primary big" id="welcomeBtn">Get started</button>
+          <div class="fp" id="fp">Free and open source</div>
+          <span class="disclaim">Not affiliated with Roblox Corporation.</span>
         </div>
-      </div>
-      <div class="field in d3">
-        <label for="who">Your Roblox or Discord name<small>Optional, shown on the report</small></label>
-        <input id="who" maxlength="40" autocomplete="off" spellcheck="false" placeholder="e.g. builderman">
-      </div>
-    </div></div>
-    <div class="bar"><div class="col">
-      <label class="agree"><input type="checkbox" id="agree"><span class="box"><svg width="12" height="12" viewBox="0 0 20 20"><path fill="none" stroke="var(--accent-ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span>I understand and agree to this check</label>
-      <span class="grow"></span>
-      <span class="hint" id="depthHint"><b>Standard</b> check, about 1 to 2 minutes</span>
-      <button class="btn primary" id="startBtn" disabled>Start check</button>
-    </div></div>
-  </section>
+      </div></div>
+    </section>
 
-  <!-- check -->
-  <section class="screen" id="s-scan" aria-label="Check">
-    <div class="scroll"><div class="col">
-      <div class="checkhead in">
-        <div class="dial busy" id="dial">
-          <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="45"/><circle class="arc zero" id="arc" cx="50" cy="50" r="45"/></svg>
-          <div class="num" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="pctBox"><span id="pct">0</span><small>%</small></div>
+    <!-- agree -->
+    <section class="screen" id="s-consent" aria-label="Agree">
+      <div class="scroll"><div class="col">
+        <div class="pagehead in">
+          <span class="tile"><svg width="26" height="26" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M10 2.5c2.4 0 4.6.5 6.5 1.4v5c0 4.1-2.7 6.9-6.5 8.6-3.8-1.7-6.5-4.5-6.5-8.6v-5c1.9-.9 4.1-1.4 6.5-1.4z"/><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M7 10l2.2 2.2L13.2 8"/></svg></span>
+          <div><h1>Before the check starts</h1><p>This is exactly what OpenCheck reads, and what it will never do.</p></div>
         </div>
-        <h1>Checking this PC</h1>
-        <p class="now" id="now"><span>Starting. Every step is read-only.</span></p>
-        <div class="dots" id="dots"></div>
-      </div>
-      <ul class="panel areas in d1" id="areas"></ul>
-      <p class="calm in d2">Keep this window open. It's safe to keep using your PC.</p>
-      <div style="height:24px"></div>
-    </div></div>
-  </section>
+        <div class="two">
+          <div class="card in d1">
+            <h2><i></i>What it reads</h2>
+            <ul class="reads">
+              <li><span class="tile"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M3 5a2 2 0 012-2h3.6l1.6 2H15a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span><div><b>File and folder names</b><span>Compared to the cheat list. Other files are never opened, except Roblox script files, which are checked for executor-only functions.</span></div></li>
+              <li><span class="tile"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="M10 3a7 7 0 107 7M10 6v4l3 2"/></svg></span><div><b>Program history</b><span>Windows' records of which programs ran and when, and which files were deleted.</span></div></li>
+              <li><span class="tile"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" d="M4 4h12v12H4zM4 8h12M8 8v8"/></svg></span><div><b>Roblox settings and game history</b><span>FastFlags, plus which games were open and when, from Roblox's own logs. Only game IDs and times are kept.</span></div></li>
+              <li><span class="tile"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" d="M3 5h14v8H3zM7 17h6M10 13v4"/></svg></span><div><b>System, network and device checks</b><span>Cleared logs, PC resets, VMs, DMA hardware, VPNs, firewall history, internet drops, USB drives and sandbox tools. A PC ID made from hardware models is added to the report.</span></div></li>
+            </ul>
+          </div>
+          <div class="card never in d2">
+            <h2><i></i>What it never does</h2>
+            <ul class="nevers">
+              <li><span class="x"><svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span>Never deletes, moves or changes anything</li>
+              <li><span class="x"><svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span>Never connects to the internet or sends your report</li>
+              <li><span class="x"><svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span>Never reads passwords, browsing, Discord, photos or documents</li>
+              <li><span class="x"><svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span>Never installs itself or keeps running after you close it</li>
+            </ul>
+            <p class="foot">The report only lists matches. Your other files are never written down.</p>
+          </div>
+        </div>
+        <div class="card field in d3">
+          <label for="who">Your Roblox or Discord name<small>Optional. Shown on the report.</small></label>
+          <input id="who" maxlength="40" autocomplete="off" spellcheck="false" placeholder="builderman">
+        </div>
+      </div></div>
+      <div class="bar"><div class="col">
+        <label class="agree"><input type="checkbox" id="agree"><span class="box"><svg width="13" height="13" viewBox="0 0 20 20"><path fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg></span>I understand and agree to this check</label>
+        <span class="grow"></span>
+        <span class="hint" id="depthHint"><b>Standard</b> check, about 1 to 2 minutes</span>
+        <button class="btn primary" id="startBtn" disabled>Start check</button>
+      </div></div>
+    </section>
 
-  <!-- results -->
-  <section class="screen results-col" id="s-results" aria-label="Results">
-    <div class="scroll" id="resultsScroll"><div class="col">
-      <div class="verdict" id="verdict">
-        <div class="seal" id="seal"></div>
-        <div class="in d1"><div class="word" id="vWord">Clean</div><p id="vText"></p><ul class="why" id="why"></ul></div>
-      </div>
-      <div class="lead in d2" id="lead" hidden></div>
-      <div class="toprow in d2">
-        <div class="panel counts" id="summary" aria-label="Evidence counts"></div>
-        <div class="panel verify" id="verify" aria-label="Verify this check"></div>
-      </div>
-      <section class="keys in d3" id="keysBox" hidden>
-        <h2 class="sec">Key evidence <span>Strongest first. Open any item for the details.</span></h2>
-        <div id="keys"></div>
-      </section>
-      <div class="panel acts in d3" id="acts" hidden></div>
-      <h2 class="sec in d3">All evidence</h2>
-      <div class="in d3">
-        <div class="seg" id="filters" role="tablist"><span class="ind" id="segInd"></span></div>
-        <div class="panel list" id="list"></div>
-      </div>
-    </div></div>
-    <div class="bar"><div class="col">
-      <button class="btn" id="saveBtn"><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m-4-4l4 4 4-4M4 15h12"/></svg>Save report</button>
-      <button class="btn primary" id="sendBtn"><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M7 7V4h9v9h-3M4 7h9v9H4z"/></svg>Copy for staff</button>
-      <span class="grow"></span>
-      <button class="btn" id="doneBtn">Close</button>
-    </div></div>
-  </section>
-</main>
+    <!-- check -->
+    <section class="screen" id="s-scan" aria-label="Check">
+      <div class="scroll"><div class="col">
+        <div class="checkhead">
+          <div class="scanner busy" id="dial">
+            <svg class="prog" viewBox="0 0 232 232" aria-hidden="true"><circle class="trk" cx="116" cy="116" r="104" fill="none" stroke-width="8"/><circle class="val" id="arc" cx="116" cy="116" r="104" fill="none" stroke-width="8" stroke-linecap="round" stroke-dasharray="653.5" stroke-dashoffset="653.5"/></svg>
+            <div class="mid"><div class="num" role="progressbar" aria-label="Check progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="pctBox"><span id="pct">0</span><small>%</small></div><span>checked</span></div>
+          </div>
+          <h1>Checking this PC</h1>
+          <p class="now" id="now" aria-live="polite"><span>Starting. Every step is read-only.</span></p>
+        </div>
+        <ul class="areas" id="areas"></ul>
+        <p class="calm">Keep this window open. It's safe to keep using your PC.</p>
+      </div></div>
+    </section>
+
+    <!-- report -->
+    <section class="screen" id="s-results" aria-label="Report">
+      <div class="scroll" id="resultsScroll"><div class="col">
+        <section class="verdict in" id="verdict">
+          <div class="badge" id="seal" aria-hidden="true"></div>
+          <div class="word" id="vWord">Clean</div>
+          <p id="vText"></p>
+          <ul class="why" id="why"></ul>
+        </section>
+        <div class="lead in d1" id="lead" hidden></div>
+        <div class="stats in d3" id="summary" aria-label="Evidence counts"></div>
+        <section class="card sec in d4" id="sec-timeline">
+          <div class="sech"><span class="tile" style="--tc:var(--blue-ink);--tc-soft:var(--blue-soft)"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="M3 15h14M6 15V9M10 15V5M14 15v-4"/></svg></span><h2>Last 30 days</h2><span>Select a mark to jump to that evidence</span></div>
+          <div class="tl" id="timeline"></div>
+        </section>
+        <div class="split in d5">
+          <section class="card sec" id="keysBox" hidden>
+            <div class="sech"><span class="tile" style="--tc:var(--flag-ink);--tc-soft:var(--flag-soft)"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M10 5v6M10 14.5v.1"/></svg></span><h2>Key evidence</h2><span>Strongest first</span></div>
+            <div class="keys" id="keys"></div>
+          </section>
+          <section class="card sec verify" id="verify" aria-label="Verify this check"></section>
+        </div>
+        <section class="card sec acts" id="acts" hidden></section>
+        <section class="card sec" id="sec-all">
+          <div class="sech"><span class="tile" style="--tc:var(--muted);--tc-soft:var(--sunk)"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="M7 5h10M7 10h10M7 15h10M3.5 5h.01M3.5 10h.01M3.5 15h.01"/></svg></span><h2>All evidence</h2></div>
+          <div class="filters-row"><div class="seg" id="filters" role="tablist"><span class="ind" id="segInd"></span></div></div>
+          <div class="list" id="list"></div>
+        </section>
+        <div class="pad-b"></div>
+      </div></div>
+      <div class="bar"><div class="col">
+        <button class="btn" id="saveBtn"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m-4-4l4 4 4-4M4 15h12"/></svg>Save report</button>
+        <span class="grow"></span>
+        <button class="btn" id="doneBtn">Close</button>
+        <button class="btn primary" id="sendBtn"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M7 7V4h9v9h-3M4 7h9v9H4z"/></svg>Copy for staff</button>
+      </div></div>
+    </section>
+  </main>
+</div>
 
 <!-- settings -->
 <div class="scrim" id="drawerScrim"></div>
 <aside class="drawer" id="drawer" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="setTitle">
   <div class="dhead">
     <h1 id="setTitle">Settings</h1>
-    <button class="iconbtn" id="closeSettings" aria-label="Close settings"><svg width="18" height="18" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M5 5l10 10M15 5L5 15"/></svg></button>
+    <button class="iconbtn" id="closeSettings" aria-label="Close settings"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M5 5l10 10M15 5L5 15"/></svg></button>
   </div>
   <div class="dbody">
     <div class="group">
@@ -530,7 +571,7 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
       </div>
       <div class="setting">
         <b>Fingerprint matches</b>
-        <p>Gives each cheat file found a unique ID (SHA-256), so moderators can tell exactly which version it is, even if it was renamed. Only files that already matched are fingerprinted.</p>
+        <p>Gives each cheat file found a unique ID (SHA-256), so staff can tell exactly which version it is, even if it was renamed. Only files that already matched are fingerprinted.</p>
         <button class="switch" role="switch" data-k="hashMatches" aria-label="Fingerprint matches"></button>
       </div>
       <div class="locked">These apply to the next check. The current check keeps its settings.</div>
@@ -562,8 +603,8 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
 <div class="scrim" id="sendModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sendTitle">
     <div class="mb">
-      <h1 id="sendTitle">Copy this report for Discord</h1>
-      <p>This is exactly what gets copied. Paste it in the moderator's channel, or attach the saved report file.</p>
+      <h1 id="sendTitle">Copy this report for staff</h1>
+      <p>This is exactly what gets copied. Paste it in the staff channel, or attach the saved report file.</p>
       <div class="preview" id="preview"></div>
     </div>
     <div class="mf"><button class="btn" id="cancelSend">Cancel</button><button class="btn primary" id="confirmSend">Copy report</button></div>
@@ -572,19 +613,18 @@ html.still *,html.still *::before,html.still *::after{transition-duration:.01s!i
 <div class="scrim" id="helpModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="mb">
-      <h1 id="helpTitle">How it works</h1>
-      <p>Windows keeps records of programs that ran and files that were deleted, even after the program itself is gone. OpenCheck reads those records and compares the names to a built-in list of Roblox cheats.</p>
-      <p>A match is evidence, not proof. Files can be renamed, and an innocent file can share a name with a cheat. A moderator makes the final call.</p>
-      <p>A fingerprint (SHA-256) is a unique ID worked out from a file's contents. The same file always gets the same fingerprint, and changing even one byte gives a completely different one.</p>
-      <p>The report shows this app's own fingerprint, so moderators can compare it with the official download and know the app wasn't modified. Cheat files that match the list get a fingerprint too, so the exact version can be identified even if it was renamed.</p>
+      <h1 id="helpTitle">How OpenCheck works</h1>
+      <p>Windows keeps records of programs that ran and files that were deleted, even after the program itself is gone. OpenCheck reads those records and lines them up with what cheats are known to leave behind.</p>
+      <p>A match is evidence, not proof. Files can be renamed, and an innocent file can share a name with a cheat. Staff make the final call.</p>
+      <p>A fingerprint (SHA-256) is a unique ID worked out from a file's contents. The report shows this app's own fingerprint, so staff can compare it with the official download and know the app wasn't changed.</p>
       <h2>For staff</h2>
-      <p>Run checks on a live screenshare, with OpenCheck downloaded fresh from the official site while you watch. On the results screen, compare the version, the fingerprint and the PC ID in "Verify this check" with what's on their screen. Evidence is ranked: <b>Strong</b> is a cheat match, <b>Worth asking</b> needs an answer from the player, and <b>Context</b> is background. Each item suggests what to ask.</p>
-      <p>OpenCheck never asks you to turn off your antivirus. If a copy of it does, it isn't the real one. OpenCheck is not affiliated with Roblox Corporation.</p>
+      <p>Run checks on a live screenshare, with OpenCheck downloaded fresh from the official site while you watch. On the report, compare the version, the fingerprint and the PC ID under "Verify this check" with what's on their screen. Evidence is ranked: Strong is a cheat match, Worth asking needs an answer from the player, and Context is background. Each item suggests what to ask.</p>
+      <p>OpenCheck never asks you to turn off your antivirus. If a copy of it does, it isn't the real one.</p>
     </div>
     <div class="mf"><button class="btn primary" id="closeHelp">Got it</button></div>
   </div>
 </div>
-<div class="toast" id="toast" role="status"><svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg><span id="toastText"></span></div>
+<div class="toast" id="toast" role="status"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg><span id="toastText"></span></div>
 
 <script>
 "use strict";
@@ -595,7 +635,7 @@ const osReduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
-/* ---------- settings (kept in this app's own browser storage, on this PC only) ---------- */
+/* ---------- settings (kept in this app's own storage, on this PC only) ---------- */
 const DEFAULTS = { depth: "standard", lowCpu: false, otherDrives: true, hashMatches: true, theme: "system", reduceMotion: false };
 const DEPTH_TEXT = {
   quick:    ["Quick", "about 30 seconds", "Your user folders, program history and the most recent changes. Skips deep folders and other drives."],
@@ -648,18 +688,18 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", app
 
 /* ---------- shared bits ---------- */
 const AREAS = [
-  ["files","Cheat files and folders","Names in user folders and Program Files"],
-  ["exec","Programs that ran","Prefetch, BAM, UserAssist"],
-  ["deleted","Deleted files","Change log and Recycle Bin"],
-  ["defender","Windows Security history","Defender detections"],
-  ["logs","Logs, resets and firewall","Cleared logs, PC resets, lag-switch rules"],
-  ["fflags","Roblox FastFlags","Roblox, bootstrappers, FastFlag files"],
-  ["games","Roblox game history","Which games were open, from Roblox's logs"],
-  ["network","Lag switches and VPNs","Adapters, firewall history, drops during games"],
-  ["devices","USB drives and sandboxes","USB history, programs run from USB, Sandboxie and freeze tools"],
-  ["vm","Virtual machines and emulators","VMs and Android emulators"],
-  ["dma","DMA hardware","PCIe devices"],
-  ["running","Running programs","Open right now"]
+  ["files","Cheat files and folders"],
+  ["exec","Programs that ran"],
+  ["deleted","Deleted files"],
+  ["defender","Windows Security history"],
+  ["logs","Logs, resets and firewall"],
+  ["fflags","Roblox FastFlags"],
+  ["games","Roblox game history"],
+  ["network","Lag switches and VPNs"],
+  ["devices","USB drives and sandboxes"],
+  ["vm","Virtual machines"],
+  ["dma","DMA hardware"],
+  ["running","Running programs"]
 ];
 function tween(node, to, ms){
   cancelAnimationFrame(node._raf);
@@ -676,7 +716,7 @@ function tween(node, to, ms){
 function slideTo(ind, target){
   if (!ind || !target || !target.offsetWidth) return;
   ind.style.width = target.offsetWidth + "px";
-  ind.style.transform = "translateX(" + target.offsetLeft + "px)";
+  ind.style.transform = "translateX(" + (target.offsetLeft - 1) + "px)";
 }
 
 /* ---------- navigation ---------- */
@@ -684,20 +724,21 @@ const ORDER = ["s-welcome","s-consent","s-scan","s-results"];
 let current = "s-welcome";
 function paintSteps(){
   const idx = ORDER.indexOf(current);
-  const items = $("steps").querySelectorAll("span.s");
-  items.forEach((s, i) => { s.className = "s" + (i < idx ? " done" : i === idx ? " on" : ""); });
-  slideTo($("stepInd"), items[idx]);
+  [...$("steps").querySelectorAll("li")].forEach((s, i) => {
+    s.className = i < idx ? "done" : i === idx ? "on" : "";
+    if (i === idx) s.setAttribute("aria-current", "step"); else s.removeAttribute("aria-current");
+  });
 }
 function go(id){
   if (id === current) return;
   $(current).classList.remove("show");
   const to = $(id); void to.offsetWidth; to.classList.add("show");
   current = id;
+  if (id !== "s-results") document.body.dataset.glow = "clean";
   paintSteps();
 }
 window.addEventListener("resize", () => {
-  paintSteps(); moveHighlight($("areas").querySelector("li.active"));
-  if (report) slideTo($("segInd"), $("filters").querySelector(".chip.on"));
+  if (report){ slideTo($("segInd"), $("filters").querySelector(".chip.on")); renderTimeline(report, false); }
   if ($("drawer").classList.contains("show")) paintSettings();
 });
 
@@ -712,17 +753,21 @@ $("startBtn").addEventListener("click", () => {
 
 /* ---------- check ---------- */
 const ICON = {
-  ok:'<svg class="ok" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="currentColor" opacity=".14"/><path class="draw" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M6 10.5l2.6 2.6L14 7.5"/></svg>',
-  hit:'<svg class="hit" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="currentColor" opacity=".16"/><path stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M10 5.5v5.5M10 14.2v.1"/></svg>',
-  warn:'<svg class="warn" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="currentColor" opacity=".16"/><path stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M10 5.5v5.5M10 14.2v.1"/></svg>'
+  ok:'<svg class="ok" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path class="draw" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M5.5 10.5l3 3 6-6.5"/></svg>',
+  hit:'<svg class="hit" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M10 4.5v7M10 15v.1"/></svg>',
+  warn:'<svg class="warn" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M10 4.5v7M10 15v.1"/></svg>'
 };
 const SPIN = '<span class="spin"></span>';
-const ARC = 282.74;
+const RING = '<span class="ring"></span>';
+const ARC_LEN = 653.5;
 let lastPercent = 0;
 
 /* The percentage climbs one whole number at a time at a calm, steady pace. It never goes backwards. */
 const pct = { shown: 0, target: 0, raf: 0, last: 0 };
-function showPct(n){ $("pct").textContent = String(n); $("pctBox").setAttribute("aria-valuenow", String(n)); }
+function showPct(n){
+  $("pct").textContent = String(n); $("pctBox").setAttribute("aria-valuenow", String(n));
+  if (current === "s-scan") $("stepCheck").textContent = n + "%";
+}
 function countTo(target){
   pct.target = Math.max(pct.target, target);
   if (motionOff()){ pct.shown = pct.target; showPct(pct.shown); return; }
@@ -735,45 +780,23 @@ function pctStep(now){
   pct.raf = gap > 0 ? requestAnimationFrame(pctStep) : 0;
 }
 function resetPct(){ cancelAnimationFrame(pct.raf); pct.shown = 0; pct.target = 0; pct.raf = 0; showPct(0); }
-function setArc(p){
-  const arc = $("arc");
-  arc.classList.toggle("zero", p <= 0.5);
-  arc.style.strokeDashoffset = String(ARC * (1 - p / 100));
-}
+function setArc(p){ $("arc").style.strokeDashoffset = String(ARC_LEN * (1 - Math.max(0, Math.min(100, p)) / 100)); }
 function setNow(text){
   const now = $("now"), cur = now.firstChild;
   if (cur && cur.textContent === text) return;
   now.textContent = ""; now.append(el("span", "fresh", text));
 }
-function moveHighlight(li){
-  const hl = $("areas").querySelector(".hl");
-  if (!hl) return;
-  if (!li){ hl.classList.remove("on"); return; }
-  hl.style.transform = "translateY(" + li.offsetTop + "px)";
-  hl.style.height = li.offsetHeight + "px";
-  hl.classList.add("on");
-}
-function updateDots(){
-  const lis = [...$("areas").querySelectorAll("li")];
-  const activeIdx = lis.findIndex(li => li.classList.contains("active"));
-  [...$("dots").children].forEach((d, i) => { d.className = lis[i] && lis[i].dataset.done === "1" ? "done" : i === activeIdx ? "cur" : ""; });
-}
 function buildAreas(){
   const ul = $("areas"); ul.textContent = "";
-  ul.append(el("span","hl"));
-  const dots = $("dots"); dots.textContent = "";
-  for (const [key,name,sub] of AREAS){
+  for (const [key,name] of AREAS){
     const li = el("li","pending"); li.dataset.key = key; li.dataset.name = name;
-    const st = el("div","st"); st.innerHTML = '<span class="ring"></span>';
-    const t = el("div","t"); t.append(el("b",null,name), el("span",null,sub));
-    li.append(st, t, el("div","d","Waiting"));
+    const st = el("div","st"); st.innerHTML = RING;
+    li.append(st, el("b",null,name), el("div","d","Waiting"));
     ul.append(li);
-    dots.append(el("i"));
   }
   $("dial").classList.add("busy");
   setArc(0); resetPct(); lastPercent = 0;
   setNow("Starting. Every step is read-only.");
-  updateDots();
 }
 function onProgress(m){
   const li = document.querySelector(`#areas li[data-key="${CSS.escape(m.area)}"]`);
@@ -784,19 +807,19 @@ function onProgress(m){
     if (running){
       $("areas").querySelectorAll("li.active").forEach(x => { if (x !== li) x.classList.remove("active"); });
       li.classList.add("active");
-      moveHighlight(li);
       const name = li.dataset.name;
       setNow(m.detail && m.detail !== "Checking" ? m.detail : "Checking " + name.charAt(0).toLowerCase() + name.slice(1));
     } else {
       li.classList.remove("active"); li.dataset.done = "1";
+      li.classList.remove("r-ok","r-hit","r-warn"); li.classList.add("r-" + (ICON[m.state] ? m.state : "ok"));
     }
-    const text = running ? "Checking" : (m.detail || "");
+    const text = running ? "Checking" : (m.detail || "Done");
     if (d.textContent !== text){ d.textContent = text; d.classList.remove("fresh"); void d.offsetWidth; d.classList.add("fresh"); }
+    d.title = text;
     d.classList.toggle("hit", m.state === "hit");
     d.classList.toggle("warn", m.state === "warn");
     const want = running ? "spin" : (ICON[m.state] ? m.state : "ok");
     if (st.dataset.icon !== want){ st.dataset.icon = want; st.innerHTML = (running ? SPIN : ICON[want]); }
-    updateDots();
   }
   if (typeof m.percent === "number"){
     const p = lastPercent = Math.max(lastPercent, Math.min(100, m.percent));   // only ever forward
@@ -805,7 +828,7 @@ function onProgress(m){
   }
 }
 
-/* ---------- results ---------- */
+/* ---------- report ---------- */
 let report = null, filter = "all";
 const FILTERS = [
   ["all","All", () => true],
@@ -822,31 +845,50 @@ const VERDICT = {
   clean: ["Clean","Nothing on the cheat list was found. A clean check is strong evidence, not a guarantee."]
 };
 const SEAL = {
-  flag:'<svg width="26" height="26" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M12 6.5v7M12 17.5v.1"/></svg>',
-  review:'<svg width="26" height="26" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" d="M9.2 9.2a2.9 2.9 0 1 1 3.9 2.7c-.7.3-1.1.9-1.1 1.6v.6M12 17.5v.1"/></svg>',
-  clean:'<svg width="26" height="26" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M6.5 12.5l3.6 3.6L17.5 8.5" style="stroke-dasharray:18;stroke-dashoffset:18;animation:draw .5s var(--ease) .45s forwards"/></svg>'
+  flag:'<svg width="34" height="34" viewBox="0 0 24 24"><path class="draw" d="M12 5.5v8M12 18v.1" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  review:'<svg width="34" height="34" viewBox="0 0 24 24"><path class="draw" d="M9 9a3 3 0 1 1 4 2.8c-.7.3-1 .9-1 1.6v.6M12 18v.1" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>',
+  clean:'<svg width="34" height="34" viewBox="0 0 24 24"><path class="draw" d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
-const CHEV = '<svg width="16" height="16" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M6 8l4 4 4-4"/></svg>';
+const CHEV = '<svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M6 8l4 4 4-4"/></svg>';
 const PAD = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M6.5 6h7a4 4 0 0 1 3.9 3.2l.8 4a2.2 2.2 0 0 1-3.8 1.9L12.6 13H7.4l-1.8 2.1a2.2 2.2 0 0 1-3.8-1.9l.8-4A4 4 0 0 1 6.5 6z"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M6.5 8.5v2.5M5.2 9.75h2.6M13.5 9.5h.01M15 11h.01"/></svg>';
 const CLOCK = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M10 6.5V10l2.3 1.6"/></svg>';
-const SPARK = '<svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M10 2.5l1.8 4.7 4.7 1.8-4.7 1.8L10 15.5l-1.8-4.7L3.5 9l4.7-1.8z"/></svg>';
+const COPY = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M7 7V4h9v9h-3M4 7h9v9H4z"/></svg>';
+const TICK = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg>';
+const ICONS = {pad: PAD, clock: CLOCK, copy: COPY, tick: TICK};
+const STAT_ICON = {
+  strong:'<svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M10 4.5v7M10 15v.1"/></svg>',
+  ask:'<svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" d="M7.6 7.6a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.4v.5M10 14.8v.1"/></svg>',
+  games:PAD.replace('width="13" height="13"','width="18" height="18"'),
+  ctx:'<svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M10 9v5M10 6.2v.1"/></svg>'
+};
+const GAME_ICON = PAD.replace('width="13" height="13"','width="16" height="16"');
+const SHIELD_ICON = '<svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" d="M10 2.5c2.4 0 4.6.5 6.5 1.4v5c0 4.1-2.7 6.9-6.5 8.6-3.8-1.7-6.5-4.5-6.5-8.6v-5c1.9-.9 4.1-1.4 6.5-1.4z"/></svg>';
+const SEC_ICONS = {shield: SHIELD_ICON, games: GAME_ICON};
+let appSha = null;
 const hm = d => d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
 const dhm = d => d.toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+const lc1 = s => s.charAt(0).toLowerCase() + s.slice(1);
 function ago(d){
   const m = Math.round((Date.now() - d) / 6e4);
   if (m < 2) return "just now"; if (m < 60) return m + " min ago";
   const h = Math.round(m / 60); if (h < 36) return h + (h === 1 ? " hour ago" : " hours ago");
   const days = Math.round(h / 24); return days + (days === 1 ? " day ago" : " days ago");
 }
+function fmtDate(iso){ if(!iso) return null; const d = new Date(iso); return isNaN(d) ? null : d; }
 function span(g){
   const a = fmtDate(g.start), b = fmtDate(g.end);
-  const day = a.toLocaleDateString(undefined,{month:"short",day:"numeric"});
-  return day + " · " + hm(a) + (b ? "–" + hm(b) : "");
+  return a.toLocaleDateString(undefined,{month:"short",day:"numeric"}) + ", " + hm(a) + (b ? " to " + hm(b) : "");
 }
-const COPY = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M7 7V4h9v9h-3M4 7h9v9H4z"/></svg>';
-const TICK = '<svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg>';
-let appSha = null;
-const ICONS = {pad: PAD, clock: CLOCK, copy: COPY, tick: TICK};
+function sessKey(g){ return g.placeId + "|" + g.start; }
+function dayLabel(d){
+  if (!d) return "No time recorded";
+  const today = new Date(); today.setHours(0,0,0,0);
+  const that = new Date(d); that.setHours(0,0,0,0);
+  const diff = Math.round((today - that)/864e5);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  return d.toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric", year: d.getFullYear() === today.getFullYear() ? undefined : "numeric"});
+}
 const copyButtons = new Map();
 function copyBtn(placeId){
   const b = el("button","cp"); b.type = "button"; b.innerHTML = ICONS.copy;
@@ -862,52 +904,12 @@ function onCopiedPlace(id){
   setTimeout(() => { b.classList.remove("ok"); b.innerHTML = ICONS.copy; }, 1600);
 }
 function tag(cls, iconName, text){ const t = el("span","tag" + (cls ? " " + cls : "")); if (iconName) t.innerHTML = ICONS[iconName]; t.append(text); return t; }
-function sessKey(g){ return g.placeId + "|" + g.start; }
-function fmtDate(iso){ if(!iso) return null; const d = new Date(iso); return isNaN(d) ? null : d; }
-function dayLabel(d){
-  if (!d) return "No time recorded";
-  const today = new Date(); today.setHours(0,0,0,0);
-  const that = new Date(d); that.setHours(0,0,0,0);
-  const diff = Math.round((today - that)/864e5);
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Yesterday";
-  return d.toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric", year: d.getFullYear() === today.getFullYear() ? undefined : "numeric"});
+function secHead(iconKey, tc, title, sub){
+  const h = el("div","sech"), t = el("span","tile"); t.style.setProperty("--tc", "var(--" + tc + "-ink)"); t.style.setProperty("--tc-soft", "var(--" + tc + "-soft)");
+  t.innerHTML = SEC_ICONS[iconKey]; h.append(t, el("h2", null, title)); if (sub) h.append(el("span", null, sub)); return h;
 }
-function onDone(r){
-  // The "Last Roblox game" row is shown in the Roblox activity panel instead.
-  if ((r.sessions || []).length) r = Object.assign({}, r, {findings: r.findings.filter(f => !(f.group === "context" && f.name === "Last Roblox game"))});
-  report = r;
-  setArc(100); countTo(100);
-  moveHighlight(null); $("dial").classList.remove("busy");
-  setNow("All done. Getting your results ready.");
-  $("areas").querySelectorAll("li").forEach(li => { li.dataset.done = "1"; li.classList.remove("active"); });
-  updateDots();
 
-  $("verdict").className = "verdict " + r.verdict;
-  $("seal").innerHTML = (SEAL[r.verdict] || "");
-  $("vWord").textContent = VERDICT[r.verdict][0];
-  $("vText").textContent = VERDICT[r.verdict][1];
-
-  const ranked = r.findings.slice().sort(byStrength);
-  renderWhy(r, ranked);
-  const sum = $("summary"); sum.textContent = "";
-  const counts = [
-    [r.findings.filter(f => strength(f) === "strong").length, "Strong evidence", "strong"],
-    [r.findings.filter(f => strength(f) === "ask").length, "Worth asking about", "ask"],
-    [new Set(r.findings.filter(f => f.group === "cheat").flatMap(f => (f.games || []).map(sessKey))).size, "Games with a cheat open", ""],
-    [r.findings.filter(f => strength(f) === "context").length, "Context only", ""]
-  ];
-  const nums = counts.map(([n,l,c]) => { const d = el("div", n > 0 ? c : ""), b = el("b",null,"0"); d.append(b, el("span",null,l)); sum.append(d); return [b,n]; });
-  renderVerify(r);
-  renderKeys(ranked);
-  renderLead(r); renderActivity(r);
-  filter = "all";
-  renderFilters(); renderList(true);
-  setTimeout(() => {
-    go("s-results");
-    setTimeout(() => { nums.forEach(([b,n]) => tween(b, n, 900)); slideTo($("segInd"), $("filters").querySelector(".chip.on")); }, 350);
-  }, 1100);
-}
+/* evidence strength: what staff should do with each item */
 const STRENGTH = {strong:["Strong","strong"], ask:["Worth asking","ask"], context:["Context",""]};
 function strength(f){ return f.cheat ? "strong" : (f.severity === "info" ? "context" : "ask"); }
 const SRANK = {strong:0, ask:1, context:2};
@@ -930,49 +932,108 @@ function askFor(f){
   if (f.group === "cheat") return "Ask what this is and when they last used it.";
   return null;
 }
-function renderWhy(r, ranked){
+
+function onDone(r){
+  // The "Last Roblox game" row is shown in the games section instead.
+  if ((r.sessions || []).length) r = Object.assign({}, r, {findings: r.findings.filter(f => !(f.group === "context" && f.name === "Last Roblox game"))});
+  r.findings.forEach((f, i) => f._i = i);
+  report = r;
+  setArc(100); countTo(100);
+  $("dial").classList.remove("busy");
+  setNow("Done. Putting your report together.");
+  $("areas").querySelectorAll("li").forEach(li => { li.dataset.done = "1"; li.classList.remove("active"); });
+
+  $("verdict").className = "verdict " + r.verdict;
+  $("seal").innerHTML = SEAL[r.verdict] || "";
+  const vb = $("verdict"); vb.classList.remove("in"); void vb.offsetWidth; vb.classList.add("in");
+  $("vWord").textContent = VERDICT[r.verdict][0];
+  $("vText").textContent = VERDICT[r.verdict][1];
+  $("stepReport").textContent = "";
+  $("stepCheck").textContent = "";
+
+  const ranked = r.findings.slice().sort(byStrength);
+  renderWhy(ranked);
+  const sum = $("summary"); sum.textContent = "";
+  const counts = [
+    [r.findings.filter(f => strength(f) === "strong").length, "Strong evidence", "strong"],
+    [r.findings.filter(f => strength(f) === "ask").length, "Worth asking about", "ask"],
+    [new Set(r.findings.filter(f => f.group === "cheat").flatMap(f => (f.games || []).map(sessKey))).size, "Games with a cheat open", "games"],
+    [r.findings.filter(f => strength(f) === "context").length, "Context only", "ctx"]
+  ];
+  const nums = counts.map(([n,l,c]) => {
+    const d = el("div", "card stat " + c + (n > 0 ? " has" : "")), t = el("span","tile"), b = el("b",null,"0"), w = el("div");
+    t.innerHTML = STAT_ICON[c]; w.append(b, el("span",null,l)); d.append(t, w); sum.append(d); return [b,n];
+  });
+  renderVerify(r);
+  renderLead(r);
+  renderKeys(ranked);
+  renderActivity(r);
+  filter = "all";
+  renderFilters(); renderList(false);
+  setTimeout(() => {
+    go("s-results");
+    document.body.dataset.glow = r.verdict;
+    $("resultsScroll").scrollTop = 0;
+    setTimeout(() => { nums.forEach(([b,n]) => tween(b, n, 900)); slideTo($("segInd"), $("filters").querySelector(".chip.on")); renderTimeline(r, true); }, 380);
+  }, 1000);
+}
+function renderWhy(ranked){
   const ul = $("why"); ul.textContent = "";
-  const top = ranked.filter(f => strength(f) !== "context").slice(0, 3);
-  for (const f of top){
+  const real = ranked.filter(f => strength(f) !== "context");
+  for (const f of real.slice(0, 3)){
     const d = fmtDate(f.time);
-    const ev = f.evidence.charAt(0).toLowerCase() + f.evidence.slice(1);
-    ul.append(el("li", null, f.name + ": " + ev + (d ? ", " + ago(d) : "")));
+    ul.append(el("li", null, f.name + ": " + lc1(f.evidence) + (d ? ", " + ago(d) : "")));
   }
-  const more = ranked.filter(f => strength(f) !== "context").length - top.length;
-  if (more > 0) ul.append(el("li", null, "and " + more + " more below"));
+  if (real.length > 3) ul.append(el("li", "more", "+" + (real.length - 3) + " more below"));
 }
 const ST = {
-  ok:'<svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg>',
-  warn:'<svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M10 5v6M10 14.5v.1"/></svg>',
-  na:'<svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 10h8"/></svg>'
+  ok:'<svg width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 10.5l3 3 7-7"/></svg>',
+  warn:'<svg width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M10 5v6M10 14.5v.1"/></svg>',
+  na:'<svg width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M6 10h8"/></svg>'
 };
 function renderVerify(r){
   const box = $("verify"); box.textContent = "";
-  const h = el("h3", null, "Verify this check"); h.append(el("span", null, "Staff: compare these on the player's screen"));
+  box.append(secHead("shield", "mint", "Verify this check", null));
   const dl = el("dl");
   const row = (state, k, v, note) => {
     const st = el("span", "st " + state); st.innerHTML = ST[state]; st.setAttribute("aria-label", state === "ok" ? "OK" : state === "warn" ? "Check this" : "Not available");
     const dd = el("dd"); if (v instanceof Node) dd.append(v); else dd.textContent = v; if (note) dd.append(el("small", null, note));
     dl.append(st, el("dt", null, k), dd);
   };
-  const ver = (r.appVersion || $("ver").textContent.replace(/^v/, "")) || "unknown";
+  const ver = r.appVersion || $("ver").textContent.replace(/^v/, "") || "unknown";
   row("ok", "App version", "v" + ver);
   const sha = r.appSha256 || appSha;
-  row(sha ? "ok" : "na", "Fingerprint", sha ? el("code", null, sha.slice(0, 16) + "...") : "unknown", sha ? "match on the release page" : null);
-  row(r.pcId ? "ok" : "na", "PC ID", r.pcId ? el("code", null, r.pcId) : "not available", r.pcId ? "same PC, same ID" : null);
+  row(sha ? "ok" : "na", "Fingerprint", sha ? el("code", null, sha.slice(0, 16) + "...") : "unknown", sha ? "Must match the release page" : null);
+  row(r.pcId ? "ok" : "na", "PC ID", r.pcId ? el("code", null, r.pcId) : "not available", r.pcId ? "Same PC, same ID" : null);
   const quick = /^quick/i.test(r.mode || "");
-  row(quick ? "warn" : "ok", "Scan", r.mode || "Standard", quick ? "ask for Standard" : null);
-  row(r.admin ? "ok" : "warn", "Admin", r.admin ? "Yes" : "No", r.admin ? null : "partial check, ask for a redo");
-  row("ok", "Finished", new Date(r.finished).toLocaleString(undefined, {dateStyle:"medium", timeStyle:"short"}) + ", " + r.seconds + " s" + (r.who ? ", " + r.who : ""));
-  box.append(h, dl);
+  row(quick ? "warn" : "ok", "Scan", r.mode || "Standard", quick ? "Ask for Standard" : null);
+  row(r.admin ? "ok" : "warn", "Admin", r.admin ? "Yes" : "No", r.admin ? null : "Partial check, ask for a redo");
+  row("ok", "Finished", new Date(r.finished).toLocaleString(undefined, {dateStyle:"medium", timeStyle:"short"}) + ", " + r.seconds + " s");
+  if (r.who) row("ok", "Player", r.who);
+  box.append(dl);
+}
+function renderLead(r){
+  const box = $("lead"); box.textContent = ""; box.hidden = true; box.className = "lead in d1 " + r.verdict;
+  const used = r.findings.filter(f => f.group === "cheat" && (f.evidence === "Ran on this PC" || f.evidence === "Running right now") && f.time)
+                         .sort((a,b) => fmtDate(b.time) - fmtDate(a.time))[0];
+  if (!used) return;
+  const d = fmtDate(used.time), g = (used.games || [])[0];
+  box.append("Last cheat used: ", el("b", null, used.name), ", ");
+  box.append(el("span","g", used.evidence === "Running right now" ? "running right now" : ago(d) + " (" + dhm(d) + ")"));
+  if (g){
+    box.append(g.how === "before" ? ". Roblox place " : ", while Roblox place ");
+    box.append(el("b","g", g.placeId), copyBtn(g.placeId));
+    box.append(g.how === "before" ? " was joined minutes later." : " was open.");
+  } else box.append(".");
+  box.hidden = false;
 }
 function renderKeys(ranked){
   const wrap = $("keysBox"), box = $("keys"); box.textContent = "";
   const top = ranked.filter(f => strength(f) !== "context").slice(0, 5);
   wrap.hidden = top.length === 0;
-  top.forEach((f, i) => {
-    const sk = strength(f), card = el("article", "key " + STRENGTH[sk][1] + " in");
-    card.style.animationDelay = (0.5 + i * 0.05) + "s";
+  wrap.parentElement.style.gridTemplateColumns = top.length ? "" : "1fr";
+  top.forEach(f => {
+    const sk = strength(f), card = el("article", "key " + STRENGTH[sk][1]);
     const t = el("div", "t", f.name); t.append(el("small", null, f.category));
     const d = fmtDate(f.time);
     const desc = el("div", "d");
@@ -987,23 +1048,6 @@ function renderKeys(ranked){
     box.append(card);
   });
 }
-function renderLead(r){
-  const box = $("lead"); box.textContent = ""; box.hidden = true; box.className = "lead in d2 " + r.verdict;
-  const used = r.findings.filter(f => f.group === "cheat" && (f.evidence === "Ran on this PC" || f.evidence === "Running right now") && f.time)
-                         .sort((a,b) => fmtDate(b.time) - fmtDate(a.time))[0];
-  if (!used) return;
-  const d = fmtDate(used.time), g = (used.games || [])[0];
-  const icon = el("span"); icon.innerHTML = SPARK;
-  const text = el("div");
-  text.append("Last cheat used: ", el("b", null, used.name), ", ");
-  text.append(el("span","g", used.evidence === "Running right now" ? "running right now" : ago(d) + " (" + dhm(d) + ")"));
-  if (g){
-    text.append(g.how === "before" ? ". Roblox place " : ", while Roblox place ");
-    text.append(el("b","g", g.placeId), copyBtn(g.placeId));
-    text.append(g.how === "before" ? " was joined minutes later." : " was open.");
-  } else text.append(".");
-  box.append(icon, text); box.hidden = false;
-}
 function renderActivity(r){
   const box = $("acts"); box.textContent = ""; box.hidden = true;
   const sessions = r.sessions || [];
@@ -1012,18 +1056,94 @@ function renderActivity(r){
   for (const f of r.findings.filter(f => f.group === "cheat")) for (const g of (f.games || [])) {
     const k = sessKey(g); if (!hits.has(k)) hits.set(k, new Set()); hits.get(k).add(f.category === "Unknown program" ? "Deleted program" : f.name);
   }
-  const h = el("h3", null, "Roblox activity"); h.append(el("span", null, "From Roblox's own logs: game IDs and times only"));
-  box.append(h);
-  sessions.slice(0, 12).forEach((g, i) => {
-    const row = el("div","sess" + (hits.has(sessKey(g)) ? " cheat" : "") + " in"); row.style.animationDelay = (0.45 + i * 0.03) + "s";
+  box.append(secHead("games", "blue", "Roblox games", "From Roblox's own logs: game IDs and times only"));
+  const rows = el("div", "rows");
+  sessions.slice(0, 12).forEach(g => {
+    const row = el("div","sess" + (hits.has(sessKey(g)) ? " cheat" : ""));
     const p = el("div","p", "Place " + g.placeId); p.append(copyBtn(g.placeId), el("small", null, "roblox.com/games/" + g.placeId));
     row.append(el("div","t", span(g)), p);
     if (hits.has(sessKey(g))){ const x = el("span","hit"); x.append(el("i"), [...hits.get(sessKey(g))].join(", ") + " ran"); row.append(x); }
     else row.append(el("span"));
-    box.append(row);
+    rows.append(row);
   });
+  box.append(rows);
   box.hidden = false;
 }
+
+/* The 30-day timeline: one lane per kind of evidence, plus Roblox games. */
+function renderTimeline(r, animate){
+  const box = $("timeline"); box.textContent = "";
+  const end = +new Date(r.finished || Date.now()), start = end - 30 * 864e5;
+  const pos = t => Math.max(0, Math.min(100, (t - start) / (end - start) * 100));
+  const lanes = [
+    ["strong", "Strong", "var(--flag)"],
+    ["ask", "Worth asking", "var(--review)"],
+    ["games", "Roblox games", "var(--blue)"]
+  ];
+  const marks = { strong: [], ask: [] };
+  for (const f of r.findings){
+    const sk = strength(f); if (sk === "context") continue;
+    const times = new Set((f.runTimes || []).concat(f.time ? [f.time] : []));
+    for (const t of times){ const d = fmtDate(t); if (d && +d >= start && +d <= end + 6e4) marks[sk].push([+d, f]); }
+  }
+  const total = marks.strong.length + marks.ask.length + (r.sessions || []).length;
+  if (!total){ box.append(el("div", "empty-tl", "Nothing with a date in the last 30 days.")); return; }
+  const tip = el("div", "tip"); const wrap = el("div", "lanes"); wrap.append(tip);
+  const showTip = (node, text) => {
+    tip.textContent = text; tip.classList.add("show");
+    const a = node.getBoundingClientRect(), b = wrap.getBoundingClientRect();
+    tip.style.left = Math.max(0, Math.min(b.width - 280, a.left - b.left - 20)) + "px";
+    tip.style.top = (a.top - b.top - 46) + "px";
+  };
+  const hideTip = () => tip.classList.remove("show");
+  let k = 0;
+  for (const [key, label, color] of lanes){
+    const lane = el("div", "lane"); lane.style.setProperty("--lc", color);
+    const lb = el("b"); lb.append(el("i"), label);
+    const strip = el("div", "strip");
+    for (let d = 5; d < 30; d += 5){ const tk = el("span", "day"); tk.style.left = (d / 30 * 100) + "%"; strip.append(tk); }
+    if (key === "games"){
+      const cheatSessions = new Set(r.findings.filter(f => f.group === "cheat").flatMap(f => (f.games || []).map(sessKey)));
+      for (const g of (r.sessions || [])){
+        const a = fmtDate(g.start), b = fmtDate(g.end) || a; if (!a || +b < start) continue;
+        const bar = el("span", "bar-g" + (cheatSessions.has(sessKey(g)) ? " hit" : ""));
+        bar.style.left = pos(+a) + "%"; bar.style.width = Math.max(0.4, pos(+b) - pos(+a)) + "%";
+        bar.title = "Place " + g.placeId + ", " + span(g);
+        strip.append(bar);
+      }
+    } else {
+      for (const [t, f] of marks[key].sort((a, b) => a[0] - b[0])){
+        const m = el("button", "mk" + (animate && !motionOff() ? " grow" : ""));
+        m.type = "button"; m.style.left = pos(t) + "%";
+        if (animate) m.style.animationDelay = (0.1 + (k++) * 0.035) + "s";
+        const text = f.name + ": " + lc1(f.evidence) + ", " + dhm(new Date(t));
+        m.setAttribute("aria-label", text);
+        m.onmouseenter = () => showTip(m, text); m.onfocus = () => showTip(m, text);
+        m.onmouseleave = hideTip; m.onblur = hideTip;
+        m.onclick = () => jumpTo(f);
+        strip.append(m);
+      }
+    }
+    lane.append(lb, strip); wrap.append(lane);
+  }
+  const axis = el("div", "axis"), ticks = el("div", "ticks");
+  for (const d of [30, 20, 10, 0]){
+    const s = el("span", null, d === 0 ? "Now" : new Date(end - d * 864e5).toLocaleDateString(undefined, {month:"short", day:"numeric"}));
+    s.style.left = ((30 - d) / 30 * 100) + "%"; ticks.append(s);
+  }
+  axis.append(el("span"), ticks);
+  box.append(wrap, axis);
+}
+function jumpTo(f){
+  if (filter !== "all"){ filter = "all"; renderFilters(); renderList(false); }
+  const row = document.querySelector(`#list .find[data-i="${f._i}"]`);
+  if (!row) return;
+  row.classList.add("open");
+  row.scrollIntoView({behavior: motionOff() ? "auto" : "smooth", block: "center"});
+  row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
+  setTimeout(() => row.focus({preventScroll: true}), 400);
+}
+
 function renderFilters(){
   const box = $("filters");
   [...box.querySelectorAll(".chip")].forEach(c => c.remove());
@@ -1039,63 +1159,63 @@ function renderFilters(){
       box.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c.dataset.key === key));
       slideTo($("segInd"), b);
       const list = $("list"); list.classList.add("swap");
-      setTimeout(() => { renderList(true, 0); list.classList.remove("swap"); }, 150);
+      setTimeout(() => { renderList(true); list.classList.remove("swap"); }, 150);
     };
     box.append(b);
   }
   slideTo($("segInd"), box.querySelector(".chip.on"));
 }
-function renderList(animate, baseDelay){
+function renderList(animate){
   const list = $("list"); list.textContent = "";
   const fn = FILTERS.find(f => f[0]===filter)[2];
-  const sevRank = {high:0, medium:1, info:2};
   const items = report.findings.filter(fn).slice().sort((a,b) => {
     const da = fmtDate(a.time), db = fmtDate(b.time);
     if (da && db && +da !== +db) return db - da;
     if (!!da !== !!db) return da ? -1 : 1;
-    return sevRank[a.severity] - sevRank[b.severity];
+    return SRANK[strength(a)] - SRANK[strength(b)];
   });
   if (!items.length){
     if (!report.findings.length){
-      const e = el("div","empty clean");
+      const e = el("div","empty");
       e.append(el("b",null,"Nothing on the cheat list was found"),
-        el("span",null,"Checked file names, program history, deleted files, Windows Security, event logs, FastFlags, Roblox's game history, VMs, DMA hardware and running programs."));
+        el("span",null,"Checked file names, program history, deleted files, Windows Security, event logs, FastFlags, Roblox's game history, the network, USB drives, VMs, DMA hardware and running programs."));
       list.append(e);
     } else list.append(el("div","empty","Nothing in this group."));
     return;
   }
-  const start = baseDelay == null ? 0.55 : baseDelay;
   let lastDay = null, i = 0;
   for (const f of items){
     const d = fmtDate(f.time), day = dayLabel(d);
-    if (day !== lastDay){ list.append(el("div","day",day)); lastDay = day; }
-    const row = el("div","find " + f.severity); row.tabIndex = 0;
-    if (animate && i < 12){ row.classList.add("in"); row.style.animationDelay = (start + i * 0.035) + "s"; }
+    if (day !== lastDay){ list.append(el("div","dayh",day)); lastDay = day; }
+    const sk = strength(f);
+    const row = el("div","find s-" + sk); row.tabIndex = 0; row.dataset.i = f._i;
+    if (animate && i < 12 && !motionOff()){ row.style.animation = "rise .45s var(--ease) both"; row.style.animationDelay = (i * 0.03) + "s"; }
     i++;
     const h = el("div","h");
     h.append(el("b",null,f.name), el("span",null,f.category), el("span","ev",f.evidence));
-    const main = el("div"); main.append(h, el("div","path",f.path || ""));
+    const main = el("div"); main.append(h);
+    if (f.path) main.append(el("div","path",f.path));
     const tags = el("div","tags");
     if (d && f.evidence === "Ran on this PC") tags.append(tag("", "clock", "Last opened " + ago(d)));
     if (f.runCount > 1) tags.append(tag("", null, f.runCount + " runs"));
     const games = f.games || [];
     if (games.length) tags.append(tag("game", "pad", (games[0].how === "before" ? "Then joined place " : "In place ") + games[0].placeId + (games.length > 1 ? " +" + (games.length - 1) : "")));
     if (tags.childNodes.length) main.append(tags);
-    const when = el("div","when", d ? d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}) : "");
+    const when = el("div","when", d ? hm(d) : "");
     const chev = el("div","chev"); chev.innerHTML = CHEV;
     const more = el("div","more"), inner = el("div"), dl = el("dl");
     const add = (k,v,code) => { if(!v) return; dl.append(el("dt",null,k)); const dd = el("dd"); if(code) dd.append(el("code",null,v)); else dd.textContent = v; dl.append(dd); };
-    add("Strength", STRENGTH[strength(f)][0]);
+    add("Strength", STRENGTH[sk][0]);
     add("Ask", askFor(f));
     add("Seen in", (f.sources||[]).join(", "));
     add("Runs counted", f.runCount ? String(f.runCount) : null);
-    if ((f.runTimes||[]).length > 1) add("Run times", f.runTimes.map(t => dhm(fmtDate(t))).join(" · "));
+    if ((f.runTimes||[]).length > 1) add("Run times", f.runTimes.map(t => dhm(fmtDate(t))).join(", "));
     if (games.length){
       dl.append(el("dt",null,"Roblox open"));
       const dd = el("dd");
       for (const g of games){
         const line = el("span","gl"); line.append("Place " + g.placeId); line.append(copyBtn(g.placeId), " " + span(g) + " ");
-        line.append(el("small", null, (g.how === "before" ? "joined right after it ran · " : "") + "roblox.com/games/" + g.placeId));
+        line.append(el("small", null, (g.how === "before" ? "joined right after it ran, " : "") + "roblox.com/games/" + g.placeId));
         dd.append(line);
       }
       dl.append(dd);
@@ -1104,7 +1224,7 @@ function renderList(animate, baseDelay){
     add("SHA-256", f.sha256, true);
     add("Note", f.note);
     inner.append(dl); more.append(inner);
-    row.append(el("div","bar"), main, when, chev, more);
+    row.append(main, when, chev, more);
     const toggle = () => { if (window.getSelection().toString()) return; row.classList.toggle("open"); };
     row.onclick = toggle; row.onkeydown = e => { if (e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(); } };
     list.append(row);
@@ -1124,7 +1244,7 @@ $("howLink").onclick = () => openModal("helpModal","closeHelp");
 $("closeHelp").onclick = closeModals;
 ["sendModal","helpModal"].forEach(id => $(id).addEventListener("mousedown", e => { if (e.target === $(id)) closeModals(); }));
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeModals(); });
-document.addEventListener("contextmenu", e => { if (!e.target.closest(".path, dd, .preview, input, .fp code")) e.preventDefault(); });
+document.addEventListener("contextmenu", e => { if (!e.target.closest(".path, dd, .preview, input, .fp code, .key code")) e.preventDefault(); });
 
 function onMessage(m){
   switch(m.type){
@@ -1132,14 +1252,14 @@ function onMessage(m){
       $("ver").textContent = "v" + m.version;
       appSha = m.sha256 || null;
       if (m.sha256){
-        const fp = $("fp"); fp.textContent = "Fingerprint";
+        const fp = $("fp"); fp.textContent = "This copy's fingerprint";
         const code = el("code", null, m.sha256.slice(0,16) + "..."); code.title = "SHA-256: " + m.sha256; fp.append(code);
       }
       break;
     case "progress": onProgress(m); break;
     case "done": onDone(m.report); break;
     case "copyPreview": $("preview").textContent = m.text; openModal("sendModal","confirmSend"); break;
-    case "copied": closeModals(); toast("Copied. Paste it in Discord."); break;
+    case "copied": closeModals(); toast("Copied. Paste it in the staff channel."); break;
     case "copiedPlace": onCopiedPlace(m.placeId); break;
     case "saved": toast("Saved to your Desktop: " + m.path); break;
     case "error": toast(m.message || "Something went wrong"); break;
@@ -1147,31 +1267,30 @@ function onMessage(m){
 }
 if (host) host.addEventListener("message", e => onMessage(e.data));
 
-applyAppearance(); paintSettings();
-requestAnimationFrame(paintSteps);
+applyAppearance(); paintSettings(); paintSteps();
 
 /* ---------- demo mode (browser preview only, never used inside the app) ---------- */
 const Demo = {
   handle(msg){
     if (msg.type === "start") this.run();
-    if (msg.type === "previewCopy") onMessage({type:"copyPreview", text: "**OpenCheck: FLAGGED** (5 strong, 4 worth asking)\nChecked: builderman\nWindows 11 Home 24H2 | 2026-11-02 22:17 | Standard scan | admin: yes\nVerify: v1.0.5 | SHA-256 `9c41d07be5a8c2f1...` | PC ID `7F3A-91C2-0B5E`\n\n__Strong evidence__\n🔴 **Solara** (Internal executor): Found on this PC, 2026-11-02 20:12\n`C:\\ProgramData\\Solara\\Solara.exe`\n🔴 **Potassium** (Internal executor): Ran on this PC, last opened 2026-11-02 19:06, 7 runs\n🎮 Roblox open: place 920587237 (2026-11-02 18:46 to 19:13)\n..."});
+    if (msg.type === "previewCopy") onMessage({type:"copyPreview", text: "**OpenCheck: FLAGGED** (6 strong, 6 worth asking)\nChecked: builderman\nWindows 11 Home 24H2 | 2026-11-02 22:17 | Standard scan | admin: yes\nVerify: v1.0.5 | SHA-256 `9c41d07be5a8c2f1...` | PC ID `7F3A-91C2-0B5E`\n\n__Strong evidence__\n🔴 **Solara** (Internal executor): Found on this PC, 2026-11-02 20:12\n`C:\\ProgramData\\Solara\\Solara.exe`\n🔴 **Potassium** (Internal executor): Ran on this PC, last opened 2026-11-02 19:06, 7 runs\n🎮 Roblox open: place 920587237 (2026-11-02 18:46 to 19:13)\n..."});
     if (msg.type === "copy") onMessage({type:"copied"});
     if (msg.type === "copyPlace") onMessage({type:"copiedPlace", placeId: msg.placeId});
-    if (msg.type === "save") onMessage({type:"saved", path:"OpenCheck - builderman - 2026-10-27.txt"});
+    if (msg.type === "save") onMessage({type:"saved", path:"OpenCheck - builderman - 2026-11-02.txt"});
   },
   run(){
     const plan = [
       ["files","hit","3 matches in 41,208 names"],["exec","hit","3 programs, 9 runs"],["deleted","hit","1 cheat deleted"],
-      ["defender","ok","No related threats"],["logs","warn","Security log cleared"],["fflags","warn","2 unfair flags"],["games","hit","6 game sessions, last 5 days"],["network","warn","VPN connected, drops during games"],["devices","ok","1 USB drive"],
+      ["defender","ok","No related threats"],["logs","warn","Security log cleared"],["fflags","warn","2 unfair flags"],["games","hit","6 game sessions"],["network","warn","VPN connected"],["devices","ok","1 USB drive"],
       ["vm","ok","Real PC"],["dma","ok","24 devices, none suspicious"],["running","ok","Nothing running"]
     ];
     let i = 0;
     const step = () => {
       if (i > 0) onProgress({area:plan[i-1][0], state:plan[i-1][1], detail:plan[i-1][2], percent: i/plan.length*100});
       if (i < plan.length){
-        const area = plan[i][0], base = i / plan.length * 100, span = 100 / plan.length;
+        const area = plan[i][0], base = i / plan.length * 100, sp = 100 / plan.length;
         onProgress({area, state:"running", detail:"Checking", percent: base});
-        [0.3, 0.6, 0.85].forEach((f, k) => setTimeout(() => onProgress({area, state:"running", detail:"Checking", percent: base + span * f}), 220 * (k + 1)));
+        [0.3, 0.6, 0.85].forEach((f, k) => setTimeout(() => onProgress({area, state:"running", detail:"Checking", percent: base + sp * f}), 220 * (k + 1)));
         i++; setTimeout(step, 900);
       } else onDone(this.report());
     };
@@ -1183,18 +1302,17 @@ const Demo = {
     return { verdict:"flag", who: $("who").value.trim() || "builderman", pc:"Windows 11 Home 24H2", pcId:"7F3A-91C2-0B5E", appVersion:"1.0.5", appSha256:"9c41d07be5a8c2f13f2a9c41d07be5a8c2f1e96d4b0a7c3e5f8d2b1a6c9e0f4d", mode: DEPTH_TEXT[settings.depth][0], finished: new Date().toISOString(), seconds: 74, admin: true,
       findings: [
         {name:"Solara", category:"Internal executor", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(2.2), path:"C:\\ProgramData\\Solara\\Solara.exe", sources:["File"], sha256:"d1e4a542fa75f6a6fb636b5de6f7616e2827a79556d3d9a4afc3ecb47f0beb2b"},
-        {name:"Executor workspace", category:"Executor files", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(2.3), path:"~\\AppData\\Local\\Potassium", sources:["Folder layout: workspace + autoexec"], note:"Executors keep scripts in these folders. They are often left behind after the executor itself is deleted."},
-        {name:"Potassium", category:"Internal executor", group:"cheat", cheat:true, severity:"medium", evidence:"Ran on this PC", time:t(3.1), path:"C:\\Program Files\\Epic Games\\OpXOyuApWKTlFzrV\\Potassium.exe", sources:["BAM","MuiCache","Prefetch","UserAssist"], runCount:7, runTimes:[t(3.1),t(27),t(50)], games:[{placeId:"920587237", start:t(3.4), end:t(2.95), how:"during"},{placeId:"2753915549", start:t(27.2), end:t(26.1), how:"during"}]},
+        {name:"Matrix Hub", category:"External", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(30), path:"~\\Downloads\\stuff", sources:["Cheat files: mcache.dat + _license.dat"], note:"Matrix Hub keeps its update notes (mcache.dat) and license key (_license.dat) together. Found by the files it keeps together, so renaming the programs doesn't hide it."},
+        {name:"Potassium", category:"Internal executor", group:"cheat", cheat:true, severity:"medium", evidence:"Ran on this PC", time:t(3.1), path:"C:\\Program Files\\Epic Games\\OpXOyuApWKTlFzrV\\Potassium.exe", sources:["BAM","MuiCache","Prefetch","UserAssist"], runCount:7, runTimes:[t(3.1),t(27),t(50),t(122),t(200)], games:[{placeId:"920587237", start:t(3.4), end:t(2.95), how:"during"},{placeId:"2753915549", start:t(27.2), end:t(26.1), how:"during"}]},
         {name:"Potassium", category:"Internal executor", group:"cheat", cheat:true, severity:"medium", evidence:"Deleted", time:t(2.9), path:"C:\\Program Files\\Epic Games\\OpXOyuApWKTlFzrV\\Potassium.exe", sources:["Drive change log (USN)"]},
         {name:"Security log cleared", category:"Tampering", group:"tamper", severity:"medium", evidence:"Possible tampering", time:t(2.8), path:"Event 1102, Security log", sources:["Windows event log"], note:"Someone with admin rights wiped the Security event log."},
         {name:"DFIntS2PhysicsSenderRate", category:"FastFlag", group:"fflags", severity:"medium", evidence:"Unfair FastFlag", time:t(26), path:"~\\AppData\\Local\\Bloxstrap\\Modifications\\ClientSettings\\ClientAppSettings.json", sources:["Bloxstrap"], note:"Set to 1. Used for desync. Roblox may ignore it under its FastFlag allowlist."},
-        {name:"DFIntMaxMissedWorldStepsRemembered", category:"FastFlag", group:"fflags", severity:"medium", evidence:"Unfair FastFlag", time:t(26), path:"~\\AppData\\Local\\Bloxstrap\\Modifications\\ClientSettings\\ClientAppSettings.json", sources:["Bloxstrap"]},
         {name:"Volcano", category:"Internal executor", group:"cheat", cheat:true, severity:"medium", evidence:"Ran on this PC", time:t(98), path:"~\\Downloads\\DownloadR2\\VolcanoUI.exe", sources:["UserAssist","Compatibility cache (ShimCache)"], runCount:2, games:[{placeId:"4924922222", start:t(97.8), end:t(96.5), how:"before"}]},
         {name:"Exploit script", category:"Exploit script (by content)", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(3.3), path:"~\\Documents\\stuff\\farm.lua", sources:["Script contents"], note:"Uses executor-only functions: getgenv, Drawing.new, loadstring(game:HttpGet. Roblox games can't run these, so this script was made for an executor."},
-        {name:"Deleted program ran during a Roblox game", category:"Unknown program", group:"cheat", severity:"medium", evidence:"Deleted", time:t(3.15), path:"C:\\Users\\~\\Downloads\\x7f2k.exe", sources:["BAM + Roblox logs"], runTimes:[t(3.15)], games:[{placeId:"920587237", start:t(3.4), end:t(2.95), how:"during"}], note:"This program was run from a personal folder while Roblox place 920587237 was open, and it has been deleted since. Renamed cheat loaders are used exactly like this. It could also be something harmless, so ask what it was."},
-        {name:"VPN connected right now", category:"VPN", group:"net", severity:"medium", evidence:"VPN", time:t(0.01), path:"NordLynx Tunnel (NordLynx)", sources:["Network adapters"], note:"A VPN or game ping booster was connected while the check ran. VPNs are legal, but they change the player's connection and can be used to dodge IP bans."},
-        {name:"Internet cut out 5 times during Roblox games", category:"Lag switch", group:"net", severity:"medium", evidence:"Possible lag switch", time:t(3.2), path:"place 920587237, place 2753915549", sources:["Network history + Roblox logs"], note:"The connection dropped and came back within a few minutes 5 times while Roblox games were open. Lag switches look like this. Weak Wi-Fi can too, so ask about it and compare with VODs."},
-        {name:"Last Roblox game", category:"Roblox", group:"context", severity:"info", evidence:"Context", time:t(1.2), path:"Place 6516141723 (roblox.com/games/6516141723)", sources:["Roblox logs"], note:"14 game sessions found in the last 5 days."},
+        {name:"Deleted program ran during a Roblox game", category:"Unknown program", group:"cheat", severity:"medium", evidence:"Deleted", time:t(3.15), path:"C:\\Users\\~\\Downloads\\x7f2k.exe", sources:["BAM + Roblox logs"], runTimes:[t(3.15)], games:[{placeId:"920587237", start:t(3.4), end:t(2.95), how:"during"}], note:"This program was run from a personal folder while Roblox place 920587237 was open, and it has been deleted since."},
+        {name:"VPN connected right now", category:"VPN", group:"net", severity:"medium", evidence:"VPN", time:t(0.01), path:"NordLynx Tunnel (NordLynx)", sources:["Network adapters"], note:"A VPN or game ping booster was connected while the check ran."},
+        {name:"Internet cut out 5 times during Roblox games", category:"Lag switch", group:"net", severity:"medium", evidence:"Possible lag switch", time:t(3.2), path:"place 920587237, place 2753915549", sources:["Network history + Roblox logs"], note:"The connection dropped and came back within a few minutes 5 times while Roblox games were open."},
+        {name:"Windows Security was turned off", category:"Antivirus turned off", group:"tamper", severity:"medium", evidence:"Possible tampering", time:t(170), path:"Real-time protection (2 times in 30 days)", sources:["Windows Security log"]},
         {name:"Bloxstrap / Fishstrap", category:"Roblox launcher (allowed)", group:"context", severity:"info", evidence:"Context", time:t(120), path:"~\\AppData\\Local\\Bloxstrap\\Bloxstrap.exe", sources:["File"]}
       ],
       sessions:[
@@ -1202,19 +1320,21 @@ const Demo = {
         {placeId:"920587237", start:t(3.4), end:t(2.95)},
         {placeId:"920587237", start:t(6), end:t(5.1)},
         {placeId:"2753915549", start:t(27.2), end:t(26.1)},
+        {placeId:"84448037861644", start:t(50.5), end:t(49)},
         {placeId:"4924922222", start:t(97.8), end:t(96.5)},
-        {placeId:"6516141723", start:t(100), end:t(99.2)}
+        {placeId:"6516141723", start:t(122.4), end:t(121)},
+        {placeId:"920587237", start:t(201), end:t(199.5)}
       ]};
   }
 };
-if (!host) onMessage({type:"version", version:"1.0.0", sha256:"3f2a9c41d07be5a8c2f1e96d4b0a7c3e5f8d2b1a6c9e0f4d7b3a5c8e1f2d4a6b"});
+if (!host) onMessage({type:"version", version:"1.0.5", sha256:"9c41d07be5a8c2f13f2a9c41d07be5a8c2f1e96d4b0a7c3e5f8d2b1a6c9e0f4d"});
 if (!host && new URLSearchParams(location.search).get("screen")){
   // Preview helper for screenshots: ?screen=consent|scan|results|send|settings
   const s = new URLSearchParams(location.search).get("screen");
   $("agree").checked = true; $("startBtn").disabled = false; $("who").value = "builderman";
   if (s === "consent") go("s-consent");
   if (s === "settings") setTimeout(openSettings, 300);
-  if (s === "scan"){ buildAreas(); go("s-scan"); const p=[["files","hit","3 matches in 41,208 names"],["exec","hit","3 programs, 9 runs"],["deleted","hit","1 cheat deleted"],["defender","ok","No related threats"]]; p.forEach((x,i)=>onProgress({area:x[0],state:x[1],detail:x[2],percent:(i+1)/9*100})); onProgress({area:"logs",state:"running",detail:"Reading Security log"}); }
+  if (s === "scan"){ buildAreas(); go("s-scan"); const p=[["files","hit","3 matches in 41,208 names"],["exec","hit","3 programs, 9 runs"],["deleted","hit","1 cheat deleted"],["defender","ok","No related threats"]]; p.forEach((x,i)=>onProgress({area:x[0],state:x[1],detail:x[2],percent:(i+1)/12*100})); onProgress({area:"logs",state:"running",detail:"Reading the Security log"}); }
   if (s === "results" || s === "send"){ buildAreas(); onDone(Demo.report()); }
   if (s === "send") setTimeout(() => Demo.handle({type:"previewCopy"}), 2200);
 }
