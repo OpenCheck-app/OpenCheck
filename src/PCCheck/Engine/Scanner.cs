@@ -76,8 +76,7 @@ namespace PCCheck.Engine
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(3),
                 AppSha256 = SafeHash(Assembly.GetExecutingAssembly().Location),
                 Pc = WindowsName(),
-                Mode = options.Summary,
-                PcId = ComputePcId()
+                Mode = options.Summary
             };
 
             if (options.LowCpu)
@@ -133,6 +132,7 @@ namespace PCCheck.Engine
             try { LinkGames(); } catch (Exception ex) { notes.Add("games: " + ex.Message); }
             try { CheckDeletedRunsDuringGames(); } catch (Exception ex) { notes.Add("deleted runs: " + ex.Message); }
             report.Sessions = sessions.Take(40).ToList();
+            report.PcId = Parsers.PcIdFromHardware(pciIds);
             report.Findings = findings.Values.ToList();
             report.Notes = notes;
             if (!admin) notes.Add("Not run as administrator, so Prefetch, the drive change log and the Security log could not be read.");

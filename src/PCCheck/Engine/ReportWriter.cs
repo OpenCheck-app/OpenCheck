@@ -122,7 +122,7 @@ namespace PCCheck.Engine
             sb.AppendLine(new string('=', 60));
             if (!string.IsNullOrEmpty(r.Who)) sb.AppendLine("Checked:     " + r.Who);
             sb.AppendLine("PC:          " + r.Pc);
-            if (r.PcId != null) sb.AppendLine("PC ID:       " + r.PcId + "   (same PC = same ID; it can't be turned back into serial numbers)");
+            if (r.PcId != null) sb.AppendLine("PC ID:       " + r.PcId + "   (made from the PC's hardware models; same PC = same ID)");
             sb.AppendLine("Started:     " + Time(r.Started));
             sb.AppendLine("Finished:    " + Time(r.Finished) + " (" + (int)(r.Finished - r.Started).TotalSeconds + " s)");
             sb.AppendLine("Admin:       " + (r.Admin ? "Yes" : "No, partial check"));

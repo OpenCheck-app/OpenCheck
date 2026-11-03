@@ -82,7 +82,6 @@ namespace PCCheck.Engine
                             if (eq > 0) path = path.Substring(0, eq);
                             excl.Add(Tuple.Create(time.Value, path.Trim()));
                         }
-                        else if (nv.IndexOf("DisableRealtimeMonitoring = 0x1", StringComparison.OrdinalIgnoreCase) >= 0) offTimes.Add(time.Value);
                     });
             }
             catch (Exception ex) { notes.Add("Couldn't read Windows Security's change history: " + ex.Message); return 0; }

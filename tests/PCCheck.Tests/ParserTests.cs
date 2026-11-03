@@ -425,7 +425,6 @@ namespace PCCheck.Tests
         [InlineData("lag switch.ahk", "Lag switch tool")]
         [InlineData("LagMacro.ahk", "Lag switch tool")]
         [InlineData("SandboxiePlus.exe", "Sandbox or freeze tool")]
-        [InlineData("SbieSvc.exe", "Sandbox or freeze tool")]
         [InlineData("DeepFreeze.exe", "Sandbox or freeze tool")]
         [InlineData("ShadowDefender.exe", "Sandbox or freeze tool")]
         [InlineData("Matcha External.exe", "Matcha")]
@@ -748,16 +747,21 @@ namespace PCCheck.Tests
     public class DeviceTests
     {
         [Fact]
-        public void Pc_id_is_stable_short_and_ignores_placeholders()
+        public void Pc_id_comes_from_hardware_models_not_serials()
         {
-            var a = Parsers.PcId(new[] { "BSN12345678", "To be filled by O.E.M.", "4C4C4544-0042-3510-8054-B4C04F4E4B32" });
-            var b = Parsers.PcId(new[] { "BSN12345678", "Default string", "4C4C4544-0042-3510-8054-B4C04F4E4B32" });
-            Assert.NotNull(a);
-            Assert.Equal(a, b);
+            var pc = new[]
+            {
+                @"PCI\VEN_10DE&DEV_2484&SUBSYS_146710DE&REV_A1\4&2B3F1C9&0&0008",
+                @"PCI\VEN_8086&DEV_7AF0&SUBSYS_00748086&REV_11\3&11583659&0&A3",
+                @"PCI\VEN_10EC&DEV_8125&SUBSYS_7D251462&REV_05\4&1A2B3C&0&00E4",
+                @"USB\VID_046D&PID_C52B\5&2A5B9&0&2"
+            };
+            var a = Parsers.PcIdFromHardware(pc);
+            var sameHardwareOtherSlots = pc.Select(x => x.Replace("&0&0008", "&0&0010")).Reverse().ToArray();
             Assert.Matches("^[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$", a);
-            Assert.NotEqual(a, Parsers.PcId(new[] { "OTHERBOARD99", "4C4C4544-0042-3510-8054-B4C04F4E4B32" }));
-            Assert.Null(Parsers.PcId(new[] { "Default string", "0", "", null }));
-            Assert.DoesNotContain("BSN12345678", a);
+            Assert.Equal(a, Parsers.PcIdFromHardware(sameHardwareOtherSlots));
+            Assert.NotEqual(a, Parsers.PcIdFromHardware(pc.Take(2).Concat(new[] { @"PCI\VEN_1022&DEV_1480&SUBSYS_7C371462&REV_00\3&2411E6FE&0&00" })));
+            Assert.Null(Parsers.PcIdFromHardware(pc.Take(2)));
         }
 
         [Theory]

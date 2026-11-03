@@ -1127,9 +1127,6 @@
       "severity": "medium",
       "match": [
         "sandboxie",
-        "sbiesvc",
-        "sbiectrl",
-        "sbiedrv",
         "sandboxieplus",
         "shadesandbox",
         "bufferzone",

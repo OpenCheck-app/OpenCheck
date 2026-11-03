@@ -23,7 +23,7 @@ OpenCheck is an open-source, read-only Windows app that checks a PC for Roblox e
 - Whether the PC is a virtual machine, whether VM software or Android emulators are installed or were used, and PCIe devices that could be DMA cards.
 - Programs running right now.
 - USB drives plugged in during the last 30 days, programs run from USB or external drives, and sandbox or "freeze" tools (Sandboxie, Deep Freeze, Shadow Defender and similar), including cheat files inside Sandboxie's container folder.
-- A **PC ID**: a scrambled ID made from hardware serial numbers. The same PC always gets the same ID, so staff can tell if someone checks a different PC. It can't be turned back into the serial numbers.
+- A **PC ID**: a scrambled ID made from which PCIe hardware the PC has (like the graphics and network card models). No serial numbers are read for it. The same PC gets the same ID, so staff can tell if someone checks a different PC. Two identical prebuilt PCs can share an ID.
 - Renamed or unknown cheats, without relying on names:
   - any `autoexec` folder (executors run scripts from it)
   - Roblox scripts that use executor-only functions
