@@ -203,6 +203,11 @@ namespace PCCheck.Engine
             }
             catch { }
 
+            Tick("Reading PowerShell history", 0.4);
+            ScanShellHistory(found);
+            Tick("Checking installed drivers", 0.45);
+            ScanServiceInstalls(found);
+
             Tick("Checking when Windows was reset", 0.5);
             DateTime? resetDate = ScanResets(found);
             Tick("Checking how far back the logs go", 0.7);

@@ -8,7 +8,7 @@ Coverage: **Strong** = caught in normal cases · **Partial** = caught often, or 
 
 | Bypass | Trace it leaves | Caught by | Coverage |
 |---|---|---|---|
-| Delete the cheat before the check | Drive change log (USN), Recycle Bin, Prefetch, BAM, compatibility cache (ShimCache) | Deleted files, Programs that ran | Strong |
+| Delete the cheat before the check | Drive change log (USN), Recycle Bin, Prefetch, BAM, compatibility cache (ShimCache), the program launch log (PCA), Windows Defender's own log, crash reports | Deleted files, Programs that ran | Strong |
 | Rename the cheat | Same file fingerprint; executor folders (workspace, autoexec); the file set it keeps together (e.g. Matrix's `mcache.dat` + `_license.dat`); scripts with executor-only functions; the website it was downloaded from | Fingerprints, folder and file-set layouts, script contents, download source | Strong |
 | Brand-new or private cheat not on any list | Program run from Downloads/Desktop/Temp during a Roblox game, then deleted; Windows-named program in a personal folder; Roblox anti-cheat kick (error 268); download from a cheat or key-system site | Behavior checks | Partial |
 | Rename it after a Windows program (`svchost.exe` in Downloads) | BAM records the real path | Disguised program check | Strong |
@@ -27,7 +27,10 @@ Coverage: **Strong** = caught in normal cases · **Partial** = caught often, or 
 | Delete the drive change log (`fsutil usn deletejournal`) | Change log created after Windows was installed | Deleted files | Strong |
 | Wipe Prefetch, or turn it off | Bulk Prefetch deletions in the change log; Prefetch setting = 0 | Deleted files, Programs that ran | Strong |
 | Delete Roblox's logs | Roblox ran (Prefetch) but no log covers that time; bulk log deletions | Roblox game history | Strong |
-| Clean recent-file history (CCleaner, BleachBit, PrivaZer) | Bulk jump-list deletions; cleaner installed or run | Trace cleaners | Partial |
+| Clean recent-file history (CCleaner, BleachBit, PrivaZer) | Bulk jump-list deletions; cleaner installed or run; the cheat is still in the PCA launch log and Defender's log, which cleaners don't touch | Trace cleaners, Programs that ran | Strong |
+| Wipe records by hand with commands (`fsutil usn deletejournal`, `wevtutil cl`, deleting Prefetch, BAM or UserAssist) | The commands stay in PowerShell history | Cleanup commands typed | Partial |
+| Injected cheat DLL with no name we know | If Roblox ever crashed with it loaded, Windows' crash report lists it | Roblox crash reports | Partial |
+| External cheat that loads a kernel driver (kdmapper and similar) | Service install event 7045 with a driver in Temp or Downloads, even after it's deleted | Installed drivers | Strong |
 | Change the PC clock | Event 4616 (time changed) | Logs | Strong |
 | Reset or reinstall Windows | Install date, "Source OS" record, new account | PC resets | Strong (it shows the reset; what was there before is gone) |
 | Turn off Windows Security or add exclusions | Defender events 5001/5007, exclusions in the registry | Windows Security history | Strong |
