@@ -1,0 +1,47 @@
+name: Defender check of published releases
+
+# Diagnostic: downloads each published OpenCheck release and scans it with Microsoft Defender
+# (latest definitions, cloud protection on, never uploads files). Run it from the Actions tab.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-defender]
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: windows-latest
+    steps:
+      - name: Scan every release
+        shell: pwsh
+        run: |
+          $mp = Join-Path $env:ProgramFiles "Windows Defender\MpCmdRun.exe"
+          try { Set-MpPreference -MAPSReporting Advanced -SubmitSamplesConsent NeverSend -ErrorAction Stop } catch { Write-Warning "Cloud protection: $_" }
+          & $mp -SignatureUpdate | Out-Host
+          Get-MpComputerStatus | Format-List AMServiceEnabled, AntivirusEnabled, RealTimeProtectionEnabled, AntivirusSignatureVersion, AMEngineVersion | Out-Host
+          Get-MpPreference | Format-List MAPSReporting, SubmitSamplesConsent, CloudBlockLevel | Out-Host
+          $tags = @("v1.0.0", "v1.0.1", "v1.0.2", "v1.0.3", "v1.0.4,")
+          $summary = "| Release | OpenCheck.exe SHA-256 | Defender |`n|---|---|---|`n"
+          foreach ($t in $tags) {
+            $dir = Join-Path $env:RUNNER_TEMP ("r_" + ($t -replace '[^0-9a-z.]', ''))
+            New-Item -ItemType Directory -Force $dir | Out-Null
+            $zip = Join-Path $dir "OpenCheck.zip"
+            try { Invoke-WebRequest "https://github.com/${{ github.repository }}/releases/download/$([uri]::EscapeDataString($t))/OpenCheck.zip" -OutFile $zip -ErrorAction Stop }
+            catch { $summary += "| $t | (download failed) | - |`n"; continue }
+            Expand-Archive $zip -DestinationPath (Join-Path $dir "x") -Force
+            $exe = Get-ChildItem (Join-Path $dir "x") -Recurse -Filter OpenCheck.exe | Select-Object -First 1
+            $hash = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower()
+            $results = @()
+            foreach ($f in @($zip, $exe.FullName)) {
+              & $mp -Scan -ScanType 3 -File $f -DisableRemediation | Out-Null
+              $results += $(if ($LASTEXITCODE -eq 0) { "clean" } elseif ($LASTEXITCODE -eq 2) { "FLAGGED" } else { "error $LASTEXITCODE" })
+            }
+            "$t  zip=$($results[0])  exe=$($results[1])  $hash"
+            $summary += "| $t | ``$($hash.Substring(0,16))…`` | zip: $($results[0]), exe: $($results[1]) |`n"
+          }
+          Get-MpThreatDetection | Format-List ThreatID, Resources, InitialDetectionTime | Out-Host
+          Get-MpThreat | Format-List ThreatName, ThreatID | Out-Host
+          $summary >> $env:GITHUB_STEP_SUMMARY

@@ -52,6 +52,29 @@ jobs:
           Get-Content dist/SHA256SUMS.txt
           "### SHA-256`n``````n$(Get-Content dist/SHA256SUMS.txt -Raw)``````" >> $env:GITHUB_STEP_SUMMARY
 
+      # Safety gate: Microsoft Defender (latest definitions, cloud protection on, never uploads the file) must find
+      # nothing in the .exe or the .zip. If it does, the build fails and no release is published.
+      - name: Scan with Microsoft Defender
+        shell: pwsh
+        run: |
+          $mp = Join-Path $env:ProgramFiles "Windows Defender\MpCmdRun.exe"
+          if (-not (Test-Path $mp)) { Write-Error "Microsoft Defender isn't available on this machine, so the build can't be checked."; exit 1 }
+          try { Set-MpPreference -MAPSReporting Advanced -SubmitSamplesConsent NeverSend -ErrorAction Stop } catch { Write-Warning "Couldn't turn on cloud protection: $_" }
+          & $mp -SignatureUpdate | Out-Host
+          Get-MpComputerStatus | Format-List AMServiceEnabled, AntivirusEnabled, AntivirusSignatureVersion, AMEngineVersion | Out-Host
+          $failed = $false
+          foreach ($f in @("pkg/OpenCheck.exe", "dist/OpenCheck.zip")) {
+            $full = (Resolve-Path $f).Path
+            & $mp -Scan -ScanType 3 -File $full -DisableRemediation | Out-Host
+            $code = $LASTEXITCODE
+            if ($code -eq 0) { "Defender: $f is clean" }
+            elseif ($code -eq 2) { Write-Error "Microsoft Defender flagged $f"; $failed = $true }
+            else { Write-Error "Defender couldn't scan $f (exit code $code)"; $failed = $true }
+          }
+          Get-MpThreatDetection | Format-List | Out-Host
+          if ($failed) { exit 1 }
+          "### Microsoft Defender`nOpenCheck.exe and OpenCheck.zip scanned clean with the latest definitions." >> $env:GITHUB_STEP_SUMMARY
+
       # Signed proof that these files were built by this workflow from this repo's public code.
       # Anyone can check a download with:  gh attestation verify OpenCheck.zip --repo OWNER/REPO
       - name: Attest build provenance
