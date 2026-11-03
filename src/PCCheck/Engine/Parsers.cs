@@ -641,6 +641,19 @@ namespace PCCheck.Engine
         }
 
         /// <summary>Removes characters that could break a Discord message or the report layout.</summary>
+        /// <summary>A staff session code: letters and digits only, upper case, at most 8 characters.</summary>
+        public static string SessionCode(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return null;
+            var sb = new StringBuilder();
+            foreach (char c in s.ToUpperInvariant())
+            {
+                if ((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) sb.Append(c);
+                if (sb.Length >= 8) break;
+            }
+            return sb.Length >= 3 ? sb.ToString() : null;
+        }
+
         public static string SafeName(string s, int max)
         {
             if (string.IsNullOrEmpty(s)) return "";

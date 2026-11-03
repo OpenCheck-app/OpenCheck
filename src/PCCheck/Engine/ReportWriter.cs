@@ -84,9 +84,12 @@ namespace PCCheck.Engine
             head.Append("**OpenCheck: ").Append(VerdictWord(r.Verdict)).Append("**");
             if (strong + ask > 0) head.Append(" (").Append(strong).Append(" strong, ").Append(ask).Append(" worth asking)");
             head.AppendLine();
+            if (!string.IsNullOrEmpty(r.SessionCode)) head.AppendLine("Session code: **" + r.SessionCode + "**");
             if (!string.IsNullOrEmpty(r.Who)) head.AppendLine("Checked: " + r.Who);
             head.AppendLine(r.Pc + " | " + Time(r.Finished) + " | " + r.Mode + " scan | admin: " + (r.Admin ? "yes" : "**no (partial)**"));
             head.AppendLine("Verify: v" + r.AppVersion + " | SHA-256 `" + Short(r.AppSha256) + "`" + (r.PcId != null ? " | PC ID `" + r.PcId + "`" : ""));
+            var cleanup = r.CleanupBeforeCheck();
+            if (cleanup.Count > 0) head.AppendLine("⚠️ **Cleanup in the 24 hours before this check:** " + string.Join(", ", cleanup.Select(c => c.Name).Distinct().Take(5)));
             head.AppendLine();
 
             var lines = new List<string>();
@@ -139,6 +142,7 @@ namespace PCCheck.Engine
             var sb = new StringBuilder();
             sb.AppendLine("OPENCHECK: " + VerdictWord(r.Verdict));
             sb.AppendLine(new string('=', 60));
+            if (!string.IsNullOrEmpty(r.SessionCode)) sb.AppendLine("Session code: " + r.SessionCode);
             if (!string.IsNullOrEmpty(r.Who)) sb.AppendLine("Checked:     " + r.Who);
             sb.AppendLine("PC:          " + r.Pc);
             if (r.PcId != null) sb.AppendLine("PC ID:       " + r.PcId + "   (made from the PC's hardware models; same PC = same ID)");
@@ -203,6 +207,7 @@ namespace PCCheck.Engine
             sb.Append(".f{border-left:4px solid #4A6280;padding:10px 14px;margin:12px 0;background:#F5F7FA;border-radius:6px}.High{border-color:#C8362F}.Medium{border-color:#A86E06}");
             sb.Append(".f b{font-size:16px}.f span{color:#5E6779}.p{font:13px Consolas,monospace;color:#5E6779;word-break:break-all}small{color:#5E6779}</style></head><body><main>");
             sb.Append("<h1>").Append(h(VerdictWord(r.Verdict))).Append("</h1><dl>");
+            if (!string.IsNullOrEmpty(r.SessionCode)) sb.Append("<dt>Session code</dt><dd><b>").Append(h(r.SessionCode)).Append("</b></dd>");
             if (!string.IsNullOrEmpty(r.Who)) sb.Append("<dt>Checked</dt><dd>").Append(h(r.Who)).Append("</dd>");
             sb.Append("<dt>PC</dt><dd>").Append(h(r.Pc)).Append("</dd>");
             if (r.PcId != null) sb.Append("<dt>PC ID</dt><dd>").Append(h(r.PcId)).Append("</dd>");
@@ -260,6 +265,8 @@ namespace PCCheck.Engine
                 { "who", r.Who },
                 { "pc", r.Pc },
                 { "pcId", r.PcId },
+                { "sessionCode", r.SessionCode },
+                { "cleanup", r.CleanupBeforeCheck().Select(c => (object)new Dictionary<string, object> { { "name", c.Name }, { "time", c.Time.Value.ToString("o", CultureInfo.InvariantCulture) } }).Take(6).ToList() },
                 { "appVersion", r.AppVersion },
                 { "appSha256", r.AppSha256 },
                 { "listVersion", r.ListVersion },

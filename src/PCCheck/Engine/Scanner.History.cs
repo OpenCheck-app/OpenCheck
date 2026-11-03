@@ -25,6 +25,7 @@ namespace PCCheck.Engine
             ScanRegistryPathNames(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers", "Compatibility settings", false);
             Tick("Reading recent files", 0.85);
             ScanRecentShortcuts();
+            ScanRunBox();
             Tick("Reading the program launch log", 0.88);
             ScanPcaLog();
             Tick("Reading crash reports", 0.9);

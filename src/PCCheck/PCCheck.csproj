@@ -17,7 +17,7 @@
     <DebugType>none</DebugType>
 
     <!-- File properties shown in Windows (right-click > Properties > Details). -->
-    <Version>1.0.5</Version>
+    <Version>1.0.6</Version>
     <Product>OpenCheck</Product>
     <AssemblyTitle>OpenCheck</AssemblyTitle>
     <Description>Open-source, read-only PC check for Roblox communities. Not affiliated with Roblox Corporation.</Description>

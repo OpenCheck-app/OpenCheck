@@ -165,7 +165,10 @@ h1,h2,h3,p{margin:0}
 .nevers li + li{border-top:1px solid var(--line)}
 .nevers .x{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--mint-soft);color:var(--mint-ink)}
 .never .foot{margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--sunk);color:var(--muted);font-size:13px}
-.field{margin:14px 0 30px;padding:18px 22px;display:flex;align-items:center;gap:18px}
+.field{margin:14px 0 0;padding:18px 22px;display:flex;align-items:center;gap:18px}
+.field + .field{margin-top:10px}
+.field:last-child{margin-bottom:30px}
+.codein{text-transform:uppercase;font-family:var(--mono)!important;letter-spacing:.12em}
 .field label{font-weight:600;flex:1}
 .field label small{display:block;font-weight:400;color:var(--faint);font-size:12.5px}
 .field input{width:300px;height:44px;border-radius:12px;border:1px solid var(--line-strong);background:var(--sunk);color:var(--ink);padding:0 14px;font:inherit;user-select:text;transition:border-color .2s,box-shadow .2s}
@@ -235,7 +238,10 @@ h1,h2,h3,p{margin:0}
 .why li.more{background:none;border-style:dashed;color:var(--muted)}
 .why li.more::before{display:none}
 .lead{margin:12px 0 0;padding:14px 18px;border-radius:14px;background:var(--ls,var(--sunk));border:1px solid color-mix(in srgb,var(--lc,var(--line)) 35%,transparent);font-size:14px;line-height:1.6}
-.lead[hidden],.acts[hidden],.keys[hidden]{display:none}
+.lead[hidden],.acts[hidden],.keys[hidden],.cleanup[hidden]{display:none}
+.cleanup{margin:12px 0 0;padding:14px 18px;border-radius:14px;background:var(--review-soft);border:1px solid color-mix(in srgb,var(--review) 40%,transparent);font-size:14px;line-height:1.55;display:flex;gap:12px;align-items:flex-start}
+.cleanup svg{flex:none;color:var(--review-ink);margin-top:2px}
+.cleanup b{font-weight:650}
 .lead.flag{--ls:var(--flag-soft);--lc:var(--flag)} .lead.review{--ls:var(--review-soft);--lc:var(--review)} .lead.clean{--ls:var(--mint-soft);--lc:var(--mint)}
 .lead b{font-weight:650}
 .g{font-variant-numeric:tabular-nums}
@@ -260,6 +266,7 @@ h1,h2,h3,p{margin:0}
 .verify dt{color:var(--muted)}
 .verify dd{margin:0;font-variant-numeric:tabular-nums;word-break:break-all;user-select:text}
 .verify dd code{font-size:12px}
+.verify dd code.bigcode{font-size:17px;font-weight:700;letter-spacing:.12em;color:var(--ink)}
 .verify dd small{display:block;color:var(--faint);font-size:11.5px}
 .verify .st{width:18px;height:18px;border-radius:50%;display:grid;place-items:center}
 .verify .st.ok{color:var(--mint-ink);background:var(--mint-soft)} .verify .st.warn{color:var(--review-ink);background:var(--review-soft)} .verify .st.na{color:var(--faint);background:var(--sunk)}
@@ -458,7 +465,7 @@ h1,h2,h3,p{margin:0}
               <li><span class="tile"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M3 5a2 2 0 012-2h3.6l1.6 2H15a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span><div><b>File and folder names</b><span>Compared to the cheat list. Other files are never opened, except Roblox script files, which are checked for executor-only functions.</span></div></li>
               <li><span class="tile"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="M10 3a7 7 0 107 7M10 6v4l3 2"/></svg></span><div><b>Program history</b><span>Windows' records of which programs ran and when, crash reports, and which files were deleted. PowerShell history is only checked for commands that wipe these records.</span></div></li>
               <li><span class="tile"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" d="M4 4h12v12H4zM4 8h12M8 8v8"/></svg></span><div><b>Roblox settings and game history</b><span>FastFlags, plus which games were open and when, from Roblox's own logs. Only game IDs and times are kept.</span></div></li>
-              <li><span class="tile"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" d="M3 5h14v8H3zM7 17h6M10 13v4"/></svg></span><div><b>System, network and device checks</b><span>Cleared logs, PC resets, VMs, DMA hardware, VPNs, firewall history, internet drops, USB drives and sandbox tools. A PC ID made from hardware models is added to the report.</span></div></li>
+              <li><span class="tile"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" d="M3 5h14v8H3zM7 17h6M10 13v4"/></svg></span><div><b>System, network and device checks</b><span>Cleared logs, PC resets, VMs, DMA hardware and flashing tools, VPNs, firewall history, internet drops, USB drives and sandbox tools. Recent website lookups and Run box history are checked only against the cheat list. A PC ID made from hardware models is added to the report.</span></div></li>
             </ul>
           </div>
           <div class="card never in d2">
@@ -475,6 +482,10 @@ h1,h2,h3,p{margin:0}
         <div class="card field in d3">
           <label for="who">Your Roblox or Discord name<small>Optional. Shown on the report.</small></label>
           <input id="who" maxlength="40" autocomplete="off" spellcheck="false" placeholder="builderman">
+        </div>
+        <div class="card field in d4">
+          <label for="code">Session code<small>If staff gave you a code, type it here. It proves this report is from today's check.</small></label>
+          <input id="code" class="codein" maxlength="8" autocomplete="off" spellcheck="false" placeholder="e.g. K7Q2XM">
         </div>
       </div></div>
       <div class="bar"><div class="col">
@@ -510,6 +521,7 @@ h1,h2,h3,p{margin:0}
           <p id="vText"></p>
           <ul class="why" id="why"></ul>
         </section>
+        <div class="cleanup in d1" id="cleanup" hidden></div>
         <div class="lead in d1" id="lead" hidden></div>
         <div class="stats in d3" id="summary" aria-label="Evidence counts"></div>
         <section class="card sec in d4" id="sec-timeline">
@@ -746,10 +758,11 @@ window.addEventListener("resize", () => {
 /* ---------- welcome and agree ---------- */
 $("welcomeBtn").addEventListener("click", () => { go("s-consent"); setTimeout(() => $("agree").focus(), 450); });
 $("agree").addEventListener("change", e => $("startBtn").disabled = !e.target.checked);
+$("code").addEventListener("input", e => { const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8); if (v !== e.target.value) e.target.value = v; });
 $("startBtn").addEventListener("click", () => {
   buildAreas(); go("s-scan");
   const opts = { depth: settings.depth, lowCpu: settings.lowCpu, otherDrives: settings.otherDrives, hashMatches: settings.hashMatches };
-  setTimeout(() => send({ type:"start", who: $("who").value.trim(), settings: opts }), 400);
+  setTimeout(() => send({ type:"start", who: $("who").value.trim(), code: $("code").value.trim(), settings: opts }), 400);
 });
 
 /* ---------- check ---------- */
@@ -966,6 +979,7 @@ function onDone(r){
     t.innerHTML = STAT_ICON[c]; w.append(b, el("span",null,l)); d.append(t, w); sum.append(d); return [b,n];
   });
   renderVerify(r);
+  renderCleanup(r);
   renderLead(r);
   renderKeys(ranked);
   renderActivity(r);
@@ -1001,6 +1015,7 @@ function renderVerify(r){
     const dd = el("dd"); if (v instanceof Node) dd.append(v); else dd.textContent = v; if (note) dd.append(el("small", null, note));
     dl.append(st, el("dt", null, k), dd);
   };
+  row(r.sessionCode ? "ok" : "na", "Session code", r.sessionCode ? el("code", "bigcode", r.sessionCode) : "none given", r.sessionCode ? "Must match the code staff gave" : null);
   const ver = r.appVersion || $("ver").textContent.replace(/^v/, "") || "unknown";
   row("ok", "App version", "v" + ver);
   const sha = r.appSha256 || appSha;
@@ -1012,6 +1027,19 @@ function renderVerify(r){
   row("ok", "Finished", new Date(r.finished).toLocaleString(undefined, {dateStyle:"medium", timeStyle:"short"}) + ", " + r.seconds + " s");
   if (r.who) row("ok", "Player", r.who);
   box.append(dl);
+}
+const WARN_ICON = '<svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" d="M10 3l7.5 13H2.5z"/><path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" d="M10 8v3.6M10 14v.1"/></svg>';
+function renderCleanup(r){
+  const box = $("cleanup"); box.textContent = ""; box.hidden = true;
+  const items = r.cleanup || [];
+  if (!items.length) return;
+  const icon = el("span"); icon.innerHTML = WARN_ICON;
+  const text = el("div");
+  const names = [...new Set(items.map(c => c.name))];
+  text.append(el("b", null, "Cleanup right before this check. "), names.join(", ") + ". ");
+  text.append("A wipe in the last 24 hours hides what was there before, so ask why, and consider a recheck in a few days.");
+  box.append(icon, text);
+  box.hidden = false;
 }
 function renderLead(r){
   const box = $("lead"); box.textContent = ""; box.hidden = true; box.className = "lead in d1 " + r.verdict;
@@ -1300,7 +1328,7 @@ const Demo = {
   report(){
     const now = Date.now(), h = 36e5;
     const t = (hrs) => new Date(now - hrs*h).toISOString();
-    return { verdict:"flag", who: $("who").value.trim() || "builderman", pc:"Windows 11 Home 24H2", pcId:"7F3A-91C2-0B5E", appVersion:"1.0.5", appSha256:"9c41d07be5a8c2f13f2a9c41d07be5a8c2f1e96d4b0a7c3e5f8d2b1a6c9e0f4d", mode: DEPTH_TEXT[settings.depth][0], finished: new Date().toISOString(), seconds: 74, admin: true,
+    return { verdict:"flag", who: $("who").value.trim() || "builderman", pc:"Windows 11 Home 24H2", pcId:"7F3A-91C2-0B5E", sessionCode: ($("code").value.trim() || "K7Q2XM"), cleanup:[{name:"Security log cleared", time:t(2.8)}], appVersion:"1.0.6", appSha256:"9c41d07be5a8c2f13f2a9c41d07be5a8c2f1e96d4b0a7c3e5f8d2b1a6c9e0f4d", mode: DEPTH_TEXT[settings.depth][0], finished: new Date().toISOString(), seconds: 74, admin: true,
       findings: [
         {name:"Solara", category:"Internal executor", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(2.2), path:"C:\\ProgramData\\Solara\\Solara.exe", sources:["File"], sha256:"d1e4a542fa75f6a6fb636b5de6f7616e2827a79556d3d9a4afc3ecb47f0beb2b"},
         {name:"Matrix Hub", category:"External", group:"cheat", cheat:true, severity:"high", evidence:"Found on this PC", time:t(30), path:"~\\Downloads\\stuff", sources:["Cheat files: mcache.dat + _license.dat"], note:"Matrix Hub keeps its update notes (mcache.dat) and license key (_license.dat) together. Found by the files it keeps together, so renaming the programs doesn't hide it."},
@@ -1328,7 +1356,7 @@ const Demo = {
       ]};
   }
 };
-if (!host) onMessage({type:"version", version:"1.0.5", sha256:"9c41d07be5a8c2f13f2a9c41d07be5a8c2f1e96d4b0a7c3e5f8d2b1a6c9e0f4d"});
+if (!host) onMessage({type:"version", version:"1.0.6", sha256:"9c41d07be5a8c2f13f2a9c41d07be5a8c2f1e96d4b0a7c3e5f8d2b1a6c9e0f4d"});
 if (!host && new URLSearchParams(location.search).get("screen")){
   // Preview helper for screenshots: ?screen=consent|scan|results|send|settings
   const s = new URLSearchParams(location.search).get("screen");

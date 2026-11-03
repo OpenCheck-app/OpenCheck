@@ -118,7 +118,7 @@ namespace PCCheck
             switch (type)
             {
                 case "start":
-                    if (!scanning && report == null) StartScan(Json.Str(msg, "who"), ScanOptions.FromJson(Json.Object(Json.Get(msg, "settings"))));
+                    if (!scanning && report == null) StartScan(Json.Str(msg, "who"), Json.Str(msg, "code"), ScanOptions.FromJson(Json.Object(Json.Get(msg, "settings"))));
                     break;
                 case "theme":
                     ApplyTheme(Json.Bool(msg, "dark"));
@@ -160,7 +160,7 @@ namespace PCCheck
             }
         }
 
-        void StartScan(string who, ScanOptions options)
+        void StartScan(string who, string code, ScanOptions options)
         {
             scanning = true;
             progressTimer.Start();
@@ -179,7 +179,7 @@ namespace PCCheck
                 }
             });
 
-            Task.Run(() => scanner.Run(who)).ContinueWith(t =>
+            Task.Run(() => scanner.Run(who, code)).ContinueWith(t =>
             {
                 BeginInvokeSafe(() =>
                 {

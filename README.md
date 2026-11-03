@@ -15,6 +15,7 @@ OpenCheck is an open-source, read-only Windows app that checks a PC for Roblox e
 - Deleted files: the Recycle Bin and the drive's change log (NTFS USN journal), read newest first so recent deletions are always covered, filtered to cheat names only.
 - Windows Security (Defender) detections and antivirus exclusions.
 - Cleared event logs, logs that are suspiciously short, clock changes, and wiped Prefetch, Roblox logs or recent-file history.
+- The Run box (Win+R) and Explorer address bar history, recent website lookups (DNS cache), Windows Security's current settings, and USB devices used to flash DMA cards. Lookups and typed commands are only compared to the cheat list; nothing else is kept.
 - PowerShell history, checked only for commands that wipe the records above (like `fsutil usn deletejournal` or deleting Prefetch). Only those matching lines are kept.
 - When Windows was last reset or installed, and when the Windows account was created (a reset in the last week is flagged for review).
 - Windows Firewall rules that block Roblox (a common lag-switch trick), and the firewall's own history of Roblox rules being added and removed, which is how lag-switch macros work.

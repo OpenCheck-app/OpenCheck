@@ -170,6 +170,71 @@ namespace PCCheck.Engine
             return null;
         }
 
+        /// <summary>A command typed into the Windows Run box (Win+R). Windows stores it with "\1" on the end.</summary>
+        public static string RunBoxCommand(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return null;
+            string v = value.Trim();
+            if (v.EndsWith("\\1", StringComparison.Ordinal)) v = v.Substring(0, v.Length - 2);
+            return v.Length == 0 ? null : v;
+        }
+
+        /// <summary>
+        /// The program or file a Run-box command or typed path points at, for name matching
+        /// ("C:\x\Solara.exe -arg" gives "C:\x\Solara.exe"; quoted paths are unquoted).
+        /// </summary>
+        public static string RunBoxTarget(string command)
+        {
+            if (string.IsNullOrEmpty(command)) return null;
+            string c = command.Trim();
+            if (c.StartsWith("\"", StringComparison.Ordinal))
+            {
+                int end = c.IndexOf('"', 1);
+                return end > 1 ? c.Substring(1, end - 1) : c.Trim('"');
+            }
+            var m = Regex.Match(c, @"^.+?\.(exe|bat|cmd|lnk|ahk|lua)\b", RegexOptions.IgnoreCase);
+            if (m.Success) return m.Value;
+            int sp = c.IndexOf(' ');
+            return sp > 0 ? c.Substring(0, sp) : c;
+        }
+
+        /// <summary>
+        /// USB devices used with DMA cheats, by vendor and product ID from Windows' device list
+        /// (kept after the device is unplugged). Returns a label, or null.
+        /// </summary>
+        public static string DmaUsbTool(string enumKeyName)
+        {
+            if (string.IsNullOrEmpty(enumKeyName)) return null;
+            string k = enumKeyName.ToUpperInvariant();
+            // WCH CH347: USB to UART + JTAG, the usual flasher for DMA card firmware.
+            if (k.Contains("VID_1A86&PID_55DA") || k.Contains("VID_1A86&PID_55DB") || k.Contains("VID_1A86&PID_55DD") || k.Contains("VID_1A86&PID_55DE"))
+                return "CH347 USB-to-JTAG adapter (DMA firmware flasher)";
+            // FTDI FT601: the USB 3 link on Screamer-style DMA cards.
+            if (k.Contains("VID_0403&PID_601F")) return "FT601 USB 3 bridge (used by DMA cards)";
+            return null;
+        }
+
+        /// <summary>USB serial chips that KMBox-style input boxes use. Also common on Arduinos, so context only.</summary>
+        public static bool IsUsbSerialChip(string enumKeyName)
+        {
+            if (string.IsNullOrEmpty(enumKeyName)) return false;
+            string k = enumKeyName.ToUpperInvariant();
+            return k.Contains("VID_1A86&PID_7523") || k.Contains("VID_1A86&PID_55D3") || k.Contains("VID_1A86&PID_55D4");
+        }
+
+        /// <summary>
+        /// What's switched off in Windows Security right now, worth asking about. Real-time protection off is normal
+        /// when another antivirus is installed, so it only counts when Defender is the only one.
+        /// </summary>
+        public static List<string> DefenderOffNow(bool realtimeOff, int? tamperProtection, bool otherAntivirus)
+        {
+            var list = new List<string>();
+            if (otherAntivirus) return list;
+            if (realtimeOff) list.Add("Real-time protection");
+            if (tamperProtection.HasValue && tamperProtection.Value == 4) list.Add("Tamper protection");
+            return list;
+        }
+
         /// <summary>A driver file sitting in a user's own folders. Real drivers install under Windows or Program Files.</summary>
         public static bool IsPersonalFolderDriver(string imagePath)
         {

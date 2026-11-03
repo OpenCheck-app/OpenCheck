@@ -65,11 +65,12 @@ namespace PCCheck.Engine
 
         delegate string AreaFn();
 
-        public Report Run(string who)
+        public Report Run(string who, string sessionCode = null)
         {
             var report = new Report
             {
                 Who = Parsers.SafeName(who, 40),
+                SessionCode = Parsers.SessionCode(sessionCode),
                 Started = DateTime.Now,
                 Admin = admin,
                 ListVersion = set.Version,

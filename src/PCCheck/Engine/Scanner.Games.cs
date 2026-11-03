@@ -150,7 +150,7 @@ namespace PCCheck.Engine
         {
             if (sessions.Count == 0 || bamRuns.Count == 0) return;
             var slack = TimeSpan.FromMinutes(5);
-            int added = 0;
+            int added = 0, unsigned = 0;
             foreach (var run in bamRuns.OrderByDescending(r => r.Item2))
             {
                 if (added >= 10) break;
@@ -158,9 +158,20 @@ namespace PCCheck.Engine
                 if (matcher.MatchName(run.Item1) != null) continue;   // already reported by name
                 bool exists = true;
                 try { exists = File.Exists(run.Item1); } catch { }
-                if (exists) continue;
                 var game = sessions.FirstOrDefault(s => run.Item2 >= s.Start - slack && run.Item2 <= (s.End ?? s.Start) + slack);
                 if (game == null) continue;
+                if (exists)
+                {
+                    // Still on the PC: only worth asking about if it isn't signed by any publisher.
+                    if (unsigned >= 5 || Native.IsSigned(run.Item1) != false) continue;
+                    unsigned++;
+                    var u = Simple("Unsigned program ran during a Roblox game", "Unknown program", Severity.Medium, Evidence.Ran, Groups.Cheat, run.Item2, run.Item1, "BAM + Roblox logs + signature check",
+                        "This program was run from a personal folder while Roblox place " + game.PlaceId + " was open, and it isn't signed by any publisher. Most real apps are signed; cheat loaders almost never are. It could still be a harmless tool, so ask what it is.");
+                    u.RunTimes.Add(run.Item2);
+                    u.Games.Add(new GameLink { Session = game, How = "during" });
+                    Add(u);
+                    continue;
+                }
                 var f = Simple("Deleted program ran during a Roblox game", "Unknown program", Severity.Medium, Evidence.Deleted, Groups.Cheat, run.Item2, run.Item1, "BAM + Roblox logs",
                     "This program was run from a personal folder while Roblox place " + game.PlaceId + " was open, and it has been deleted since. Renamed cheat loaders are used exactly like this. It could also be something harmless, so ask what it was.");
                 f.RunTimes.Add(run.Item2);

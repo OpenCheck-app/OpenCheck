@@ -947,5 +947,89 @@ namespace PCCheck.Tests
             Assert.Equal(expected, TraceParsers.IsPersonalFolderDriver(image));
         }
     }
+
+    /// <summary>Gaps found by watching experienced manual PC checkers (Nov 2026 videos).</summary>
+    public class CheckerVideoTests
+    {
+        readonly Matcher m = new Matcher(Repo.Signatures());
+
+        [Fact]
+        public void Run_box_history_is_read()
+        {
+            Assert.Equal(@"C:\Users\a\Downloads\Solara.exe", TraceParsers.RunBoxCommand(@"C:\Users\a\Downloads\Solara.exe\1"));
+            Assert.Equal(@"C:\Users\a\Downloads\Solara.exe", TraceParsers.RunBoxTarget(@"C:\Users\a\Downloads\Solara.exe --inject"));
+            Assert.Equal(@"C:\Program Files\Wave\Wave.exe", TraceParsers.RunBoxTarget("\"C:\\Program Files\\Wave\\Wave.exe\" -x"));
+            Assert.Equal("cmd", TraceParsers.RunBoxTarget("cmd /c dir"));
+            Assert.NotNull(m.MatchName(TraceParsers.RunBoxTarget(@"C:\Users\a\Downloads\Solara.exe --inject")));
+            Assert.Equal("Deleted the drive change log", TraceParsers.CleanupCommand("cmd /c fsutil usn deletejournal /d c:"));
+        }
+
+        [Theory]
+        [InlineData(@"VID_1A86&PID_55DD&MI_02", true)]
+        [InlineData(@"VID_1A86&PID_55DE", true)]
+        [InlineData(@"VID_0403&PID_601F", true)]
+        [InlineData(@"VID_046D&PID_C539", false)]
+        [InlineData(@"VID_1A86&PID_7523", false)]
+        public void Dma_flashing_tools_are_recognized_by_usb_id(string key, bool dma)
+        {
+            Assert.Equal(dma, TraceParsers.DmaUsbTool(key) != null);
+        }
+
+        [Fact]
+        public void Usb_serial_chips_are_context_only()
+        {
+            Assert.True(TraceParsers.IsUsbSerialChip("VID_1A86&PID_7523"));
+            Assert.False(TraceParsers.IsUsbSerialChip("VID_046D&PID_C539"));
+        }
+
+        [Fact]
+        public void Defender_off_only_counts_when_it_is_the_only_antivirus()
+        {
+            Assert.Equal(new[] { "Real-time protection", "Tamper protection" }, TraceParsers.DefenderOffNow(true, 4, false));
+            Assert.Empty(TraceParsers.DefenderOffNow(true, 4, true));
+            Assert.Empty(TraceParsers.DefenderOffNow(false, 5, false));
+        }
+
+        [Fact]
+        public void Memory_string_cleaners_are_flagged_as_tampering()
+        {
+            var sig = m.MatchName("Manual Cleaner.exe");
+            Assert.NotNull(sig);
+            Assert.Equal("Trace cleaner", sig.Category);
+            Assert.NotNull(m.MatchName("StringCleaner.exe"));
+        }
+
+        [Fact]
+        public void Skript_is_matched_by_its_site_not_its_name()
+        {
+            // "Skript" is also a popular Minecraft plugin, so only the cheat's website counts.
+            Assert.Null(m.MatchName("Skript-2.8.zip"));
+            Assert.Equal("skript.gg", Parsers.MatchDomain("www.skript.gg", Repo.Signatures().CheatSites));
+        }
+
+        [Theory]
+        [InlineData("k7q2xm", "K7Q2XM")]
+        [InlineData(" K7-Q2 XM ", "K7Q2XM")]
+        [InlineData("ab", null)]
+        [InlineData("ABCDEFGHIJK", "ABCDEFGH")]
+        [InlineData(null, null)]
+        public void Session_codes_are_cleaned(string input, string expected)
+        {
+            Assert.Equal(expected, Parsers.SessionCode(input));
+        }
+
+        [Fact]
+        public void Cleanup_in_the_last_day_is_called_out()
+        {
+            var now = new DateTime(2026, 11, 3, 20, 0, 0);
+            var r = new Report { Finished = now };
+            r.Findings.Add(new Finding { Name = "Security log cleared", Evidence = Evidence.Tamper, Severity = Severity.Medium, Time = now.AddHours(-2) });
+            r.Findings.Add(new Finding { Name = "Old wipe", Evidence = Evidence.Tamper, Severity = Severity.Medium, Time = now.AddDays(-5) });
+            r.Findings.Add(new Finding { Name = "Context", Evidence = Evidence.Context, Severity = Severity.Info, Time = now.AddHours(-1) });
+            var c = r.CleanupBeforeCheck();
+            Assert.Single(c);
+            Assert.Equal("Security log cleared", c[0].Name);
+        }
+    }
 }
 

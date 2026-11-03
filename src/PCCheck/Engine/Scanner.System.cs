@@ -48,6 +48,7 @@ namespace PCCheck.Engine
 
             int exclusions = ScanDefenderExclusions();
             exclusions += ScanDefenderChanges();
+            exclusions += ScanDefenderStateNow();
             if (detections == 0 && exclusions == 0) return "No related threats";
             var parts = new List<string>();
             if (detections > 0) parts.Add(detections + (detections == 1 ? " related detection" : " related detections"));
