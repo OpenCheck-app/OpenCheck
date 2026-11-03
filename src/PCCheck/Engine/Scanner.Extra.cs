@@ -32,6 +32,8 @@ namespace PCCheck.Engine
                                 string cmd = TraceParsers.RunBoxCommand(key.GetValue(name) as string);
                                 if (cmd == null) continue;
 
+                                var remote = TraceParsers.RemoteScriptRun(cmd);
+                                if (remote != null) { ReportRemoteScript(remote, null, source); continue; }
                                 string cleanup = TraceParsers.CleanupCommand(cmd);
                                 if (cleanup != null)
                                 {
@@ -161,6 +163,69 @@ namespace PCCheck.Engine
                 }
             }
             catch { }
+        }
+    
+        /// <summary>
+        /// Programs that ran from outside the usual install folders: their fingerprint is checked against known cheat
+        /// builds, and their structure is checked for the shape of external cheat loaders (packed, unsigned, overlay,
+        /// online), which catches loaders like Matcha's whatever they're named. Files are only read, never run.
+        /// </summary>
+        void CheckRanProgramFiles()
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            long budget = 400L << 20, used = 0;
+            int packedFound = 0;
+            var paths = bamRuns.Where(r => TraceParsers.IsOutsideInstalledPlaces(r.Item1))
+                               .GroupBy(r => r.Item1, StringComparer.OrdinalIgnoreCase)
+                               .Select(g => new { Path = g.Key, Times = g.Select(x => x.Item2).Distinct().OrderByDescending(x => x).ToList() })
+                               .OrderByDescending(x => x.Times.First()).Take(60).ToList();
+            foreach (var p in paths)
+            {
+                if (cancelled || used > budget || sw.Elapsed.TotalSeconds > 20) break;
+                byte[] bytes;
+                try
+                {
+                    if (!System.IO.File.Exists(p.Path)) continue;
+                    var info = new System.IO.FileInfo(p.Path);
+                    if (info.Length > (64L << 20) || info.Length < 1024) continue;
+                    bytes = ReadShared(p.Path, 64L << 20);
+                    used += bytes.Length;
+                }
+                catch { continue; }
+                Breathe();
+
+                string sha;
+                using (var h = System.Security.Cryptography.SHA256.Create()) sha = BitConverter.ToString(h.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
+                string known;
+                if (set.KnownBadSha256.TryGetValue(sha, out known))
+                {
+                    var k = Simple(known.Split('(')[0].Trim(), "Known cheat file", Severity.High, Evidence.Ran, Groups.Cheat, p.Times.First(), p.Path, "File fingerprint (SHA-256)",
+                        "This exact file is a known cheat build: " + known + ". It matches by its contents, so renaming it doesn't help.");
+                    k.IsCheat = true; k.Sha256 = sha;
+                    foreach (var t in p.Times) k.RunTimes.Add(t);
+                    Add(k);
+                    continue;
+                }
+                if (matcher.MatchName(p.Path) != null || packedFound >= 8) continue;   // already reported by name
+
+                var traits = TraceParsers.InspectPe(bytes);
+                if (!traits.IsPe || traits.Packer == null) continue;
+                if (Native.IsSigned(p.Path) == true) continue;   // signed by a publisher: not a cheat loader shape
+                packedFound++;
+                var parts = new List<string> { "packed with " + traits.Packer, "unsigned" };
+                if (traits.Overlay) parts.Add("draws a DirectX overlay");
+                if (traits.Online) parts.Add("connects online");
+                bool external = traits.Overlay && traits.Online;
+                var f = Simple(external ? "Program shaped like an external cheat ran" : "Packed, unsigned program ran", "Unknown loader", Severity.Medium, Evidence.Ran, Groups.Cheat,
+                    p.Times.First(), p.Path, "Program file check",
+                    "This program is " + string.Join(", ", parts) + ". " +
+                    (external ? "That's exactly how external cheat loaders like Matcha are built: the code is hidden until it runs, then it draws an ESP menu over the game and logs in online. "
+                              : "Cheat loaders hide their code like this so they can't be read. ") +
+                    "Some legitimate tools are packed too, so ask what it is.");
+                f.Sha256 = sha;
+                foreach (var t in p.Times) f.RunTimes.Add(t);
+                Add(f);
+            }
         }
     }
 }

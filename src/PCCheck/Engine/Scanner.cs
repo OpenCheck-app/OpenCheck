@@ -130,6 +130,7 @@ namespace PCCheck.Engine
                 Progress(state, detail, done / total * 100);
             }
 
+            try { CheckRanProgramFiles(); } catch (Exception ex) { notes.Add("program file check: " + ex.Message); }
             try { LinkGames(); } catch (Exception ex) { notes.Add("games: " + ex.Message); }
             try { CheckDeletedRunsDuringGames(); } catch (Exception ex) { notes.Add("deleted runs: " + ex.Message); }
             try { CheckDisguisedPrograms(); } catch (Exception ex) { notes.Add("disguised programs: " + ex.Message); }
@@ -352,10 +353,12 @@ namespace PCCheck.Engine
                         try
                         {
                             var doc = XDocument.Parse(rec.ToXml());
+                            int unnamed = 0;
                             foreach (var d in doc.Descendants(EventNs + "Data"))
                             {
                                 var nameAttr = d.Attribute("Name");
                                 if (nameAttr != null) data[nameAttr.Value] = d.Value;
+                                else data["#" + (unnamed++)] = d.Value;   // classic logs (like Windows PowerShell) keep fields unnamed
                             }
                             // Some events (like 104) keep fields under UserData in their own namespace.
                             foreach (var e in doc.Descendants().Where(x => x.Name.LocalName == "Channel" && !x.HasElements))

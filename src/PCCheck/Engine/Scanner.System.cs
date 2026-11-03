@@ -206,6 +206,8 @@ namespace PCCheck.Engine
 
             Tick("Reading PowerShell history", 0.4);
             ScanShellHistory(found);
+            Tick("Reading PowerShell logs", 0.42);
+            ScanPowerShellLogs(found);
             Tick("Checking installed drivers", 0.45);
             ScanServiceInstalls(found);
 
@@ -332,59 +334,72 @@ namespace PCCheck.Engine
             catch (Exception ex) { notes.Add("Couldn't read firewall rules: " + ex.Message); }
         }
 
-        /// <summary>FastFlag files from Roblox and launchers like Bloxstrap or Fishstrap.</summary>
+        /// <summary>
+        /// FastFlags from Roblox and every Roblox launcher (Bloxstrap, Fishstrap, Voidstrap and the rest).
+        /// Each flag is put in a category: unfair ones are listed one by one, allowed ones are summed up per category.
+        /// </summary>
         string ScanFastFlags()
         {
             var files = new List<KeyValuePair<string, string>>();   // path, source
+            var straps = new List<Tuple<string, string>>();          // launcher name, folder
             foreach (var p in profiles)
             {
                 string local = Path.Combine(p.Path, @"AppData\Local");
+                string roaming = Path.Combine(p.Path, @"AppData\Roaming");
                 AddFlagFilesUnder(files, Path.Combine(local, @"Roblox\Versions"), "Roblox");
                 AddFlagFile(files, Path.Combine(local, @"Roblox\ClientSettings\ClientAppSettings.json"), "Roblox");
-                try
-                {
-                    foreach (var dir in Directory.GetDirectories(local, "*strap"))
-                    {
-                        string name = Path.GetFileName(dir);
-                        AddFlagFile(files, Path.Combine(dir, @"Modifications\ClientSettings\ClientAppSettings.json"), name);
-                        // Bootstrappers are allowed. Unknown ones are still listed so moderators know what was used.
-                        if (matcher.MatchName(name) == null)
-                            Add(Simple(name, "Roblox bootstrapper (allowed)", Severity.Info, Evidence.Context, Groups.Context, Directory.GetLastWriteTime(dir), dir, "AppData",
-                                "A Roblox launcher. Bootstrappers are normal; listed so moderators know which one is used."));
-                    }
-                }
-                catch { }
+                foreach (var root in new[] { local, roaming, Path.Combine(local, "Programs") })
+                    foreach (var dir in LauncherFolders(root)) straps.Add(Tuple.Create(Path.GetFileName(dir), dir));
 
                 // FastFlag list files people download (names only, then read if they look like FastFlags).
                 foreach (var sub in new[] { "Desktop", "Downloads", "Documents", @"OneDrive\Desktop", @"OneDrive\Documents" })
                     AddLooseFlagFiles(files, Path.Combine(p.Path, sub));
-
             }
             foreach (var pf in ProgramFilesDirs())
+            {
                 AddFlagFilesUnder(files, Path.Combine(pf, @"Roblox\Versions"), "Roblox");
+                foreach (var dir in LauncherFolders(pf)) straps.Add(Tuple.Create(Path.GetFileName(dir), dir));
+            }
 
-            int unfair = 0, otherTotal = 0;
+            // Every launcher folder is searched (4 levels) for JSON files holding FastFlags, wherever the launcher keeps them.
+            foreach (var st in straps.GroupBy(x => x.Item2, StringComparer.OrdinalIgnoreCase).Select(g => g.First()))
+            {
+                int before = files.Count;
+                AddJsonUnder(files, st.Item2, st.Item1, 0);
+                DateTime? used = null;
+                try { used = Directory.GetLastWriteTime(st.Item2); } catch { }
+                if (matcher.MatchName(st.Item1) == null)
+                    Add(Simple(st.Item1, "Roblox launcher (allowed)", Severity.Info, Evidence.Context, Groups.Context, used, st.Item2, "AppData",
+                        "A Roblox launcher (bootstrapper). These are normal; listed so staff know which one is used" + (files.Count > before ? " and where its FastFlags came from." : ".")));
+            }
+
+            int unfair = 0, allowed = 0;
+            var seenFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var file in files)
             {
+                if (!seenFiles.Add(file.Key)) continue;
                 try
                 {
                     var info = new FileInfo(file.Key);
                     if (info.Length > 4 * 1024 * 1024) continue;
-                    var flags = Json.Object(Json.Parse(File.ReadAllText(file.Key)));
-                    int other;
-                    var hits = Parsers.AnalyzeFastFlags(flags, set.FlagWords, out other);
-                    foreach (var h in hits)
+                    var flags = Parsers.FlagLikeEntries(Json.Object(Json.Parse(File.ReadAllText(file.Key))));
+                    if (flags.Count == 0) continue;
+                    var hits = Parsers.CategorizeFastFlags(flags, set.FlagCategories);
+                    foreach (var h in hits.Where(x => x.Category != null && x.Category.Unfair))
                     {
-                        var f = Simple(h.Name, "FastFlag", Severity.Medium, Evidence.FastFlag, Groups.FastFlags, info.LastWriteTime, file.Key, file.Value,
-                            "Set to " + h.Value + ". Its name contains \"" + h.Word + "\", which is used for unfair advantages like desync or bigger hitboxes. Roblox only honors an allowlist of FastFlags now, so it may have no effect, but it's worth asking about.");
-                        Add(f);
+                        Add(Simple(h.Name, "FastFlag: " + h.Category.Name, Severity.Medium, Evidence.FastFlag, Groups.FastFlags, info.LastWriteTime, file.Key, file.Value,
+                            "Set to " + h.Value + ". " + h.Category.Note + " Set through " + file.Value + ". Roblox only honors an allowlist of FastFlags now, so it may have no effect, but it shows what was intended."));
                         unfair++;
                     }
-                    if (other > 0)
+                    foreach (var g in hits.Where(x => x.Category == null || !x.Category.Unfair).GroupBy(x => x.Category == null ? "Other" : x.Category.Name))
                     {
-                        otherTotal += other;
-                        Add(Simple(other + " other FastFlags", "FastFlags (visual or performance)", Severity.Info, Evidence.Context, Groups.FastFlags, info.LastWriteTime, file.Key, file.Value,
-                            "These don't match the unfair list. They're usually graphics or FPS tweaks."));
+                        var cat = g.First().Category;
+                        var names = g.Select(x => x.Name).Take(8).ToList();
+                        int n = g.Count();
+                        allowed += n;
+                        Add(Simple(n + (n == 1 ? " " + g.Key.ToLowerInvariant() + " flag" : " " + g.Key.ToLowerInvariant() + " flags"), "FastFlags: " + g.Key + " (allowed)", Severity.Info, Evidence.Context, Groups.FastFlags,
+                            info.LastWriteTime, file.Key, file.Value,
+                            (cat == null ? "Flags that don't fit a known category. Usually harmless tweaks." : cat.Note) + " Set through " + file.Value + ". Includes: " + string.Join(", ", names) + (n > names.Count ? ", and " + (n - names.Count) + " more." : ".")));
                     }
                 }
                 catch (Exception)
@@ -393,9 +408,48 @@ namespace PCCheck.Engine
                 }
             }
 
-            if (files.Count == 0) return "No FastFlag files";
-            if (unfair == 0) return otherTotal > 0 ? "No unfair flags (" + otherTotal + " other)" : "No unfair flags";
+            if (seenFiles.Count == 0) return "No FastFlag files";
+            if (unfair == 0) return allowed > 0 ? "No unfair flags (" + allowed + " allowed)" : "No unfair flags";
             return unfair + (unfair == 1 ? " unfair flag" : " unfair flags");
+        }
+
+        /// <summary>Roblox launcher folders: names ending in "strap", plus any folder name on the bootstrapper list.</summary>
+        IEnumerable<string> LauncherFolders(string root)
+        {
+            var list = new List<string>();
+            try
+            {
+                foreach (var dir in Directory.GetDirectories(root))
+                {
+                    string name = Path.GetFileName(dir);
+                    var sig = matcher.MatchName(name);
+                    bool launcher = name.EndsWith("strap", StringComparison.OrdinalIgnoreCase)
+                                 || (sig != null && (sig.Category ?? "").IndexOf("bootstrapper", StringComparison.OrdinalIgnoreCase) >= 0);
+                    if (launcher) list.Add(dir);
+                }
+            }
+            catch { }
+            return list;
+        }
+
+        /// <summary>JSON files under a launcher folder (skips the Roblox versions it downloads, and big files).</summary>
+        void AddJsonUnder(List<KeyValuePair<string, string>> files, string dir, string source, int depth)
+        {
+            if (depth > 4 || files.Count > 400) return;
+            try
+            {
+                foreach (var f in Directory.EnumerateFiles(dir, "*.json"))
+                {
+                    try { if (new FileInfo(f).Length <= 2 * 1024 * 1024) files.Add(new KeyValuePair<string, string>(f, source)); } catch { }
+                }
+                foreach (var sub in Directory.EnumerateDirectories(dir))
+                {
+                    string n = Path.GetFileName(sub);
+                    if (n.Equals("Versions", StringComparison.OrdinalIgnoreCase) || n.Equals("Downloads", StringComparison.OrdinalIgnoreCase) || n.Equals("Logs", StringComparison.OrdinalIgnoreCase)) continue;
+                    AddJsonUnder(files, sub, source, depth + 1);
+                }
+            }
+            catch { }
         }
 
         void AddLooseFlagFiles(List<KeyValuePair<string, string>> files, string folder)

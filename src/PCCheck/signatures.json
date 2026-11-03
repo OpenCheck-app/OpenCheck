@@ -8,7 +8,7 @@
     "severity: high = cheat, medium = suspicious tool, info = context only (never causes FLAGGED by itself).",
     "Generic tokens (like 'robloxexecutor') catch renamed or unknown tools. No list can catch every cheat, so the checker also looks at behavior: executor folders, deleted files, antivirus exclusions and firewall rules."
   ],
-  "version": "2026-11-03a",
+  "version": "2026-11-03c",
   "nameSuffixes": [
     "ui",
     "bootstrapper",
@@ -687,7 +687,8 @@
         "matcha"
       ],
       "strict": true,
-      "folders": []
+      "folders": [],
+      "note": "External cheat (draws an ESP/aimbot overlay on top of Roblox). Ships as a packed, unsigned loader.exe, so it's also caught by its fingerprint and by the packed-loader check, not just by name."
     },
     {
       "name": "Severe",
@@ -1290,7 +1291,13 @@
         "froststrap",
         "lunastrap",
         "plexity",
-        "bloxshade"
+        "bloxshade",
+        "appleblox",
+        "rovyx",
+        "novastrap",
+        "nexstrap",
+        "bubblestrap",
+        "purplestrap"
       ],
       "strict": false,
       "folders": [],
@@ -1305,6 +1312,40 @@
       ],
       "strict": false,
       "folders": []
+    },
+    {
+      "name": "FastFlag injector",
+      "category": "FastFlag injector",
+      "severity": "high",
+      "match": [
+        "fflaginjector",
+        "fflagsinjector",
+        "fastflaginjector",
+        "fflaginject",
+        "fflagloader",
+        "fflagexecutor"
+      ],
+      "strict": false,
+      "folders": [],
+      "note": "Writes FastFlags into Roblox while it's running, which gets around Roblox's FastFlag allowlist. That's memory editing, the same thing executors do."
+    },
+    {
+      "name": "Generic cheat loader name",
+      "category": "Unknown loader",
+      "severity": "medium",
+      "match": [
+        "loader",
+        "injector",
+        "inject",
+        "executor",
+        "exploit",
+        "cheatloader",
+        "externalloader",
+        "dllinjector"
+      ],
+      "strict": true,
+      "folders": [],
+      "note": "A program named like a cheat loader (Matcha, for example, ships as just loader.exe). The name alone proves nothing, so ask what it is."
     }
   ],
   "executorFolderLayouts": [
@@ -1318,33 +1359,210 @@
     ]
   ],
   "fastFlags": {
-    "_readme": "Any flag whose name contains one of these words is flagged. Roblox only honors an allowlist of FastFlags now, so many of these may have no effect - they are still worth asking about.",
+    "_readme": "Each flag is put in the first category whose word its name contains. Unfair categories come first and are listed one by one; allowed categories are summed up. Roblox only honors an allowlist of FastFlags now, so many unfair ones may have no effect - they still show intent and are worth asking about.",
     "suspiciousWords": [
-      "S2Physics",
-      "PhysicsSender",
-      "DataSender",
-      "MaxMissedWorldSteps",
-      "WorldStep",
-      "Replicat",
-      "NetworkOwner",
-      "Hitbox",
+      "AngularVelociry",
+      "AngularVelocity",
       "AssemblyExtents",
-      "HipHeight",
-      "Gravity",
-      "WalkSpeed",
-      "JumpPower",
-      "Desync",
-      "Noclip",
-      "Teleport",
-      "Fling",
       "BufferZone",
-      "GameNetPV",
-      "Invisible",
+      "ClientPacket",
+      "DataSender",
+      "Desync",
       "DontRender",
+      "ExtentsExpansion",
+      "Fling",
+      "FlySpeed",
+      "FogEnd",
+      "FullBright",
+      "GameNetPV",
+      "GrassDistance",
+      "GrassMovement",
+      "Gravity",
+      "HipHeight",
+      "Hitbox",
       "Interpolation",
+      "Invisible",
+      "JumpHeight",
+      "JumpPower",
       "LagSwitch",
       "MaxClientSimulationRadius",
-      "SimRadius"
+      "MaxDataPacket",
+      "MaxMissedWorldSteps",
+      "MTUSize",
+      "NetworkOwner",
+      "NetworkPrediction",
+      "Noclip",
+      "NoFog",
+      "PacketLoss",
+      "PauseVoxelizer",
+      "PhysicsReceive",
+      "PhysicsSender",
+      "RakNet",
+      "Replicat",
+      "S2Physics",
+      "ShadowIntensity",
+      "SimRadius",
+      "SkyGray",
+      "Teleport",
+      "TouchSender",
+      "TouchTransmitter",
+      "WalkSpeed",
+      "Wallhack",
+      "WorldStep",
+      "XRay"
+    ],
+    "categories": [
+      {
+        "id": "desync",
+        "name": "Desync and physics",
+        "unfair": true,
+        "note": "Changes how your character's movement and physics are sent to the server. Used for desync, where other players see you somewhere you aren't, and for lag-based exploits.",
+        "words": [
+          "S2Physics",
+          "PhysicsSender",
+          "PhysicsReceive",
+          "DataSender",
+          "MaxMissedWorldSteps",
+          "WorldStep",
+          "Replicat",
+          "NetworkOwner",
+          "GameNetPV",
+          "MaxClientSimulationRadius",
+          "SimRadius",
+          "Desync",
+          "AngularVelocity",
+          "AngularVelociry"
+        ]
+      },
+      {
+        "id": "hitbox",
+        "name": "Hitbox and reach",
+        "unfair": true,
+        "note": "Changes how big parts are for hits and touches. Used for bigger hitboxes and longer reach.",
+        "words": [
+          "Hitbox",
+          "AssemblyExtents",
+          "ExtentsExpansion",
+          "TouchSender",
+          "TouchTransmitter"
+        ]
+      },
+      {
+        "id": "movement",
+        "name": "Movement and character",
+        "unfair": true,
+        "note": "Names that point at speed, jumping, gravity, flying through walls or teleporting. Roblox controls these on the server, so they rarely work, but they show what someone was trying to do.",
+        "words": [
+          "WalkSpeed",
+          "JumpPower",
+          "JumpHeight",
+          "Gravity",
+          "HipHeight",
+          "Noclip",
+          "Teleport",
+          "Fling",
+          "FlySpeed"
+        ]
+      },
+      {
+        "id": "network",
+        "name": "Network and lag",
+        "unfair": true,
+        "note": "Changes low-level networking. Used to cause or fake lag. Some \"ping booster\" presets set these too, so ask where they came from.",
+        "words": [
+          "LagSwitch",
+          "BufferZone",
+          "Interpolation",
+          "RakNet",
+          "MTUSize",
+          "ClientPacket",
+          "MaxDataPacket",
+          "NetworkPrediction",
+          "PacketLoss"
+        ]
+      },
+      {
+        "id": "visibility",
+        "name": "Visibility advantage",
+        "unfair": true,
+        "note": "Removes things that hide players: grass, fog, shadows, lighting or the sky. Many competitive servers ban these as an unfair visibility advantage. Check your server's rules.",
+        "words": [
+          "DontRender",
+          "Invisible",
+          "SkyGray",
+          "GrassDistance",
+          "GrassMovement",
+          "PauseVoxelizer",
+          "ShadowIntensity",
+          "NoFog",
+          "FogEnd",
+          "FullBright",
+          "XRay",
+          "Wallhack"
+        ]
+      },
+      {
+        "id": "fps",
+        "name": "FPS and graphics",
+        "unfair": false,
+        "note": "Frame rate, graphics API, anti-aliasing and texture quality tweaks. These are normal and usually allowed.",
+        "words": [
+          "TaskScheduler",
+          "TargetFps",
+          "Framerate",
+          "FpsCap",
+          "PreferVulkan",
+          "PreferD3D11",
+          "PreferOpenGL",
+          "GraphicsPrefer",
+          "MSAA",
+          "TextureQuality",
+          "SkipMips",
+          "FRMQuality",
+          "QualityLevel",
+          "Antialias",
+          "PostFx",
+          "Render",
+          "Graphics",
+          "Texture",
+          "Lighting",
+          "Lod",
+          "Mesh"
+        ]
+      },
+      {
+        "id": "ui",
+        "name": "Menus and interface",
+        "unfair": false,
+        "note": "Menu, chat, font and window tweaks. Normal and allowed.",
+        "words": [
+          "Menu",
+          "Chrome",
+          "Font",
+          "Toolbar",
+          "Topbar",
+          "Fullscreen",
+          "Chat",
+          "Emote",
+          "Voice",
+          "Camera",
+          "Gui",
+          "UI"
+        ]
+      },
+      {
+        "id": "telemetry",
+        "name": "Telemetry and analytics",
+        "unfair": false,
+        "note": "Turns off Roblox's usage reporting. Normal and allowed.",
+        "words": [
+          "Telemetry",
+          "Analytics",
+          "Crash",
+          "Stats",
+          "Report"
+        ]
+      }
     ]
   },
   "dma": {
@@ -1369,7 +1587,8 @@
   },
   "knownBadSha256": {
     "_readme": "Optional: add 'sha256': 'name' pairs for exact cheat builds. Catches renamed files in scanned folders.",
-    "74e704b51c1c1d2ffd2c58d2c10026d88c5a50134c9989b87c98db315f341400": "Matrix Hub loader (newui.exe)"
+    "74e704b51c1c1d2ffd2c58d2c10026d88c5a50134c9989b87c98db315f341400": "Matrix Hub loader (newui.exe)",
+    "3ad44d0b739b43078efc8a7f794e58a4a27a54cb59b2bdd825fb831e9b40940b": "Matcha loader (loader.exe, packed external, May 2026 build)"
   },
   "looseFastFlagFiles": {
     "_readme": "FastFlag list files people download. Looked for by name in Desktop, Downloads and Documents.",
@@ -1447,7 +1666,7 @@
     ]
   },
   "downloadSites": {
-    "_readme": "Websites a file was downloaded from (Windows records this on every download). 'cheat' = Roblox executor/script sites and Roblox script key systems; 'keySystem' = ad-link sites that cheat keys often go through, but other things too.",
+    "_readme": "Websites a file was downloaded from (Windows records this on every download). 'cheat' = Roblox executor/script sites and Roblox script key systems; 'keySystem' = ad-link sites that cheat keys often go through, but other things too. 'scriptInstallers' = sites whose one-line PowerShell installers are common and not cheats (context only when run with irm | iex).",
     "cheat": [
       "wearedevs.net",
       "rscripts.net",
@@ -1483,7 +1702,8 @@
       "deltaexploits.net",
       "delta-executor.com",
       "synapsez.net",
-      "skript.gg"
+      "skript.gg",
+      "cheese-project.com"
     ],
     "keySystem": [
       "linkvertise.com",
@@ -1501,6 +1721,24 @@
       "sub2get.com",
       "sub2unlock.com",
       "rekonise.com"
+    ],
+    "scriptInstallers": [
+      "get.scoop.sh",
+      "scoop.sh",
+      "community.chocolatey.org",
+      "chocolatey.org",
+      "christitus.com",
+      "bun.sh",
+      "deno.land",
+      "astral.sh",
+      "get.activated.win",
+      "massgrave.dev",
+      "get.pnpm.io",
+      "aka.ms",
+      "dot.net",
+      "spicetify.app",
+      "raw.githubusercontent.com",
+      "github.com"
     ]
   },
   "cheatFileLayouts": {

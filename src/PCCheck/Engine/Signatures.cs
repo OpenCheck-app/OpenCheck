@@ -28,6 +28,10 @@ namespace PCCheck.Engine
         public HashSet<string> Suffixes = new HashSet<string>(StringComparer.Ordinal);
         public List<string[]> FolderLayouts = new List<string[]>();
         public List<string> FlagWords = new List<string>();
+        /// <summary>FastFlag categories in order: a flag goes in the first one whose word its name contains.</summary>
+        public List<FlagCategory> FlagCategories = new List<FlagCategory>();
+        /// <summary>Sites whose one-line PowerShell installers (irm | iex) are common and not cheats.</summary>
+        public List<string> ScriptInstallerSites = new List<string>();
         public List<string> LooseFlagFileWords = new List<string>();
         /// <summary>Words in a network adapter's name that mean it belongs to a VPN or game ping booster.</summary>
         public List<string> VpnAdapters = new List<string>();
@@ -95,6 +99,13 @@ namespace PCCheck.Engine
 
             var ff = Json.Object(Json.Get(root, "fastFlags"));
             foreach (var w in Json.Array(Json.Get(ff, "suspiciousWords"))) set.FlagWords.Add(Convert.ToString(w));
+            foreach (var o in Json.Array(Json.Get(ff, "categories")))
+            {
+                var c = Json.Object(o);
+                var cat = new FlagCategory { Id = Json.Str(c, "id"), Name = Json.Str(c, "name"), Unfair = Json.Bool(c, "unfair"), Note = Json.Str(c, "note") };
+                foreach (var w in Json.Array(Json.Get(c, "words"))) cat.Words.Add(Convert.ToString(w));
+                if (!string.IsNullOrEmpty(cat.Name) && cat.Words.Count > 0) set.FlagCategories.Add(cat);
+            }
 
             foreach (var w in Json.Array(Json.Get(Json.Object(Json.Get(root, "looseFastFlagFiles")), "nameWords")))
                 set.LooseFlagFileWords.Add(Clean(Convert.ToString(w)));
@@ -106,6 +117,7 @@ namespace PCCheck.Engine
             var sites = Json.Object(Json.Get(root, "downloadSites"));
             foreach (var w in Json.Array(Json.Get(sites, "cheat"))) set.CheatSites.Add(Convert.ToString(w));
             foreach (var w in Json.Array(Json.Get(sites, "keySystem"))) set.KeySites.Add(Convert.ToString(w));
+            foreach (var w in Json.Array(Json.Get(sites, "scriptInstallers"))) set.ScriptInstallerSites.Add(Convert.ToString(w));
             foreach (var o in Json.Array(Json.Get(Json.Object(Json.Get(root, "cheatFileLayouts")), "items")))
             {
                 var item = Json.Object(o);
@@ -197,5 +209,14 @@ namespace PCCheck.Engine
             var v = Get(d, key);
             return v is bool && (bool)v;
         }
+    }
+
+    public sealed class FlagCategory
+    {
+        public string Id;
+        public string Name;
+        public bool Unfair;
+        public string Note;
+        public List<string> Words = new List<string>();
     }
 }
