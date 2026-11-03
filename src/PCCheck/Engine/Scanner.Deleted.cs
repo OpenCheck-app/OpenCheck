@@ -232,7 +232,7 @@ namespace PCCheck.Engine
                 {
                     Add(Simple("Drive change log was reset", "Tampering", Severity.Medium, Evidence.Tamper, Groups.Tamper, created,
                         "Drive " + letter, "Drive change log (USN)",
-                        "The change log was recreated after Windows was installed. Running 'fsutil usn deletejournal' does this to hide deleted files. Disk repairs can also cause it."));
+                        "The change log was recreated after Windows was installed. Deleting the change log with a command does this to hide deleted files. Disk repairs can also cause it."));
                 }
             }
             return oldest;

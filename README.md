@@ -15,7 +15,7 @@ OpenCheck is an open-source, read-only Windows app that checks a PC for Roblox e
 - Deleted files: the Recycle Bin and the drive's change log (NTFS USN journal), read newest first so recent deletions are always covered, filtered to cheat names only.
 - Windows Security (Defender) detections and antivirus exclusions.
 - Cleared event logs, logs that are suspiciously short, clock changes, and wiped Prefetch, Roblox logs or recent-file history.
-- The Run box (Win+R) and Explorer address bar history, recent website lookups (DNS cache), Windows Security's current settings, and USB devices used to flash DMA cards. Lookups and typed commands are only compared to the cheat list; nothing else is kept.
+- The Run box (Win+R) and Explorer address bar history, Windows Security's current status, and USB devices used to flash DMA cards. Typed commands are only compared to the cheat list; nothing else is kept.
 - PowerShell history and Windows' PowerShell logs, checked only for commands that wipe the records above (like `fsutil usn deletejournal`) or download and run a script from the internet (`irm site | iex`, how PowerShell cheats start). Only those matching lines are kept.
 - Programs that ran from outside the normal install folders (Downloads, Desktop, folders the user made) are read to fingerprint them and check whether they're packed, unsigned, draw an overlay and go online, which is how external cheat loaders like Matcha look. They are never run.
 - FastFlags from Roblox and every launcher (Bloxstrap, Fishstrap, Voidstrap and others), each sorted into a category: desync, hitbox, movement, network, visibility (unfair) or FPS, interface, telemetry (allowed).

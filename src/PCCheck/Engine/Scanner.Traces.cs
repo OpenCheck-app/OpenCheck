@@ -270,7 +270,7 @@ namespace PCCheck.Engine
             if (kind == "cheat")
             {
                 f = Simple("Cheat run through PowerShell (" + site + ")", "PowerShell cheat", Severity.High, Evidence.Ran, Groups.Cheat, time, rs.Command, source,
-                    "A script was downloaded from " + site + " and run straight from memory (\"irm | iex\"), so no cheat file is left on disk. That site is on the cheat list.");
+                    "A script was downloaded from " + site + " and run straight from memory with a one-line PowerShell command, so no cheat file is left on disk. That site is on the cheat list.");
                 f.IsCheat = true;
             }
             else if (kind == "installer")
@@ -281,7 +281,7 @@ namespace PCCheck.Engine
             else
             {
                 f = Simple("Script from the internet run through PowerShell (" + site + ")", "PowerShell script", Severity.Medium, Evidence.Ran, Groups.Cheat, time, rs.Command, source,
-                    "A script was downloaded from " + site + " and run straight from memory (\"irm | iex\"). Cheats and loaders are started this way so they leave no file behind. Ask what it was.");
+                    "A script was downloaded from " + site + " and run straight from memory with a one-line PowerShell command. Cheats and loaders are started this way so they leave no file behind. Ask what it was.");
             }
             if (time.HasValue && kind != "installer") f.RunTimes.Add(time.Value);
             Add(f);

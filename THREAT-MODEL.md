@@ -13,7 +13,7 @@ Coverage: **Strong** = caught in normal cases · **Partial** = caught often, or 
 | Brand-new or private cheat not on any list | Program run from Downloads/Desktop/Temp during a Roblox game, then deleted; Windows-named program in a personal folder; Roblox anti-cheat kick (error 268); download from a cheat or key-system site | Behavior checks | Partial |
 | Rename it after a Windows program (`svchost.exe` in Downloads) | BAM records the real path | Disguised program check | Strong |
 | Encrypted cheat that only exists in memory (like Matrix's `version.dat`) | The loader still runs from disk; its files sit together | Loader name and fingerprint, file set, Programs that ran | Strong |
-| Run a cheat from PowerShell with `irm site \| iex` (nothing saved to disk) | The command in PowerShell history or the Run box; Windows' PowerShell logs (400/800 command lines, 4104 script text); the site in the DNS cache | PowerShell cheats | Strong when the site is known, otherwise flagged to ask |
+| Run a cheat from PowerShell with `irm site \| iex` (nothing saved to disk) | The command in PowerShell history or the Run box; Windows' PowerShell logs (400/800 command lines, 4104 script text) | PowerShell cheats | Strong when the site is known, otherwise flagged to ask |
 | A packed loader with a harmless name (Matcha's `loader.exe`) | Ran from a personal folder; file is packed, unsigned, draws an overlay and goes online; exact fingerprint | Program file check, fingerprints | Strong |
 | Run it from a USB stick or external drive | Windows device log (USB plugged in), BAM path on a drive that's not connected now | USB history, programs run from USB | Partial |
 | Run it from a RAM disk | RAM disk software installed | RAM disk tool | Partial |

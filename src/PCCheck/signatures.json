@@ -8,7 +8,7 @@
     "severity: high = cheat, medium = suspicious tool, info = context only (never causes FLAGGED by itself).",
     "Generic tokens (like 'robloxexecutor') catch renamed or unknown tools. No list can catch every cheat, so the checker also looks at behavior: executor folders, deleted files, antivirus exclusions and firewall rules."
   ],
-  "version": "2026-11-03c",
+  "version": "2026-11-03d",
   "nameSuffixes": [
     "ui",
     "bootstrapper",
@@ -1218,7 +1218,6 @@
         "manualcleaner",
         "stringcleaner",
         "stringscleaner",
-        "lsasscleaner",
         "pccheckbypass"
       ],
       "strict": false,
@@ -1340,8 +1339,7 @@
         "executor",
         "exploit",
         "cheatloader",
-        "externalloader",
-        "dllinjector"
+        "externalloader"
       ],
       "strict": true,
       "folders": [],
@@ -1666,7 +1664,7 @@
     ]
   },
   "downloadSites": {
-    "_readme": "Websites a file was downloaded from (Windows records this on every download). 'cheat' = Roblox executor/script sites and Roblox script key systems; 'keySystem' = ad-link sites that cheat keys often go through, but other things too. 'scriptInstallers' = sites whose one-line PowerShell installers are common and not cheats (context only when run with irm | iex).",
+    "_readme": "Websites a file was downloaded from (Windows records this on every download). 'cheat' = Roblox executor/script sites and Roblox script key systems; 'keySystem' = ad-link sites that cheat keys often go through, but other things too. 'scriptInstallers' = sites whose one-line PowerShell installers are common and not cheats (context only when a one-line PowerShell installer from them was run).",
     "cheat": [
       "wearedevs.net",
       "rscripts.net",

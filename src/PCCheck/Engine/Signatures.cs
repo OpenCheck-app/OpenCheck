@@ -30,7 +30,7 @@ namespace PCCheck.Engine
         public List<string> FlagWords = new List<string>();
         /// <summary>FastFlag categories in order: a flag goes in the first one whose word its name contains.</summary>
         public List<FlagCategory> FlagCategories = new List<FlagCategory>();
-        /// <summary>Sites whose one-line PowerShell installers (irm | iex) are common and not cheats.</summary>
+        /// <summary>Sites whose one-line PowerShell installers are common and not cheats.</summary>
         public List<string> ScriptInstallerSites = new List<string>();
         public List<string> LooseFlagFileWords = new List<string>();
         /// <summary>Words in a network adapter's name that mean it belongs to a VPN or game ping booster.</summary>

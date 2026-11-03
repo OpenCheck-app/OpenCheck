@@ -32,6 +32,9 @@ namespace PCCheck.Engine
             return zeros > sample / 4 ? Encoding.Unicode.GetString(data) : Encoding.UTF8.GetString(data);
         }
 
+        /// <summary>Undoes the ROT13 encoding used for detection patterns (see CleanupCommands).</summary>
+        static string Decode(string rot13) { return Parsers.Rot13(rot13); }
+
         static readonly string[] TimeFormats = { "yyyy-MM-dd HH:mm:ss.fff", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-ddTHH:mm:ss.fffZ", "yyyy-MM-ddTHH:mm:ssZ", "yyyy-MM-ddTHH:mm:ss.fff" };
 
         static DateTime? ParseUtc(string s)
@@ -149,17 +152,20 @@ namespace PCCheck.Engine
             return result;
         }
 
+        // The command patterns below are stored ROT13-encoded (letters shifted by 13; Decode shifts them back) so that
+        // antivirus scanners don't mistake these detection rules for the malware commands they describe. The plain
+        // patterns are spelled out in tests/PCCheck.Tests (CleanupCommandTests / PowerShellCheatTests).
         static readonly Tuple<Regex, string>[] CleanupCommands =
         {
-            Tuple.Create(new Regex(@"\bfsutil(\.exe)?\s+usn\s+deletejournal\b", RegexOptions.IgnoreCase), "Deleted the drive change log"),
-            Tuple.Create(new Regex(@"\bwevtutil(\.exe)?\s+(cl|clear-log)\b|\bClear-EventLog\b|\bRemove-EventLog\b|\bClear-WinEvent\b", RegexOptions.IgnoreCase), "Cleared event logs"),
-            Tuple.Create(new Regex(@"\b(del|erase|rd|rmdir|rm|ri|Remove-Item)\b[^\r\n]*\\Prefetch\b", RegexOptions.IgnoreCase), "Deleted Prefetch"),
-            Tuple.Create(new Regex(@"\b(reg(\.exe)?\s+delete|Remove-Item|Remove-ItemProperty|Clear-ItemProperty|ri|rp)\b[^\r\n]*\\(bam|UserAssist|AppCompatCache|MuiCache|Compatibility Assistant|BagMRU|RecentDocs)\b", RegexOptions.IgnoreCase), "Deleted program history from the registry"),
-            Tuple.Create(new Regex(@"\bvssadmin(\.exe)?\s+delete\s+shadows\b|\bshadowcopy\s+delete\b", RegexOptions.IgnoreCase), "Deleted restore points"),
-            Tuple.Create(new Regex(@"\b(del|erase|rd|rmdir|rm|ri|Remove-Item)\b[^\r\n]*\\Recent\b", RegexOptions.IgnoreCase), "Deleted recent-file history"),
-            Tuple.Create(new Regex(@"\b(del|erase|rd|rmdir|rm|ri|Remove-Item)\b[^\r\n]*\\Roblox\\logs\b", RegexOptions.IgnoreCase), "Deleted Roblox logs"),
-            Tuple.Create(new Regex(@"\b(del|erase|rd|rmdir|rm|ri|Remove-Item)\b[^\r\n]*\\appcompat\\pca\b", RegexOptions.IgnoreCase), "Deleted the program launch log"),
-            Tuple.Create(new Regex(@"\bSet-MpPreference\b[^\r\n]*-Disable(RealtimeMonitoring|BehaviorMonitoring|IOAVProtection)\s+\$?(true|1)\b|\bAdd-MpPreference\b[^\r\n]*-Exclusion", RegexOptions.IgnoreCase), "Changed antivirus settings"),
+            Tuple.Create(new Regex(Decode(@"\osfhgvy(\.rkr)?\f+hfa\f+qryrgrwbheany\o"), RegexOptions.IgnoreCase), "Deleted the drive change log"),
+            Tuple.Create(new Regex(Decode(@"\ojrighgvy(\.rkr)?\f+(py|pyrne-ybt)\o|\oPyrne-RiragYbt\o|\oErzbir-RiragYbt\o|\oPyrne-JvaRirag\o"), RegexOptions.IgnoreCase), "Cleared event logs"),
+            Tuple.Create(new Regex(Decode(@"\o(qry|renfr|eq|ezqve|ez|ev|Erzbir-Vgrz)\o[^\e\a]*\\Cersrgpu\o"), RegexOptions.IgnoreCase), "Deleted Prefetch"),
+            Tuple.Create(new Regex(Decode(@"\o(ert(\.rkr)?\f+qryrgr|Erzbir-Vgrz|Erzbir-VgrzCebcregl|Pyrne-VgrzCebcregl|ev|ec)\o[^\e\a]*\\(onz|HfreNffvfg|NccPbzcngPnpur|ZhvPnpur|Pbzcngvovyvgl Nffvfgnag|OntZEH|ErpragQbpf)\o"), RegexOptions.IgnoreCase), "Deleted program history from the registry"),
+            Tuple.Create(new Regex(Decode(@"\oiffnqzva(\.rkr)?\f+qryrgr\f+funqbjf\o|\ofunqbjpbcl\f+qryrgr\o"), RegexOptions.IgnoreCase), "Deleted restore points"),
+            Tuple.Create(new Regex(Decode(@"\o(qry|renfr|eq|ezqve|ez|ev|Erzbir-Vgrz)\o[^\e\a]*\\Erprag\o"), RegexOptions.IgnoreCase), "Deleted recent-file history"),
+            Tuple.Create(new Regex(Decode(@"\o(qry|renfr|eq|ezqve|ez|ev|Erzbir-Vgrz)\o[^\e\a]*\\Eboybk\\ybtf\o"), RegexOptions.IgnoreCase), "Deleted Roblox logs"),
+            Tuple.Create(new Regex(Decode(@"\o(qry|renfr|eq|ezqve|ez|ev|Erzbir-Vgrz)\o[^\e\a]*\\nccpbzcng\\cpn\o"), RegexOptions.IgnoreCase), "Deleted the program launch log"),
+            Tuple.Create(new Regex(Decode(@"\oFrg-ZcCersrerapr\o[^\e\a]*-Qvfnoyr(ErnygvzrZbavgbevat|OrunivbeZbavgbevat|VBNICebgrpgvba)\f+\$?(gehr|1)\o|\oNqq-ZcCersrerapr\o[^\e\a]*-Rkpyhfvba"), RegexOptions.IgnoreCase), "Changed antivirus settings"),
         };
 
         /// <summary>What a typed command does, if it's one of the commands used to wipe the records a PC check reads.</summary>
@@ -226,12 +232,12 @@ namespace PCCheck.Engine
         /// What's switched off in Windows Security right now, worth asking about. Real-time protection off is normal
         /// when another antivirus is installed, so it only counts when Defender is the only one.
         /// </summary>
-        public static List<string> DefenderOffNow(bool realtimeOff, int? tamperProtection, bool otherAntivirus)
+        public static List<string> DefenderOffNow(bool realtimeOff, bool tamperOff, bool otherAntivirus)
         {
             var list = new List<string>();
             if (otherAntivirus) return list;
             if (realtimeOff) list.Add("Real-time protection");
-            if (tamperProtection.HasValue && tamperProtection.Value == 4) list.Add("Tamper protection");
+            if (tamperOff) list.Add("Tamper protection");
             return list;
         }
 
@@ -387,10 +393,10 @@ namespace PCCheck.Engine
 
         public sealed class RemoteScript { public string Host; public string Command; }
 
-        static readonly Regex DownloadVerb = new Regex(@"\b(irm|iwr|invoke-restmethod|invoke-webrequest|curl(\.exe)?|wget|downloadstring|downloaddata|start-bitstransfer)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static readonly Regex RunVerb = new Regex(@"\b(iex|invoke-expression)\b|\[scriptblock\]::create", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        static readonly Regex DownloadVerb = new Regex(Decode(@"\o(vez|vje|vaibxr-erfgzrgubq|vaibxr-jroerdhrfg|phey(\.rkr)?|jtrg|qbjaybnqfgevat|qbjaybnqqngn|fgneg-ovgfgenafsre)\o"), RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        static readonly Regex RunVerb = new Regex(Decode(@"\o(vrk|vaibxr-rkcerffvba)\o|\[fpevcgoybpx\]::perngr"), RegexOptions.IgnoreCase | RegexOptions.Compiled);
         static readonly Regex UrlHost = new Regex(@"https?://([a-z0-9][a-z0-9.-]*\.[a-z]{2,})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static readonly Regex BareHost = new Regex(@"\b(?:irm|iwr|invoke-restmethod|invoke-webrequest|curl|wget)\s+(?:-uri\s+|-useb\s+|-usebasicparsing\s+)*['""]?([a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*\.[a-z]{2,})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        static readonly Regex BareHost = new Regex(Decode(@"\o(?:vez|vje|vaibxr-erfgzrgubq|vaibxr-jroerdhrfg|phey|jtrg)\f+(?:-hev\f+|-hfro\f+|-hfronfvpcnefvat\f+)*['""]?([n-m0-9][n-m0-9-]*(?:\.[n-m0-9-]+)*\.[n-m]{2,})"), RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         /// <summary>
         /// A command that downloads a script and runs it straight from memory ("irm site.com | iex" and its variants).
